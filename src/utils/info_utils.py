@@ -24,7 +24,7 @@ def environment_info(env):
     for location_1, location_2 in env.graph.get_edgelist():
 
         edge_id = env.graph.get_eid(location_1, location_2)
-        row_data = [edge_id, location_1, location_2, env.graph.es[edge_id]['time']]
+        row_data = [edge_id, location_1, location_2, env.graph.es[edge_id]['travel_time']]
         graph_properties_row.append(row_data)
     
     graph_properties.add_rows(graph_properties_row)
