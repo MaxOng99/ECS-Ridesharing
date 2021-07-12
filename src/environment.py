@@ -51,17 +51,19 @@ class Environment:
         g.vs['coordinate'] = coordinates
         
         # Compute distance matrix (euclidean) and travel time (weight of graph)
-        for location_1, location_2 in g.get_edgelist():
-            
-            location_1_coordinate = g.vs[location_1]['coordinate']
-            location_2_coordinate = g.vs[location_2]['coordinate']
-            distance = np.linalg.norm(np.array(location_1_coordinate) - np.array(location_2_coordinate))
-            
-            # Assume distance in km, and time in minutes
-            edge_id = g.get_eid(location_1, location_2)
-            g.es[edge_id]['distance'] = round(distance, 2)
-            g.es[edge_id]['time'] = round(distance / avg_speed, 2)
-                    
+        for edge in g.es:
+            source_index = edge.source
+            target_index = edge.target
+
+            source_coordinate = np.array(g.vs[source_index]["coordinate"])
+            target_coordinate = np.array(g.vs[target_index]["coordinate"])
+
+            distance = round(np.linalg.norm(source_coordinate - target_coordinate), 2)
+            travel_time = round(distance / avg_speed, 0)
+
+            edge["distance"] = distance
+            edge["time"] = travel_time
+
         return g
 
     def generate_passengers(self, graph, num_passengers):
@@ -126,4 +128,3 @@ class Environment:
 
 env = Environment(num_locations=10, num_passengers=5)
 print(env)
-
