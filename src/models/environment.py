@@ -22,6 +22,7 @@ class Environment:
     def generate_graph(self, num_locations, max_coordinates, avg_speed):
         # Create fully connected graph with n locations
         g = ig.Graph.Full(n=num_locations, loops=False)
+        g.vs["identifier"] = [id for id in range(len(g.vs))]
         
         # Generate random coordinates
         max_x = max_coordinates[0]
