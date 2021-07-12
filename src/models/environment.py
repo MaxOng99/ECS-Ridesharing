@@ -1,7 +1,7 @@
 import random
 import numpy as np
 import igraph as ig
-from passenger import Passenger
+from models.passenger import Passenger
 from utils.info_utils import environment_info
 
 class Environment:
