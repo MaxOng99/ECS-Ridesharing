@@ -23,7 +23,7 @@ class Environment:
         # Create fully connected graph with n locations
         g = ig.Graph.Full(n=num_locations, loops=False)
         g.vs["identifier"] = [id for id in range(len(g.vs))]
-        
+
         # Generate random coordinates
         max_x = max_coordinates[0]
         max_y = max_coordinates[1]
@@ -46,7 +46,7 @@ class Environment:
             travel_time = round(distance / avg_speed, 0)
 
             edge["distance"] = distance
-            edge["time"] = travel_time
+            edge["travel_time"] = travel_time
 
         return g
 
