@@ -62,15 +62,6 @@ class Environment:
 
         return passengers
 
-    def plot_graph(self):
-        visual_style = {
-            "bbox": (600, 600),
-            "margin": 30,
-        }
-        self.graph.vs['label'] = self.graph.vs['coordinate']
-        self.graph.es['label'] = self.graph.es['time']
-        ig.plot(self.graph, **visual_style)
-
     def __str__(self):
         
         """
