@@ -7,8 +7,8 @@ class Passenger:
     def __init__(self, id: int, start: int, destination: int):
         """
         Args:
-            start (int): Node ID of start location
-            destination (int): Node ID of destination
+            start (int): Location ID of start location
+            destination (int): Location ID of destination
         """
         self.id = id
         self.start_id = start

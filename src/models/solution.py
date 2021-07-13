@@ -1,6 +1,6 @@
 from collections import namedtuple
 from typing import List, Tuple
-TourNode = namedtuple("TourNode", "node_id arrival_time waiting_time")
+TourNode = namedtuple("TourNode", "location_id arrival_time waiting_time")
 
 class Solution:
 
@@ -8,8 +8,8 @@ class Solution:
         self.tour_nodes = []
         self.first_trip = False
 
-    def expand_tour(self, node_id: int, arrival_time: float, waiting_time: float) -> None:
-        self.tour_nodes.append(TourNode(node_id, arrival_time, waiting_time))
+    def expand_tour(self, location_id: int, arrival_time: float, waiting_time: float) -> None:
+        self.tour_nodes.append(TourNode(location_id, arrival_time, waiting_time))
 
     def get_current_node(self) -> TourNode:
         return self.tour_nodes[-1]
@@ -17,8 +17,8 @@ class Solution:
     def eligible_node_pairs(self, source_id: int, destination_id: int) -> List[Tuple[TourNode, TourNode]]:
 
         eligible_pairs = []
-        departure_nodes = list(filter(lambda node: node.node_id == source_id, self.tour_nodes))
-        arrival_nodes = list(filter(lambda node: node.node_id == destination_id, self.tour_nodes))
+        departure_nodes = list(filter(lambda node: node.location_id == source_id, self.tour_nodes))
+        arrival_nodes = list(filter(lambda node: node.location_id == destination_id, self.tour_nodes))
 
         for departure_node in departure_nodes:
             for arrival_node in arrival_nodes:
@@ -27,8 +27,8 @@ class Solution:
 
         return eligible_pairs
     
-    def get_nodes_from_id(self, node_id: int) -> List[TourNode]:
-        return list(filter(lambda node: node.node_id == node_id, self.tour_nodes))
+    def get_nodes_from_id(self, location_id: int) -> List[TourNode]:
+        return list(filter(lambda node: node.location_id == location_id, self.tour_nodes))
 
     def get_tour(self) -> List[TourNode]:
         return self.tour_nodes
@@ -37,6 +37,6 @@ class Solution:
         return self.__str__()
     
     def __str__(self) -> str:
-        tour_repr = [str((node.node_id, node.arrival_time, node.waiting_time)) for node in self.tour_nodes]
+        tour_repr = [str((node.location_id, node.arrival_time, node.waiting_time)) for node in self.tour_nodes]
         return " -> ".join(tour_repr)
 

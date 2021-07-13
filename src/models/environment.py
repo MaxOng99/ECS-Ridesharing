@@ -23,7 +23,7 @@ class Environment:
     def generate_graph(self, num_locations: int, max_coordinates: Tuple[int, int], avg_speed: float) -> ig.Graph:
         # Create fully connected graph with n locations
         g = ig.Graph.Full(n=num_locations, loops=False)
-        g.vs["identifier"] = [id for id in range(len(g.vs))]
+        g.vs["location_id"] = [id for id in range(len(g.vs))]
 
         # Generate random coordinates
         max_x = max_coordinates[0]
@@ -53,7 +53,7 @@ class Environment:
 
     def generate_passengers(self, graph: ig.Graph, num_passengers: int) -> List[Passenger]:
 
-        location_ids = [location_id for location_id in range(len(graph.vs['coordinate']))]
+        location_ids = [location_id for location_id in graph.vs["location_id"]]
         passengers = []
 
         for id in range(num_passengers):
