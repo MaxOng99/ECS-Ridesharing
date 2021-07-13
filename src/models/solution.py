@@ -1,6 +1,6 @@
 from collections import namedtuple
 from typing import List, Tuple
-TourNode = namedtuple("TourNode", "node_id timestamp waiting_time")
+TourNode = namedtuple("TourNode", "node_id arrival_time waiting_time")
 
 class Solution:
 
@@ -8,8 +8,8 @@ class Solution:
         self.tour_nodes = []
         self.first_trip = False
 
-    def expand_tour(self, node_id: int, timestamp: float, waiting_time: float) -> None:
-        self.tour_nodes.append(TourNode(node_id, timestamp, waiting_time))
+    def expand_tour(self, node_id: int, arrival_time: float, waiting_time: float) -> None:
+        self.tour_nodes.append(TourNode(node_id, arrival_time, waiting_time))
 
     def get_current_node(self) -> TourNode:
         return self.tour_nodes[-1]
@@ -22,7 +22,7 @@ class Solution:
 
         for departure_node in departure_nodes:
             for arrival_node in arrival_nodes:
-                if departure_node.timestamp < arrival_node.timestamp:
+                if departure_node.arrival_time < arrival_node.arrival_time:
                     eligible_pairs.append((departure_node, arrival_node))
 
         return eligible_pairs
@@ -37,6 +37,6 @@ class Solution:
         return self.__str__()
     
     def __str__(self) -> str:
-        tour_repr = [str((node.node_id, node.timestamp, node.waiting_time)) for node in self.tour_nodes]
+        tour_repr = [str((node.node_id, node.arrival_time, node.waiting_time)) for node in self.tour_nodes]
         return " -> ".join(tour_repr)
 

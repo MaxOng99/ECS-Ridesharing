@@ -25,7 +25,7 @@ class Passenger:
 
         max_utility = 0
         for source_node, target_node in eligible_node_pairs:
-            utility = self.__utility_function(source_node.timestamp, target_node.timestamp)
+            utility = self.__utility_function(source_node.arrival_time, target_node.arrival_time)
             if utility > max_utility:
                 max_utility = utility
         return max_utility
