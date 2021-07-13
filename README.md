@@ -10,7 +10,8 @@
 ## Instructions
 
 ### Running the simulation script
-`python src/simulation.py`
+1. Navigate to root folder of this project.
+2. Run the script with `python src/simulation.py`.
 
 ## Resources
 [igraph python library](https://igraph.org/python/)
