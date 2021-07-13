@@ -3,6 +3,7 @@ import numpy as np
 import igraph as ig
 from models.passenger import Passenger
 from utils.info_utils import environment_info
+from typing import Tuple, List
 
 class Environment:
     def __init__(self, num_locations=10, num_passengers=10, max_coordinates=(100, 100), avg_vehicle_speed=2.0):
@@ -19,7 +20,7 @@ class Environment:
         self.graph = self.generate_graph(num_locations, max_coordinates, avg_vehicle_speed)
         self.passengers = self.generate_passengers(self.graph, num_passengers)
 
-    def generate_graph(self, num_locations, max_coordinates, avg_speed):
+    def generate_graph(self, num_locations: int, max_coordinates: Tuple[int, int], avg_speed: float) -> ig.Graph:
         # Create fully connected graph with n locations
         g = ig.Graph.Full(n=num_locations, loops=False)
         g.vs["identifier"] = [id for id in range(len(g.vs))]
@@ -50,7 +51,7 @@ class Environment:
 
         return g
 
-    def generate_passengers(self, graph, num_passengers):
+    def generate_passengers(self, graph: ig.Graph, num_passengers: int) -> List[Passenger]:
 
         location_ids = [location_id for location_id in range(len(graph.vs['coordinate']))]
         passengers = []

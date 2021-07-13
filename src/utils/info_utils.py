@@ -1,6 +1,8 @@
 from prettytable import PrettyTable
 
-def environment_info(env):
+from models.environment import Environment
+
+def environment_info(env: Environment) -> str:
     """
     Returns:
         string: Displays the summary of the environment

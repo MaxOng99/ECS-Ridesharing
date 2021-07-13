@@ -1,7 +1,8 @@
+import igraph as ig
 from models.solution import Solution
 import utils.graph_utils as graph_utils
 
-def __nn(graph, solution):
+def __nn(graph: ig.Graph, solution: Solution) -> Solution:
 
     start_node = solution.get_current_node()
     current_timestamp = start_node.timestamp
@@ -19,7 +20,7 @@ def __nn(graph, solution):
     
     return solution
 
-def nearest_neighbour(graph, start_node_id):
+def nearest_neighbour(graph: ig.Graph, start_node_id: int) -> Solution:
 
     solution = Solution()
     solution.expand_tour(node_id=start_node_id, timestamp=0, waiting_time=0)

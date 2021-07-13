@@ -1,8 +1,10 @@
 import random
+from typing import List
+from models.solution import Solution
 
 class Passenger:
 
-    def __init__(self, id, start, destination):
+    def __init__(self, id: int, start: int, destination: int):
         """
         Args:
             start (int): Node ID of start location
@@ -15,10 +17,10 @@ class Passenger:
         self.optimal_departure = 0
         self.optimal_arrival = 0
 
-    def rank_solutions(self, solutions):
+    def rank_solutions(self, solutions: List[Solution]) -> List[Solution]:
         return sorted(solutions, key=lambda sol: self.get_utility(sol), reverse=True)
     
-    def get_utility(self, solution):
+    def get_utility(self, solution: Solution) -> float:
         eligible_node_pairs = solution.eligible_node_pairs(self.start_id, self.destination_id)
 
         max_utility = 0
@@ -28,11 +30,11 @@ class Passenger:
                 max_utility = utility
         return max_utility
         
-    def __utility_function(self, departure_time, arrival_time):
+    def __utility_function(self, departure_time: float, arrival_time: float) -> float:
         return self.beta**(abs(self.optimal_departure - departure_time)) + \
             self.beta**(abs(self.optimal_arrival - arrival_time))
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Passenger {self.id}: {{Start: {self.start_id} | End: {self.destination_id}}}"
     
     def __repr__(self) -> str:

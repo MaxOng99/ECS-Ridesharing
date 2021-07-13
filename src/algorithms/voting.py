@@ -1,6 +1,7 @@
 from models.passenger import Passenger
+from models.solution import Solution
 
-def borda_count(solutions, passengers):
+def borda_count(solutions: Solution, passengers: Passenger) -> Solution:
 
     num_of_candidates = len(solutions)
     scores = {solution_index: 0 for solution_index, _ in enumerate(solutions)}
