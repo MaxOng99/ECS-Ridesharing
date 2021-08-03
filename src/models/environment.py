@@ -1,9 +1,11 @@
+from copy import deepcopy
 import random
 import numpy as np
 import igraph as ig
 from models.passenger import Passenger
 from utils.info_utils import environment_info
-from typing import Tuple, List
+from utils.graph_utils import travel_time
+from typing import Tuple, Set
 
 class Environment:
     def __init__(self, num_locations=10, num_passengers=10, max_coordinates=(100, 100), avg_vehicle_speed=2.0):
@@ -51,19 +53,27 @@ class Environment:
 
         return g
 
-    def generate_passengers(self, graph: ig.Graph, num_passengers: int) -> List[Passenger]:
+    def generate_passengers(self, graph: ig.Graph, num_passengers: int) -> Set[Passenger]:
 
         location_ids = [location_id for location_id in graph.vs["location_id"]]
-        passengers = []
+        passengers = set()
 
         for id in range(num_passengers):
 
             # Sample 2 elements w/o replacement - avoids having same start and end location
             start_id, destination_id = random.sample(location_ids, 2)
-            passengers.append(Passenger(id, start_id, destination_id))
+            optimal_departure, optimal_arrival = self.__generate_preferences(start_id, destination_id)
+            passengers.add(Passenger(id, start_id, destination_id, optimal_departure, optimal_arrival))
 
         return passengers
 
+    def __generate_preferences(self, source: int, destination: int):
+        max_travel_time = max(self.graph.es["travel_time"])
+        max_distance = 2 * self.num_passengers * max_travel_time
+        optimum_departure = random.uniform(0, max_distance)
+        optimum_arrival = random.uniform(optimum_departure + travel_time(source, destination, self.graph), max_distance)
+
+        return (optimum_departure, optimum_arrival)
     def __str__(self):
         
         """
