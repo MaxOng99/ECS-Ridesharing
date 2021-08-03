@@ -129,7 +129,8 @@ class Passenger:
             if self.optimal_departure - departure_time < 0:
                 return True
 
-            # This condition determines whether it is too early to board the bus
+            # This condition determines whether it is too early to board the bus. 
+            # The board_utility_threshold is computed as (1 - beta)
             elif self.get_location_utility(location_id, solution) >= self.board_utility_threshold:
                 return True
 
