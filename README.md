@@ -6,6 +6,7 @@
 - cairo=1.16.0
 - numpy=1.20.2
 - prettytable=2.1.0
+- pyllist=0.3
 
 ## Instructions
 
