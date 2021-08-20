@@ -14,4 +14,6 @@
 2. Run the script with `python src/simulation.py`.
 
 ## Resources
-[igraph python library](https://igraph.org/python/)
+- [igraph python library](https://igraph.org/python/)
+- [pretty table library](https://pypi.org/project/prettytable/)
+- [pyllist library (linked list implementation)](https://pythonhosted.org/pyllist/)
