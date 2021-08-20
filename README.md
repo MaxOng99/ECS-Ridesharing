@@ -6,6 +6,7 @@
 - cairo=1.16.0
 - numpy=1.20.2
 - prettytable=2.1.0
+- pyllist=0.3
 
 ## Instructions
 
@@ -14,4 +15,6 @@
 2. Run the script with `python src/simulation.py`.
 
 ## Resources
-[igraph python library](https://igraph.org/python/)
+- [igraph python library](https://igraph.org/python/)
+- [pretty table library][https://pypi.org/project/prettytable/]
+- [linked list implementation][https://pythonhosted.org/pyllist/]
