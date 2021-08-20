@@ -17,4 +17,4 @@
 ## Resources
 - [igraph python library](https://igraph.org/python/)
 - [pretty table library](https://pypi.org/project/prettytable/)
-- [linked list implementation](https://pythonhosted.org/pyllist/)
+- [pyllist library (linked list implementation)](https://pythonhosted.org/pyllist/)
