@@ -68,7 +68,7 @@ class Environment:
 
     def __generate_preferences(self, source: int, destination: int):
         max_travel_time = max(self.graph.es["travel_time"])
-        max_distance = 0.025 * self.num_passengers * max_travel_time
+        max_distance = 2 * max_travel_time
         optimum_departure = int(random.uniform(0, max_distance))
         optimum_arrival = int(random.uniform(optimum_departure + travel_time(source, destination, self.graph), max_distance))
 
