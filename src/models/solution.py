@@ -1,42 +1,45 @@
-from collections import namedtuple
-from typing import List, Tuple
-TourNode = namedtuple("TourNode", "location_id arrival_time waiting_time")
+from typing import Dict, Set
+from pyllist import dllist
+from utils.info_utils import solution_info
 
-class Solution:
+class TourNodeValue:
 
-    def __init__(self):
-        self.tour_nodes = []
-        self.first_trip = False
+    def __init__(self, location_id: int, arrival_time: int, waiting_time: int) -> None:
+        self.location_id = location_id
+        self.arrival_time = arrival_time
+        self.waiting_time = waiting_time
+        self.departure_time = self.arrival_time + self.waiting_time
 
-    def expand_tour(self, location_id: int, arrival_time: float, waiting_time: float) -> None:
-        self.tour_nodes.append(TourNode(location_id, arrival_time, waiting_time))
+        self.pick_up = set()
+        self.drop_off = set()
 
-    def get_current_node(self) -> TourNode:
-        return self.tour_nodes[-1]
-
-    def eligible_node_pairs(self, source_id: int, destination_id: int) -> List[Tuple[TourNode, TourNode]]:
-
-        eligible_pairs = []
-        departure_nodes = list(filter(lambda node: node.location_id == source_id, self.tour_nodes))
-        arrival_nodes = list(filter(lambda node: node.location_id == destination_id, self.tour_nodes))
-
-        for departure_node in departure_nodes:
-            for arrival_node in arrival_nodes:
-                if departure_node.arrival_time < arrival_node.arrival_time:
-                    eligible_pairs.append((departure_node, arrival_node))
-
-        return eligible_pairs
-    
-    def get_nodes_from_id(self, location_id: int) -> List[TourNode]:
-        return list(filter(lambda node: node.location_id == location_id, self.tour_nodes))
-
-    def get_tour(self) -> List[TourNode]:
-        return self.tour_nodes
-    
     def __repr__(self) -> str:
         return self.__str__()
-    
-    def __str__(self) -> str:
-        tour_repr = [str((node.location_id, node.arrival_time, node.waiting_time)) for node in self.tour_nodes]
-        return " -> ".join(tour_repr)
 
+    def __str__(self) -> str:
+        return f"({self.location_id}, {self.arrival_time}, {self.waiting_time}, P:{self.pick_up}, D:{self.drop_off})"
+
+class Solution:
+    def __init__(self, riders: Set['Passenger']):
+        self.llist = dllist()
+        self.rider_schedule = {"departure": dict(), "arrival": dict()}
+        self.riders = sorted(list(riders), key=lambda x: x.id)
+    
+    def update_rider_schedule(self) -> Dict[str, Dict[int, int]]:
+        for node in self.llist.iternodes():
+            departure_time = node.value.departure_time
+            arrival_time = node.value.arrival_time
+
+            for rider in node.value.pick_up:
+                self.rider_schedule['departure'][rider.id] = departure_time
+            
+            for rider in node.value.drop_off:
+                self.rider_schedule['arrival'][rider.id] = arrival_time
+        
+        return self.rider_schedule
+
+    def __str__(self) -> str:
+        return solution_info(self)
+
+    def __repr__(self) -> str:
+        return self.__str__()
