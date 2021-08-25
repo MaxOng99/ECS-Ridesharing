@@ -9,7 +9,7 @@ def get_edge(source_location_id: int, target_location_id: int, graph: ig.Graph) 
     edge_id = graph.get_eid(source_index, target_index)
     return graph.es[edge_id]
 
-def travel_time(source_location_id: int, target_location_id: int, graph: ig.Graph) -> float:
+def travel_time(source_location_id: int, target_location_id: int, graph: ig.Graph) -> int:
     edge = get_edge(source_location_id, target_location_id, graph)
     return edge["travel_time"]
 

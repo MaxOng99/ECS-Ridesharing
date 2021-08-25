@@ -1,12 +1,22 @@
 from models.environment import Environment
 from algorithms.optimiser import Optimiser
+import numpy as np
 
-env = Environment(num_locations=10, num_passengers=5, max_coordinates=(100, 100))
+np.random.seed(42)
+env = Environment(num_locations=25, num_passengers=25, max_coordinates=(1000, 1000))
 optimiser = Optimiser(env.graph, env.passengers)
-optimal_solution = optimiser.optimise(solution_constructor="nearest_neighbour")
 
-print("Solution:", "\n")
-print(optimal_solution, "\n")
-print("Passenger Utilities: ", "\n")
-for index, passenger in enumerate(env.passengers):
-    print(f"Passenger {index}:", passenger.get_utility(optimal_solution))
+
+options = dict()
+
+# # Greedy Insert
+# options["algorithm"] = 'greedy_insert'
+# options["parameters"] = {'iterations': 5}
+
+# Iterative Voting
+options["algorithm"] = "iterative_voting"
+options["parameters"] = {"voting_rule": "borda_count"}
+
+optimal_solution = optimiser.optimise(options)
+print(optimal_solution)
+

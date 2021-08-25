@@ -36,3 +36,61 @@ def environment_info(env: 'Environment') -> str:
     f"{passenger_list.get_string()} \n",
     "Graph:",
     graph_properties.get_string()])
+
+def solution_info(solution) -> str:
+
+    schedule = PrettyTable()
+    schedule.field_names = ['Visit Order', 'Location ID', 'Pick Ups', 'Drop Offs', 'Arrival', 'Wait Time', 'Departure Time']
+
+    rider_sched = PrettyTable()
+    rider_sched.field_names = ['Passenger', 'Travel Locations', 'Departure', 'Actual Departure', 'Arrival', 'Actual Arrival', 'Utility']
+
+    for index, tour_node in enumerate(solution.llist.iternodes()):
+        row_data = [index, tour_node.value.location_id, list(tour_node.value.pick_up), list(tour_node.value.drop_off), tour_node.value.arrival_time, tour_node.value.waiting_time, tour_node.value.departure_time]
+        schedule.add_row(row_data)
+
+    rider_schedule = solution.rider_schedule
+    
+    for rider in solution.riders:
+        utility = rider.get_solution_utility(solution)
+        row_data = [f'P:{rider.id}', f'{rider.start_id} - {rider.destination_id}', rider.optimal_departure, rider_schedule['departure'][rider.id], rider.optimal_arrival, rider_schedule['arrival'][rider.id], utility]
+        rider_sched.add_row(row_data)
+    
+    return "\n".join(['Schedule', f'{schedule.get_string()}', 'Rider Utils', rider_sched.get_string()]) 
+    
+def strategy_info(strat_obj):
+    info = []
+
+    if strat_obj.strat['action'] == 'wait':
+        info = [
+            f'{strat_obj.__class__.__name__}, Wait',
+            f'Ref_Node: {strat_obj.strat["ref_node"]}',
+            f'Ref_Node_Old_Value {strat_obj.strat["ref_node_old_value"]}',
+            f'Ref_Node_New_Value{strat_obj.strat["ref_node_new_value"]}',
+            f'Next_Node: {strat_obj.strat["next_node"]}',
+            f'Next_Node_Old_Value: {strat_obj.strat["next_node_old_value"]}',
+            f'Next_Node_New_Value: {strat_obj.strat["next_node_new_value"]}'
+        ]
+        return "\n".join(info)
+    
+    elif strat_obj.strat['action'] == 'insert_before':
+        info = [
+            f'{strat_obj.__class__.__name__}, Insert Before',
+            f'Ref_Node: {strat_obj.strat["ref_node"]}',
+            f'Next_Node: {strat_obj.strat["next_node"]}',
+            f'Next_Node_Old_Value: {strat_obj.strat["next_node_old_value"]}',
+            f'Next_Node_New_Value: {strat_obj.strat["next_node_new_value"]}',
+            f'New_Node_Value: {strat_obj.strat["new_node_value"]}',
+        ]
+        return "\n".join(info)
+
+    elif strat_obj.strat['action'] == 'insert_after':
+        info = [
+            f'{strat_obj.__class__.__name__}, Insert After',
+            f'Ref_Node: {strat_obj.strat["ref_node"]}',
+            f'Next_Node: {strat_obj.strat["next_node"]}',
+            f'Next_Node_Old_Value: {strat_obj.strat["next_node_old_value"]}',
+            f'Next_Node_New_Value: {strat_obj.strat["next_node_new_value"]}',
+            f'New_Node_Value: {strat_obj.strat["new_node_value"]}'
+        ]
+        return "\n".join(info)
