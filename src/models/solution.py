@@ -26,6 +26,10 @@ class TourNodeValue:
         
         elif current_status == 'onboard':
             self.drop_off.remove(rider)
+    
+    def update_waiting_time(self, new_waiting_time):
+        self.waiting_time = new_waiting_time
+        self.departure_time = self.arrival_time + new_waiting_time
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -53,6 +57,16 @@ class Solution:
         new_node = self.llist.insert(new_node_value, before=ref_node)
         self.__updated_affected_node(affected_node)
         return new_node
+    
+    def append(self, new_node_value):
+        new_node = self.llist.append(new_node_value)
+        return new_node
+        
+    def head(self):
+        return self.llist.first
+    
+    def tail(self):
+        return self.llist.last
 
     def check_valid_insert(self, ref_node, location_id, position='before'):
         
@@ -130,9 +144,6 @@ class Solution:
                 affected_node.value.arrival_time = 0
                 affected_node.value.waiting_time = affected_node.value.departure_time
         
-            if affected_node.value.waiting_time < 0:
-                print("bruh dude")
-
     def __str__(self) -> str:
         return solution_info(self)
 

@@ -1,5 +1,3 @@
-from numpy import deprecate_with_doc, insert, positive
-from numpy.lib import Arrayterator
 from utils.info_utils import strategy_info
 from pyllist.dllist import dllistnode
 from models.solution import Solution, TourNodeValue
@@ -152,7 +150,7 @@ class GreedyInsert:
                 return ArrivalStrategy(strategy_details, depart_node)
             else:
                 return None
-                
+
     def __stay_at_node(self, rider, ref_node, current_status):
         strategy_details = {
             'action': 'stay',

@@ -6,6 +6,7 @@ from utils.info_utils import environment_info
 from typing import Tuple, List
 from utils.graph_utils import travel_time
 
+
 class Environment:
     def __init__(self, num_locations=10, num_passengers=10, max_coordinates=(100, 100), avg_vehicle_speed=2.0):
         """
