@@ -37,7 +37,7 @@ def environment_info(env: 'Environment') -> str:
     "Graph:",
     graph_properties.get_string()])
 
-def solution_info(solution) -> str:
+def solution_info(solution: "Solution") -> str:
 
     schedule = PrettyTable()
     schedule.field_names = ['Visit Order', 'Location ID', 'Pick Ups', 'Drop Offs', 'Arrival', 'Wait Time', 'Departure Time']
@@ -49,11 +49,11 @@ def solution_info(solution) -> str:
         row_data = [index, tour_node.value.location_id, list(tour_node.value.pick_up), list(tour_node.value.drop_off), tour_node.value.arrival_time, tour_node.value.waiting_time, tour_node.value.departure_time]
         schedule.add_row(row_data)
 
-    rider_schedule = solution.rider_schedule
-    
-    for rider in solution.riders:
-        utility = rider.get_solution_utility(solution)
-        row_data = [f'P:{rider.id}', f'{rider.start_id} - {rider.destination_id}', rider.optimal_departure, rider_schedule['departure'][rider.id], rider.optimal_arrival, rider_schedule['arrival'][rider.id], utility]
+    for agent in solution.agents:
+        departure_time = agent.departure_node.value.departure_time
+        arrival_time = agent.arrival_node.value.arrival_time
+        utility = agent.rider.utility(departure_time, arrival_time)
+        row_data = [f'P:{agent.rider.id}', f'{agent.rider.start_id} - {agent.rider.destination_id}', agent.rider.optimal_departure, departure_time, agent.rider.optimal_arrival, arrival_time, utility]
         rider_sched.add_row(row_data)
     
     return "\n".join(['Schedule', f'{schedule.get_string()}', 'Rider Utils', rider_sched.get_string()]) 

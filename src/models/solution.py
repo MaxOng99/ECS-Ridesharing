@@ -38,10 +38,10 @@ class TourNodeValue:
         return f"({self.location_id}, {self.arrival_time}, {self.waiting_time}, P:{self.pick_up}, D:{self.drop_off})"
 
 class Solution:
-    def __init__(self, riders: Set['Passenger'], time_matrix):
+    def __init__(self, agents: Set["Agent"], time_matrix):
         self.llist = dllist()
-        self.rider_schedule = {"departure": dict(), "arrival": dict()}
-        self.riders = sorted(list(riders), key=lambda x: x.id)
+        self.rider_schedule = {"departure": dict(), "arrival": dict()} # nullify
+        self.agents = sorted(list(agents), key=lambda x: x.rider.id)
         self.time_matrix = time_matrix
 
     def insert_after(self, ref_node, new_node_value):
