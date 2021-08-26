@@ -22,3 +22,14 @@ class VotingRules:
                 scores[candidate] += (num_of_candidates - 1) - rank_index
         
         return ranked_candidates[0]
+    
+    def majority(candidates: Set[object], ranking_functions: Set[Callable]):
+
+        scores = {candidate: 0 for candidate in candidates}
+
+        for ranking_function in ranking_functions:
+            ranked_candidates = ranking_function(candidates)
+            first_choice = ranked_candidates[0]
+            scores[first_choice] += 1
+        
+        return max(scores, key=scores.get)
