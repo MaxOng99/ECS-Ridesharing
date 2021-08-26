@@ -4,6 +4,7 @@ from models.solution import Solution, TourNodeValue
 from models.passenger import Passenger
 from typing import List
 import random
+from models.agent import GreedyInsertAgent
 
 class GreedyInsert:
 
@@ -26,25 +27,24 @@ class GreedyInsert:
     optimise()
         Constructs n solutions based on the greedy insert procedure
     """
-    def __init__(self, passengers: List[Passenger], time_matrix, params) -> None:
-        self.passengers = passengers
+    def __init__(self, agents: List[GreedyInsertAgent], time_matrix, params) -> None:
+        self.agents = agents
         self.params = params
         self.time_matrix = time_matrix
 
     def optimise(self) -> Solution:
 
         solutions = []
-        for _ in range(self.params["iterations"]):
-            random.shuffle(self.passengers)
-            start_rider = random.choice(self.passengers)
+        for _ in range(1):
+            random.shuffle(self.agents)
+            start_agent = random.choice(self.agents)
             
             # Create new Solution
-            solution = self.__initialise_new_solution(start_rider)
+            solution = self.__initialise_new_solution(start_agent)
             # Assign n other riders
-            other_riders = set(self.passengers) - set([start_rider])
-
-            for rider in other_riders:
-                self.__best_allocation(rider, solution)
+            other_agents = set(self.agents) - set([start_agent])
+            for agent in other_agents:
+                self.__best_allocation(agent, solution)
 
             solution.create_rider_schedule()
             solutions.append(solution)
@@ -52,10 +52,11 @@ class GreedyInsert:
         # Vote on these solutions
         return solutions[0]
     
-    def __initialise_new_solution(self, start_rider):
-        solution = Solution(self.passengers, self.time_matrix)
+    def __initialise_new_solution(self, start_agent):
+        solution = Solution(self.agents, self.time_matrix)
 
         # Create TourNodeValue for departure
+        start_rider = start_agent.rider
         depart_node_value = TourNodeValue(start_rider.start_id, 0, start_rider.optimal_departure)
         depart_node_value.add_rider(start_rider, 'waiting')
         
@@ -66,12 +67,15 @@ class GreedyInsert:
         arrive_node_value = TourNodeValue(start_rider.destination_id, arrival_time, waiting_time)
         arrive_node_value.add_rider(start_rider, 'onboard')
 
-        solution.llist.append(dllistnode(depart_node_value))
-        solution.llist.append(dllistnode(arrive_node_value))
+        depart_node = solution.llist.append(dllistnode(depart_node_value))
+        arrival_node = solution.llist.append(dllistnode(arrive_node_value))
+
+        start_agent.departure_node = depart_node
+        start_agent.arrival_node = arrival_node
 
         return solution
 
-    def __best_allocation(self, rider: Passenger, solution: Solution):
+    def __best_allocation(self, agent: GreedyInsertAgent, solution: Solution):
 
         strategy_util_pairs = dict()
 
@@ -81,14 +85,14 @@ class GreedyInsert:
 
             # Departure strategy can be allocating this rider to current node,
             # or creating a new node, and insert it before the current node
-            departure_strategy = self.__create_departure_strategy(rider, node, solution, insert_position='before')
+            departure_strategy = self.__create_departure_strategy(agent, node, solution, insert_position='before')
             if departure_strategy:
                 departure_strategies.append(departure_strategy)
             
             # Special case at tail of linked list: Attempt to create an 
             # additional departure strategy by inserting after the current node
             if node.next == None:
-                departure_strategy = self.__create_departure_strategy(rider, node, solution, insert_position='after')
+                departure_strategy = self.__create_departure_strategy(agent, node, solution, insert_position='after')
                 if departure_strategy:
                     departure_strategies.append(departure_strategy)
         
@@ -104,7 +108,7 @@ class GreedyInsert:
 
                 # Arrival Strategy can be allocating this rider to current node
                 # or create a new node, and insert it after current node.
-                arrival_strategy = self.__create_arrival_strategy(rider, node, depart_node, solution, insert_position='after')
+                arrival_strategy = self.__create_arrival_strategy(agent, node, depart_node, solution, insert_position='after')
                 if arrival_strategy:
 
                     # Apply arrival strategy to llist
@@ -114,7 +118,7 @@ class GreedyInsert:
                     departure_time = departure_strategy.allocated_node.value.departure_time
                     arrival_time = arrival_strategy.allocated_node.value.arrival_time
                     strategy_util_pairs[(departure_strategy, arrival_strategy)] = \
-                        rider.get_utility_by_time(departure_time, arrival_time)
+                        agent.rider.utility(departure_time, arrival_time)
 
                     # Revert to previous llist state (before applying arrival strategy)
                     arrival_strategy.revert_strategy(solution)
@@ -123,47 +127,50 @@ class GreedyInsert:
             departure_strategy.revert_strategy(solution)
 
         best_depart_strat, best_arrive_strat = max(strategy_util_pairs, key=strategy_util_pairs.get)
-        best_depart_strat.apply_strategy(solution)
+        best_depart_strat.apply_strategy(solution, commit=True)
         arrival_strat = ArrivalStrategy(best_arrive_strat.strat, best_depart_strat.allocated_node)
-        arrival_strat.apply_strategy(solution)
+        arrival_strat.apply_strategy(solution, commit=True)
 
-    def __create_departure_strategy(self, rider, ref_node, solution: Solution, insert_position='before'):
+    def __create_departure_strategy(self, agent, ref_node, solution: Solution, insert_position='before'):
+        rider = agent.rider
         try:
             solution.check_valid_insert(ref_node=ref_node, location_id=rider.start_id, position=insert_position)
-            strategy_details = strategy_details = self.__insert_at_node(rider, ref_node, 'waiting', position=insert_position)
+            strategy_details = strategy_details = self.__insert_at_node(agent, ref_node, 'waiting', position=insert_position)
             return DepartStrategy(strategy_details)
         except:
             if ref_node.value.location_id == rider.start_id:
-                strategy_details = self.__stay_at_node(rider, ref_node, 'waiting')
+                strategy_details = self.__stay_at_node(agent, ref_node, 'waiting')
                 return DepartStrategy(strategy_details)
             else:
                 return None
 
-    def __create_arrival_strategy(self, rider, ref_node, depart_node, solution, insert_position='after'):
+    def __create_arrival_strategy(self, agent, ref_node, depart_node, solution, insert_position='after'):
+        rider = agent.rider
         try:
             solution.check_valid_insert(ref_node, rider.destination_id, position=insert_position)
-            strategy_details = self.__insert_at_node(rider, ref_node, 'onboard', position=insert_position)
+            strategy_details = self.__insert_at_node(agent, ref_node, 'onboard', position=insert_position)
             return ArrivalStrategy(strategy_details, depart_node)
         except:
             if ref_node.value.location_id == rider.destination_id:
-                strategy_details = self.__stay_at_node(rider, ref_node, 'onboard')
+                strategy_details = self.__stay_at_node(agent, ref_node, 'onboard')
                 return ArrivalStrategy(strategy_details, depart_node)
             else:
                 return None
 
-    def __stay_at_node(self, rider, ref_node, current_status):
+    def __stay_at_node(self, agent, ref_node, current_status):
         strategy_details = {
             'action': 'stay',
-            'rider': rider,
+            'agent': agent,
             'current_status': current_status,
             'ref_node': ref_node
         }
         return strategy_details
 
-    def __insert_at_node(self, rider, ref_node, current_status, position='before'):
-        new_node_value = self.__create_new_value_by_insertion(rider, ref_node, position, current_status)
+    def __insert_at_node(self, agent, ref_node, current_status, position='before'):
+        new_node_value = self.__create_new_value_by_insertion(agent.rider, ref_node, position, current_status)
         strategy_details = {
             'action': f'insert_{position}',
+            'agent': agent,
             'ref_node': ref_node,
             'current_status': current_status,
             'new_node_value': new_node_value
@@ -241,7 +248,7 @@ class Strategy:
         self.strat = strategy_dictionary
         self.allocated_node: dllistnode = None
 
-    def apply_strategy(self, solution: Solution):
+    def apply_strategy(self, solution: Solution, commit=False):
         """Carry out this strategy (wait/insert), affecting the state of llist. If there are more strategies
         to check, ensure that revert_strategy is called afterwards to revert the changes, so that other
         strategies can be correctly applied with an untouched state of the linked list.
@@ -250,7 +257,7 @@ class Strategy:
         strat = self.strat
         # Either wait at the current node, or insert a new one
         if strat['action'] == 'stay':
-            strat['ref_node'].value.add_rider(strat['rider'], strat['current_status'])
+            strat['ref_node'].value.add_rider(strat['agent'].rider, strat['current_status'])
             self.allocated_node = strat['ref_node']
 
         elif strat['action'] == 'insert_before':
@@ -258,6 +265,12 @@ class Strategy:
 
         elif strat['action'] == 'insert_after':
             self.allocated_node = solution.insert_after(ref_node=strat['ref_node'], new_node_value=strat['new_node_value'])
+
+        if commit:
+            if strat['current_status'] == 'waiting':
+                strat['agent'].departure_node = self.allocated_node
+            else:
+                strat['agent'].arrival_node = self.allocated_node
 
     def revert_strategy(self, solution: Solution):
         """This function should only be called after apply_strategy() is called. This reverts
@@ -267,7 +280,7 @@ class Strategy:
         strat = self.strat
 
         if strat['action'] == 'stay':
-            strat['ref_node'].value.remove_rider(strat['rider'], strat['current_status'])
+            strat['ref_node'].value.remove_rider(strat['agent'].rider, strat['current_status'])
 
         elif strat['action'] == 'insert_before' or \
             strat['action'] == 'insert_after':

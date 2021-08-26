@@ -1,11 +1,11 @@
 import igraph as ig
 from typing import Callable, Dict, Set
+from models.agent import GreedyInsertAgent, IterativeVotingAgent
 from models.passenger import Passenger
 from models.solution import Solution
 from algorithms import tsp_heuristics as heuristic_algo
-from algorithms import iterative_voting
-from algorithms import greedy_insert
-from utils.graph_utils import travel_time
+from algorithms.iterative_voting import IterativeVoting
+from algorithms.greedy_insert import GreedyInsert
 class Optimiser:
     """Wrapper class for the various optimiser algorithms
 
@@ -66,7 +66,9 @@ class Optimiser:
             return heuristic_algo.nearest_neighbour
 
         elif algorithm == "iterative_voting":
-            return iterative_voting.IterativeVoting(self.passengers, self.time_matrix, params=params)
+            agents = [IterativeVotingAgent(rider, self.time_matrix) for rider in self.passengers]
+            return IterativeVoting(agents, self.time_matrix, params=params)
             
         elif algorithm == 'greedy_insert':
-            return greedy_insert.GreedyInsert(self.passengers, self.time_matrix, params=params)
+            agents = [GreedyInsertAgent(rider, self.time_matrix) for rider in self.passengers]
+            return GreedyInsert(agents, self.time_matrix, params=params)
