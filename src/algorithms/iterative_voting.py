@@ -3,6 +3,7 @@ from models.agent import IterativeVotingAgent
 from models.solution import Solution, TourNodeValue
 from algorithms.voting_rules import VotingRules
 from copy import deepcopy
+from pyllist import dllistnode
 
 class IterativeVoting:
     """Voting algorithm to find sub-optimal Solution
@@ -62,7 +63,7 @@ class IterativeVoting:
         new_agents = deepcopy(self.agents)
         new_solution = Solution(new_agents, self.time_matrix)
         first_tour_node_value = TourNodeValue(start_location, 0, 0)
-        new_solution.append(first_tour_node_value)
+        new_solution.append(dllistnode(first_tour_node_value))
 
         # Initialise internal state
         waiting: Set[IterativeVotingAgent] = set()
@@ -88,7 +89,7 @@ class IterativeVoting:
             if voted_location != current_node.value.location_id:
                 arrival_time = current_node.value.departure_time + self.time_matrix[(current_node.value.location_id, voted_location)]
                 new_node_value = TourNodeValue(voted_location, arrival_time, 0)
-                new_node = new_solution.append(new_node_value)
+                new_node = new_solution.append(dllistnode(new_node_value))
                 current_node = new_node
 
             # Increase the waiting time at the current location if riders
