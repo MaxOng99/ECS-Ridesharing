@@ -1,7 +1,6 @@
 from utils.info_utils import strategy_info
 from pyllist.dllist import dllistnode
 from models.solution import Solution, TourNodeValue
-from models.passenger import Passenger
 from typing import List
 import random
 from models.agent import GreedyInsertAgent
@@ -77,94 +76,57 @@ class GreedyInsert:
 
     def __best_allocation(self, agent: GreedyInsertAgent, solution: Solution):
 
-        strategy_util_pairs = dict()
-
-        # Create Departure strategies
         departure_strategies = []
-        for node in solution.llist.iternodes():
-
-            # Departure strategy can be allocating this rider to current node,
-            # or creating a new node, and insert it before the current node
-            departure_strategy = self.__create_departure_strategy(agent, node, solution, insert_position='before')
+        for node in solution.iterator():
+            departure_strategy = self.__create_strategy(agent, node, 'waiting', insert_position='before')
             if departure_strategy:
                 departure_strategies.append(departure_strategy)
-            
+                
             # Special case at tail of linked list: Attempt to create an 
             # additional departure strategy by inserting after the current node
             if node.next == None:
-                departure_strategy = self.__create_departure_strategy(agent, node, solution, insert_position='after')
+                departure_strategy = self.__create_strategy(agent, node, 'waiting', insert_position='after')
                 if departure_strategy:
                     departure_strategies.append(departure_strategy)
         
-        # Create Arrival strategies for each departure strategy
-        for departure_strategy in departure_strategies:
+        best_departure_strategy = \
+            max(departure_strategies, key=lambda strat: agent.rider.utility(strat.strat['allocated_node'].value.departure_time, 0))
+        departure_node = best_departure_strategy.apply(solution)
+        agent.departure_node = departure_node
 
-            # Apply departure strategy to linked list
-            departure_strategy.apply_strategy(solution)
-            depart_node = departure_strategy.allocated_node
+        arrival_strategies = []
+        for node in solution.iterator(start_node=departure_node):
+            arrival_strategy = self.__create_strategy(agent, node, 'onboard', insert_position='after')
+            if arrival_strategy:
+                arrival_strategies.append(arrival_strategy)
+        
+        best_arrival_strategy = \
+            max(arrival_strategies, key=lambda strat: agent.rider.utility(departure_node.value.departure_time, strat.strat['allocated_node'].value.arrival_time))
+        arrival_node = best_arrival_strategy.apply(solution)
+        agent.arrival_node = arrival_node
 
-            # Only consider nodes after depart_node
-            for node in depart_node.iternext():
-
-                # Arrival Strategy can be allocating this rider to current node
-                # or create a new node, and insert it after current node.
-                arrival_strategy = self.__create_arrival_strategy(agent, node, depart_node, solution, insert_position='after')
-                if arrival_strategy:
-
-                    # Apply arrival strategy to llist
-                    arrival_strategy.apply_strategy(solution)
-
-                    # Record utility for this strategy pair
-                    departure_time = departure_strategy.allocated_node.value.departure_time
-                    arrival_time = arrival_strategy.allocated_node.value.arrival_time
-                    strategy_util_pairs[(departure_strategy, arrival_strategy)] = \
-                        agent.rider.utility(departure_time, arrival_time)
-
-                    # Revert to previous llist state (before applying arrival strategy)
-                    arrival_strategy.revert_strategy(solution)
-            
-            # Revert to previous llist state (before applying departure strategy)
-            departure_strategy.revert_strategy(solution)
-
-        best_depart_strat, best_arrive_strat = max(strategy_util_pairs, key=strategy_util_pairs.get)
-        best_depart_strat.apply_strategy(solution, commit=True)
-        arrival_strat = ArrivalStrategy(best_arrive_strat.strat, best_depart_strat.allocated_node)
-        arrival_strat.apply_strategy(solution, commit=True)
-
-    def __create_departure_strategy(self, agent, ref_node, solution: Solution, insert_position='before'):
+    def __create_strategy(self, agent, ref_node, status, insert_position=None):
         rider = agent.rider
-        try:
-            solution.check_valid_insert(ref_node=ref_node, location_id=rider.start_id, position=insert_position)
-            strategy_details = strategy_details = self.__insert_at_node(agent, ref_node, 'waiting', position=insert_position)
-            return DepartStrategy(strategy_details)
-        except:
-            if ref_node.value.location_id == rider.start_id:
-                strategy_details = self.__stay_at_node(agent, ref_node, 'waiting')
-                return DepartStrategy(strategy_details)
-            else:
-                return None
+        location_id = rider.start_id if status == 'waiting' else rider.destination_id
 
-    def __create_arrival_strategy(self, agent, ref_node, depart_node, solution, insert_position='after'):
-        rider = agent.rider
-        try:
-            solution.check_valid_insert(ref_node, rider.destination_id, position=insert_position)
-            strategy_details = self.__insert_at_node(agent, ref_node, 'onboard', position=insert_position)
-            return ArrivalStrategy(strategy_details, depart_node)
-        except:
-            if ref_node.value.location_id == rider.destination_id:
-                strategy_details = self.__stay_at_node(agent, ref_node, 'onboard')
-                return ArrivalStrategy(strategy_details, depart_node)
-            else:
-                return None
+        if self.__check_valid_insert(ref_node, location_id, position=insert_position):
+            strategy = self.__insert_at_node(agent, ref_node, status, position=insert_position)
+
+        elif ref_node.value.location_id == location_id:
+            strategy = self.__stay_at_node(agent, ref_node, status)
+            return strategy
+        else:
+            strategy = None        
+        return strategy
 
     def __stay_at_node(self, agent, ref_node, current_status):
         strategy_details = {
             'action': 'stay',
             'agent': agent,
             'current_status': current_status,
-            'ref_node': ref_node
+            'allocated_node': ref_node
         }
-        return strategy_details
+        return Strategy(strategy_details)
 
     def __insert_at_node(self, agent, ref_node, current_status, position='before'):
         new_node_value = self.__create_new_value_by_insertion(agent.rider, ref_node, position, current_status)
@@ -173,10 +135,52 @@ class GreedyInsert:
             'agent': agent,
             'ref_node': ref_node,
             'current_status': current_status,
-            'new_node_value': new_node_value
+            'allocated_node': dllistnode(new_node_value)
         }
-        return strategy_details
+        return Strategy(strategy_details)
 
+    def __check_valid_insert(self, ref_node, location_id, position='before'):
+        
+        # Verify adjacent nodes, before attempting to insert between them
+        if position == 'before':
+            left_node = ref_node.prev
+            right_node = ref_node
+        else:
+            left_node = ref_node
+            right_node = ref_node.next
+        
+        # If either nodes have the same location_id, reject insert
+        if left_node and left_node.value.location_id == location_id or \
+            right_node and right_node.value.location_id == location_id:
+            return False
+        
+        # Left node is empty: right_node is the head of linked list.
+        # Accept the insertion if inserting before the head node does not cause
+        # the new arrival time of the head node to exceed its departure time
+        elif not left_node:
+            right_node_new_arrival_time = self.time_matrix[(location_id, right_node.value.location_id)]
+            if right_node_new_arrival_time > right_node.value.departure_time:
+                return False
+
+        # Right node is empty (left_node is the tail of linked list) There is no right_node
+        # to check wehther it's new arrival time exceeds its departure time due to the insert.
+        # Therefore, always accept the insertion in this case
+        elif not right_node:
+            return True
+
+        # Accept insertion if inserting between these two nodes do not cause the new 
+        # arrival time of the right_node to exceed its departure time
+        else:
+            left_to_new_travel_time = self.time_matrix[(left_node.value.location_id, location_id)]
+            new_to_right_travel_time = self.time_matrix[(location_id, right_node.value.location_id)]
+
+            new_node_arrival_time = left_node.value.departure_time + left_to_new_travel_time
+            right_node_new_arrival_time = new_node_arrival_time + new_to_right_travel_time
+            if right_node_new_arrival_time > right_node.value.departure_time:
+                return False
+        
+        return True
+        
     def __create_new_value_by_insertion(self, rider, ref_node, insert_position, status):
         new_node_location_id = rider.start_id if status == 'waiting' else rider.destination_id
         preferred_time = rider.optimal_departure if status == 'waiting' else rider.optimal_arrival
@@ -226,9 +230,8 @@ class GreedyInsert:
 # HELPER CLASS
 class Strategy:
     """Helper class that records the previous state of the linked list before applying
-    this strategy (wait/insert), as well as the updated state after applying this strategy.
-    This form of state management is requried to ensure that the linked list is at the correct,
-    original state before testing each combination of departure and arrival strategies.
+    this strategy (wait/insert). This form of state management is helpful to find the best
+    strategy, before applying it.
 
     Attributes
     ----------
@@ -246,59 +249,24 @@ class Strategy:
     """
     def __init__(self, strategy_dictionary) -> None:
         self.strat = strategy_dictionary
-        self.allocated_node: dllistnode = None
 
-    def apply_strategy(self, solution: Solution, commit=False):
-        """Carry out this strategy (wait/insert), affecting the state of llist. If there are more strategies
-        to check, ensure that revert_strategy is called afterwards to revert the changes, so that other
-        strategies can be correctly applied with an untouched state of the linked list.
-
+    def apply(self, solution: Solution):
+        """Carry out this strategy (wait/insert), affecting the state of llist.
         """
         strat = self.strat
         # Either wait at the current node, or insert a new one
         if strat['action'] == 'stay':
-            strat['ref_node'].value.add_rider(strat['agent'].rider, strat['current_status'])
-            self.allocated_node = strat['ref_node']
+            strat['allocated_node'].value.add_rider(strat['agent'].rider, strat['current_status'])
+            return strat['allocated_node']
 
         elif strat['action'] == 'insert_before':
-            self.allocated_node = solution.insert_before(ref_node=strat['ref_node'], new_node_value=strat['new_node_value'])
-
+            new_node = solution.insert_before(strat['ref_node'], strat['allocated_node'])
+            return new_node
         elif strat['action'] == 'insert_after':
-            self.allocated_node = solution.insert_after(ref_node=strat['ref_node'], new_node_value=strat['new_node_value'])
-
-        if commit:
-            if strat['current_status'] == 'waiting':
-                strat['agent'].departure_node = self.allocated_node
-            else:
-                strat['agent'].arrival_node = self.allocated_node
-
-    def revert_strategy(self, solution: Solution):
-        """This function should only be called after apply_strategy() is called. This reverts
-        the linked list back to its original state before this strategy is applied in order
-        to ensure that the changes made by this strategy does not affect other strategies being tested.
-        """
-        strat = self.strat
-
-        if strat['action'] == 'stay':
-            strat['ref_node'].value.remove_rider(strat['agent'].rider, strat['current_status'])
-
-        elif strat['action'] == 'insert_before' or \
-            strat['action'] == 'insert_after':
-
-            solution.remove_node(self.allocated_node)
+            return solution.insert_after(strat['ref_node'], strat['allocated_node'])
 
     def __repr__(self) -> str:
         return self.__str__()
 
     def __str__(self) -> str:
         strategy_info(self)
-
-class DepartStrategy(Strategy):
-    pass
-
-class ArrivalStrategy(Strategy):
-    def __init__(self, strategy_dictionary, depart_node) -> None:
-        super().__init__(strategy_dictionary)
-        if self.strat and depart_node and \
-            self.strat['ref_node'].value == depart_node.value:
-            self.strat['ref_node'] = depart_node
