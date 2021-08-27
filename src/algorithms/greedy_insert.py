@@ -1,3 +1,4 @@
+from algorithms.voting_rules import VotingRules
 from utils.info_utils import strategy_info
 from pyllist.dllist import dllistnode
 from models.solution import Solution, TourNodeValue
@@ -30,11 +31,12 @@ class GreedyInsert:
         self.agents = agents
         self.params = params
         self.time_matrix = time_matrix
+        self.voting_rule = self.__get_voting_rule(params['voting_rule'])
 
     def optimise(self) -> Solution:
 
         solutions = []
-        for _ in range(1):
+        for _ in range(self.params['iterations']):
             random.shuffle(self.agents)
             start_agent = random.choice(self.agents)
             
@@ -48,9 +50,17 @@ class GreedyInsert:
             solution.create_rider_schedule()
             solutions.append(solution)
 
-        # Vote on these solutions
-        return solutions[0]
+        solution_ranking_functions = [agent.rank_solutions for agent in self.agents]
+        borda_solution = self.voting_rule(solutions, solution_ranking_functions)
+        return borda_solution
     
+    def __get_voting_rule(self, voting_rule: str):
+        if voting_rule == 'majority':
+            return VotingRules.majority
+        
+        elif voting_rule == 'borda_count':
+            return VotingRules.borda_count
+        
     def __initialise_new_solution(self, start_agent):
         solution = Solution(self.agents, self.time_matrix)
 
