@@ -9,13 +9,13 @@ optimiser = Optimiser(env.graph, env.passengers)
 
 options = dict()
 
-# # Greedy Insert
-# options["algorithm"] = 'greedy_insert'
-# options["parameters"] = {'iterations': 5}
+# Greedy Insert
+options["algorithm"] = 'greedy_insert'
+options["parameters"] = {'iterations': 100, 'voting_rule': 'borda_count'}
 
-# Iterative Voting
-options["algorithm"] = "iterative_voting"
-options["parameters"] = {"voting_rule": "borda_count"}
+# # Iterative Voting
+# options["algorithm"] = "iterative_voting"
+# options["parameters"] = {"voting_rule": "borda_count"}
 
 optimal_solution = optimiser.optimise(options)
 print(optimal_solution)
