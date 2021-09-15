@@ -1,6 +1,7 @@
 from typing import Dict, Set
 from pyllist import dllist, dllistnode
-from utils.info_utils import solution_info
+from src.utils.info_utils import solution_info
+from src.models.graph import Graph
 
 class TourNodeValue:
 
@@ -40,11 +41,14 @@ class TourNodeValue:
 
 class Solution:
 
-    def __init__(self, agents: Set["Agent"], time_matrix):
+    def __init__(self, agents: Set["Agent"], graph: Graph):
         self.llist = dllist()
         self.rider_schedule = {"departure": dict(), "arrival": dict()} # nullify
         self.agents = sorted(list(agents), key=lambda x: x.rider.id)
-        self.time_matrix = time_matrix
+        self.graph = graph
+        self.rider_utilities = dict()
+        self.objective_type = None
+        self.objective_value = None
 
     def head(self):
         return self.llist.first
@@ -83,6 +87,19 @@ class Solution:
         new_node = self.llist.append(new_node)
         return new_node
     
+    def get_rider_utilities(self) -> Dict:
+        if not self.rider_utilities:
+            if not self.rider_schedule:
+                self.create_rider_schedule()
+            
+            for agent in self.agents:
+                rider = agent.rider
+                departure_time = self.rider_schedule.get("departure").get(rider.id)
+                arrival_time = self.rider_schedule.get("arrival").get(rider.id)
+                self.rider_utilities[rider] = rider.utility(departure_time, arrival_time)
+
+        return self.rider_utilities
+
     def create_rider_schedule(self) -> Dict[str, Dict[int, int]]:
         for node in self.llist.iternodes():
             departure_time = node.value.departure_time
@@ -120,7 +137,7 @@ class Solution:
             elif left_node:
                 left_node_location = left_node.value.location_id
                 left_node_depart_time = left_node.value.departure_time
-                travel_time = self.time_matrix[(left_node_location, new_location)]
+                travel_time = self.graph.travel_time(left_node_location, new_location)
                 if left_node_depart_time + travel_time != arrival_time:
                     return False
         return True
@@ -129,7 +146,7 @@ class Solution:
         if affected_node:
             for node in affected_node.iternext():
                 prev = node.prev
-                travel_time = self.time_matrix[(prev.value.location_id, node.value.location_id)]
+                travel_time = self.graph.travel_time(prev.value.location_id, node.value.location_id)
                 arrival_time = prev.value.departure_time + travel_time
 
                 if arrival_time > affected_node.value.departure_time:

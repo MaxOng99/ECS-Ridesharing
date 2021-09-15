@@ -1,10 +1,11 @@
-from algorithms.voting_rules import VotingRules
-from utils.info_utils import strategy_info
+from src.algorithms.voting_rules import VotingRules
+from src.utils.info_utils import strategy_info
 from pyllist.dllist import dllistnode
-from models.solution import Solution, TourNodeValue
+from src.models.solution import Solution, TourNodeValue
 from typing import List
 import random
-from models.agent import GreedyInsertAgent
+from src.models.graph import Graph
+from src.models.agent import GreedyInsertAgent
 
 class GreedyInsert:
 
@@ -27,11 +28,11 @@ class GreedyInsert:
     optimise()
         Constructs n solutions based on the greedy insert procedure
     """
-    def __init__(self, agents: List[GreedyInsertAgent], time_matrix, params) -> None:
+    def __init__(self, agents: List[GreedyInsertAgent], graph: Graph, params) -> None:
         self.agents = agents
         self.params = params
-        self.time_matrix = time_matrix
-        self.voting_rule = self.__get_voting_rule(params['voting_rule'])
+        self.graph = graph
+        self.voting_rule = self.__get_voting_rule(params['final_voting_rule'])
 
     def optimise(self) -> Solution:
 
@@ -62,7 +63,7 @@ class GreedyInsert:
             return VotingRules.borda_count
         
     def __initialise_new_solution(self, start_agent):
-        solution = Solution(self.agents, self.time_matrix)
+        solution = Solution(self.agents, self.graph)
 
         # Create TourNodeValue for departure
         start_rider = start_agent.rider
@@ -70,7 +71,7 @@ class GreedyInsert:
         depart_node_value.add_rider(start_rider, 'waiting')
         
         # Create TourNodeValue for arrival
-        depart_to_arrival_travel_time = self.time_matrix[(start_rider.start_id, start_rider.destination_id)]
+        depart_to_arrival_travel_time = self.graph.travel_time(start_rider.start_id, start_rider.destination_id)
         arrival_time = start_rider.optimal_departure + depart_to_arrival_travel_time
         waiting_time = start_rider.optimal_arrival - arrival_time
         arrive_node_value = TourNodeValue(start_rider.destination_id, arrival_time, waiting_time)
@@ -168,7 +169,7 @@ class GreedyInsert:
         # Accept the insertion if inserting before the head node does not cause
         # the new arrival time of the head node to exceed its departure time
         elif not left_node:
-            right_node_new_arrival_time = self.time_matrix[(location_id, right_node.value.location_id)]
+            right_node_new_arrival_time = self.graph.travel_time(location_id, right_node.value.location_id)
             if right_node_new_arrival_time > right_node.value.departure_time:
                 return False
 
@@ -181,8 +182,8 @@ class GreedyInsert:
         # Accept insertion if inserting between these two nodes do not cause the new 
         # arrival time of the right_node to exceed its departure time
         else:
-            left_to_new_travel_time = self.time_matrix[(left_node.value.location_id, location_id)]
-            new_to_right_travel_time = self.time_matrix[(location_id, right_node.value.location_id)]
+            left_to_new_travel_time = self.graph.travel_time(left_node.value.location_id, location_id)
+            new_to_right_travel_time = self.graph.travel_time(location_id, right_node.value.location_id)
 
             new_node_arrival_time = left_node.value.departure_time + left_to_new_travel_time
             right_node_new_arrival_time = new_node_arrival_time + new_to_right_travel_time
@@ -205,7 +206,7 @@ class GreedyInsert:
         
         # Inserting before the start node. Here, right_node is the start node
         if not left_node:
-            right_node_new_arrival_time = self.time_matrix[(new_node_location_id, right_node.value.location_id)]
+            right_node_new_arrival_time = self.graph.travel_time(new_node_location_id, right_node.value.location_id)
 
             # Waiting time for new TourNodeValue is dependent on the remainding waiting time
             # for right_node after performing the insert before right_node.
@@ -219,12 +220,12 @@ class GreedyInsert:
         elif not right_node:
 
             # Waiting time is 
-            new_node_arrival_time = left_node.value.departure_time + self.time_matrix[(left_node.value.location_id, new_node_location_id)]
+            new_node_arrival_time = left_node.value.departure_time + self.graph.travel_time(left_node.value.location_id, new_node_location_id)
             new_node_wait_time = max(preferred_time - new_node_arrival_time, 0)
         
         else:
-            prev_to_new_travel_time = self.time_matrix[(left_node.value.location_id, new_node_location_id)]
-            new_to_next_travel_time = self.time_matrix[(new_node_location_id, right_node.value.location_id)]
+            prev_to_new_travel_time = self.graph.travel_time(left_node.value.location_id, new_node_location_id)
+            new_to_next_travel_time = self.graph.travel_time(new_node_location_id, right_node.value.location_id)
 
             new_node_arrival_time = left_node.value.departure_time + prev_to_new_travel_time
             next_node_arrival_time = new_node_arrival_time + new_to_next_travel_time

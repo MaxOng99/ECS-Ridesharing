@@ -1,18 +1,5 @@
 import igraph as ig
 
-def get_node(location_id: int, graph: ig.Graph) -> ig.Vertex:
-    return graph.vs.find(location_id_eq=location_id)
-
-def get_edge(source_location_id: int, target_location_id: int, graph: ig.Graph) -> ig.EdgeSeq:
-    source_index = graph.vs.find(location_id_eq=source_location_id)
-    target_index = graph.vs.find(location_id_eq=target_location_id)
-    edge_id = graph.get_eid(source_index, target_index)
-    return graph.es[edge_id]
-
-def travel_time(source_location_id: int, target_location_id: int, graph: ig.Graph) -> int:
-    edge = get_edge(source_location_id, target_location_id, graph)
-    return edge["travel_time"]
-
 def plot_graph(igraph: ig.Graph) -> None:
     visual_style = {
         "bbox": (600, 600),
@@ -22,7 +9,28 @@ def plot_graph(igraph: ig.Graph) -> None:
         "vertex_size": 40
     }
     layout = [(x, -y) for x, y in igraph.vs["coordinate"]]
-    igraph.vs['label'] = igraph.vs['coordinate']
+    for v in igraph.vs:
+        if v['is_centroid']:
+            v['color'] = 'blue'
+    
+    for e in igraph.es:
+        source = igraph.vs[e.source]
+        target = igraph.vs[e.target]
+
+        if not source['is_centroid'] or \
+            not target['is_centroid']:
+            e['width'] = 0
+
+    centroids = igraph.vs.select(is_centroid_eq=True)
+    for centroid in centroids:
+        cluster = centroid['cluster']
+        for location in cluster:
+            edge_id = igraph.get_eid(centroid.index, location.index)
+            edge = igraph.es[edge_id]
+            edge['width'] = 1
+
+    
+    igraph.vs['label'] = [(int(x), int(y)) for x, y in igraph.vs['coordinate']]
     ig.plot(igraph, layout=layout, **visual_style)
 
 

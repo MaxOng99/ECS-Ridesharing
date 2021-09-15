@@ -1,0 +1,42 @@
+seeds:
+  graph: 42
+  passengers: 67
+
+experiments:
+  - passenger_params:
+      num_passengers: 80
+      service_hours: 24
+
+    graph_params:
+      num_locations: 24
+      clusters: 5
+      grid_size: 120000
+      avg_vehicle_speed: 14.96
+
+    optimiser_params:
+      algorithm: 'greedy_insert'
+      algorithm_params:
+        iterations: 5
+        final_voting_rule: "borda_count"
+
+    experiment_params:
+      runs: 1
+
+  # - passenger_params:
+  #     num_passengers: 80
+  #     service_hours: 24
+
+  #   graph_params:
+  #     num_locations: 75
+  #     clusters: 5
+  #     grid_size: 12000
+  #     avg_vehicle_speed: 19.68
+
+  #   optimiser_params:
+  #     algorithm: 'greedy_insert'
+  #     algorithm_params:
+  #       iterations: 5
+  #       final_voting_rule: "borda_count"
+
+  #   experiment_params:
+  #     runs: 10

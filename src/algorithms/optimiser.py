@@ -1,11 +1,13 @@
 import igraph as ig
 from typing import Callable, Dict, Set
-from models.agent import GreedyInsertAgent, IterativeVotingAgent
-from models.passenger import Passenger
-from models.solution import Solution
-from algorithms import tsp_heuristics as heuristic_algo
-from algorithms.iterative_voting import IterativeVoting
-from algorithms.greedy_insert import GreedyInsert
+from src.models.agent import GreedyInsertAgent, IterativeVotingAgent
+from src.models.passenger import Passenger
+from src.models.solution import Solution
+from src.algorithms import tsp_heuristics as heuristic_algo
+from src.algorithms.iterative_voting import IterativeVoting
+from src.algorithms.greedy_insert import GreedyInsert
+from src.models.graph import Graph
+
 class Optimiser:
     """Wrapper class for the various optimiser algorithms
 
@@ -18,57 +20,60 @@ class Optimiser:
 
         Parameters for 'iterative_voting'
         - 'voting_rule': 'borda_count' | 'majority'
-
         Parameters for 'greedy_insert'
 
     """
 
-    def __init__(self, graph: ig.Graph, passengers: Set[Passenger]):
-        self.pruned_graph = self.__prune_graph(graph, passengers)
-        self.time_matrix = self.__create_time_matrix(self.pruned_graph)
+    def __init__(self, graph: Graph, passengers: Set[Passenger]):
+        self.graph = graph
         self.passengers = passengers
-
-        for rider in self.passengers:
-            rider.time_matrix = self.time_matrix
+        self.pruned_graph = self.__prune_graph(graph, passengers)
+        self.objective_function = None
 
     def optimise(self, options) -> Solution:
         algorithm = self.__customise_algorithm(options)
-        return algorithm.optimise()
 
-    def __prune_graph(self, graph: ig.Graph, passengers: Set[Passenger]) -> ig.Graph:
+        solution: Solution = algorithm.optimise()
+        return solution
+        
+    def __prune_graph(self, graph: Graph, passengers: Set[Passenger]) -> Graph:
         passenger_locations = set()
 
         for passenger in passengers:
             passenger_locations.add(passenger.start_id)
             passenger_locations.add(passenger.destination_id)
         
-        return graph.subgraph(passenger_locations)
+        # Prune location_ids
+        new_location_ids = set()
+        for location_id in graph.locations:
+            if location_id in passenger_locations:
+                new_location_ids.add(location_id)
+        
+        # Update time and distance matrix
+        new_time_matrix = dict()
+        new_distance_matrix = dict()
 
-    def __create_time_matrix(self, graph: ig.Graph):
-        travel_time_loc = dict()
-        for edge in graph.es:
-            source = graph.vs[edge.source]['location_id']
-            target = graph.vs[edge.target]['location_id']
-            travel_time_loc[(source, target)] = edge['travel_time']
-            travel_time_loc[(target, source)] = edge['travel_time']
+        for (source, target) in graph.distance_matrix:
+            if source in passenger_locations and \
+                target in passenger_locations:
 
-        for vertex in graph.vs:
-            travel_time_loc[(vertex['location_id'], vertex['location_id'])] = 0
-
-        return travel_time_loc
+                new_time_matrix[(source, target)] = graph.time_matrix[(source, target)]
+                new_distance_matrix[(source, target)] = graph.distance_matrix[(source, target)]
+        
+        return Graph(None, None, new_location_ids, None, new_time_matrix, new_distance_matrix)
 
     def __customise_algorithm(self, options: Dict[str, object]) -> Callable:
 
         algorithm = options.get("algorithm")
-        params = options.get("parameters", None)
+        params = options.get("algorithm_params", None)
 
         if algorithm == "nearest_neighbour":
             return heuristic_algo.nearest_neighbour
 
         elif algorithm == "iterative_voting":
-            agents = [IterativeVotingAgent(rider, self.time_matrix) for rider in self.passengers]
-            return IterativeVoting(agents, self.time_matrix, params=params)
+            agents = [IterativeVotingAgent(rider, self.graph) for rider in self.passengers]
+            return IterativeVoting(agents, self.graph, params=params)
             
         elif algorithm == 'greedy_insert':
-            agents = [GreedyInsertAgent(rider, self.time_matrix) for rider in self.passengers]
-            return GreedyInsert(agents, self.time_matrix, params=params)
+            agents = [GreedyInsertAgent(rider, self.graph) for rider in self.passengers]
+            return GreedyInsert(agents, self.graph, params=params)

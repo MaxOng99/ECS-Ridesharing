@@ -1,11 +1,13 @@
-from models.passenger import Passenger
-from models.solution import Solution
+from src.models.passenger import Passenger
+from src.models.solution import Solution
+from src.models.graph import Graph
+
 from typing import List, Set
 
 class Agent:
-    def __init__(self, rider: Passenger, time_matrix) -> None:
+    def __init__(self, rider: Passenger, graph: Graph) -> None:
         self.rider: Passenger = rider
-        self.time_matrix = time_matrix
+        self.graph = graph
         self.status = 'waiting'
         self.departure_node = None
         self.arrival_node = None
@@ -19,8 +21,8 @@ class Agent:
         return self.rider.utility(departure_time, arrival_time)
 
 class IterativeVotingAgent(Agent):
-    def __init__(self, rider: Passenger, time_matrix) -> None:
-        super().__init__(rider, time_matrix)
+    def __init__(self, rider: Passenger, graph: Graph) -> None:
+        super().__init__(rider, graph)
         self.board_threshold = self.__board_threshold()
         self.current_node = None
     
@@ -36,18 +38,18 @@ class IterativeVotingAgent(Agent):
         
         rider_start = self.rider.start_id
         rider_end = self.rider.destination_id
-        travel_time = self.time_matrix[(self.current_node.value.location_id, new_location)]
+        travel_time = self.graph.travel_time(self.current_node.value.location_id, new_location)
         new_location_arrival_time = self.current_node.value.departure_time + travel_time
         
         # Make sure node exist in the linked list solution
         if self.status == 'waiting':
-            potential_departure_time = new_location_arrival_time + self.time_matrix[(new_location, rider_start)]
-            potential_arrival_time = potential_departure_time + self.time_matrix[(rider_start, rider_end)]
+            potential_departure_time = new_location_arrival_time + self.graph.travel_time(new_location, rider_start)
+            potential_arrival_time = potential_departure_time + self.graph.travel_time(rider_start, rider_end)
             return self.rider.utility(potential_departure_time, potential_arrival_time)
         
         elif self.status == 'onboard':
             departure_time = self.departure_node.value.departure_time
-            potential_arrival_time = new_location_arrival_time + self.time_matrix[(rider_start, rider_end)]
+            potential_arrival_time = new_location_arrival_time + self.graph.travel_time(rider_start, rider_end)
             return self.rider.utility(departure_time, potential_arrival_time)
 
     def choose_to_board(self) -> bool:
@@ -66,7 +68,7 @@ class IterativeVotingAgent(Agent):
             # This condition determines whether it is too early to board the bus. 
             # The board_utility_threshold is computed as (1 - beta)
             else:
-                start_to_target_time = self.time_matrix[(current_location, rider_end)]
+                start_to_target_time = self.graph.travel_time(current_location, rider_end)
                 potential_arrival_time = current_depart_time + start_to_target_time
                 potential_utility = self.rider.utility(current_depart_time, potential_arrival_time)
                 
@@ -83,5 +85,5 @@ class IterativeVotingAgent(Agent):
             return False
 
 class GreedyInsertAgent(Agent):
-    def __init__(self, rider: Passenger, time_matrix) -> None:
-        super().__init__(rider, time_matrix)
+    def __init__(self, rider: Passenger, graph: Graph) -> None:
+        super().__init__(rider, graph)

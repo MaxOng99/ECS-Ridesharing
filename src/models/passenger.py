@@ -1,4 +1,5 @@
-import random
+import numpy as np
+from typing import List
 
 class Passenger:
 
@@ -32,7 +33,7 @@ class Passenger:
         self.id = id
         self.start_id = start
         self.destination_id = destination
-        self.beta = random.uniform(0.1, 1)
+        self.beta = np.random.uniform(0.1, 1)
         self.optimal_departure = optimal_departure
         self.optimal_arrival = optimal_arrival
 
@@ -50,3 +51,34 @@ class Passenger:
     
     def __repr__(self) -> str:
         return self.__str__()
+
+class PassengerGenerator:
+    def __init__(self, graph, passenger_params) -> None:
+        self.graph = graph
+        self.passenger_params = passenger_params
+        self.passengers = self.generate_passengers()
+    
+    def generate_passengers(self) -> List[Passenger]:
+        
+        num_passengers = self.passenger_params['num_passengers']
+        cluster_info = self.graph.cluster_info
+        location_ids = self.graph.locations
+        passengers = []
+
+        for id in range(num_passengers):
+            # Sample 2 elements w/o replacement - avoids having same start and end location
+            start_target_ids = np.random.choice(location_ids, size=2, replace=False)
+            start_id, destination_id = start_target_ids[0], start_target_ids[1]
+            optimal_departure, optimal_arrival = self.__generate_preferences(start_id, destination_id)
+            passengers.append(Passenger(id, start_id, destination_id, optimal_departure, optimal_arrival))
+
+        return passengers
+
+    def __generate_preferences(self, source: int, destination: int):
+        service_hours = self.passenger_params['service_hours']
+        service_minutes = service_hours * 60
+        travel_time = self.graph.travel_time(source, destination)
+        optimum_departure = int(np.random.uniform(0, service_minutes - travel_time))
+        optimum_arrival = optimum_departure + travel_time
+
+        return (optimum_departure, optimum_arrival)

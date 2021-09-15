@@ -1,9 +1,10 @@
 from typing import Callable, Set
-from models.agent import IterativeVotingAgent
-from models.solution import Solution, TourNodeValue
-from algorithms.voting_rules import VotingRules
+from src.models.agent import IterativeVotingAgent
+from src.models.solution import Solution, TourNodeValue
+from src.algorithms.voting_rules import VotingRules
 from copy import deepcopy
 from pyllist import dllistnode
+from src.models.graph import Graph
 
 class IterativeVoting:
     """Voting algorithm to find sub-optimal Solution
@@ -24,15 +25,15 @@ class IterativeVoting:
         and then vote on these solutions
     """
 
-    def __init__(self, agents: Set[IterativeVotingAgent], time_matrix, params) -> None:
+    def __init__(self, agents: Set[IterativeVotingAgent], graph: Graph, params) -> None:
         self.agents = agents
-        self.time_matrix = time_matrix
+        self.graph = graph
         self.voting_rule = self.__voting_rule(params.get("voting_rule"))
     
     def optimise(self):
 
         candidate_solutions = set()
-        location_ids = set([source for source, _ in self.time_matrix])
+        location_ids = set([source for source, _ in self.graph.time_matrix])
 
         for location_id in location_ids:
             candidate_solutions.add(self.__initiate_voting(location_id))
@@ -61,7 +62,7 @@ class IterativeVoting:
         
         # Initialise Solution object
         new_agents = deepcopy(self.agents)
-        new_solution = Solution(new_agents, self.time_matrix)
+        new_solution = Solution(new_agents, self.graph)
         first_tour_node_value = TourNodeValue(start_location, 0, 0)
         new_solution.append(dllistnode(first_tour_node_value))
 
@@ -87,7 +88,7 @@ class IterativeVoting:
             # Grow the Solution if the voted location is different
             # than the current location
             if voted_location != current_node.value.location_id:
-                arrival_time = current_node.value.departure_time + self.time_matrix[(current_node.value.location_id, voted_location)]
+                arrival_time = current_node.value.departure_time + self.graph.travel_time(current_node.value.location_id, voted_location)
                 new_node_value = TourNodeValue(voted_location, arrival_time, 0)
                 new_node = new_solution.append(dllistnode(new_node_value))
                 current_node = new_node
