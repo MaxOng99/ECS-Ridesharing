@@ -28,7 +28,9 @@ class IterativeVoting:
     def __init__(self, agents: Set[IterativeVotingAgent], graph: Graph, params) -> None:
         self.agents = agents
         self.graph = graph
-        self.voting_rule = self.__voting_rule(params.get("voting_rule"))
+        self.iterative_voting_rule = self.__voting_rule(params.get("iterative_voting_rule"))
+        self.final_voting_rule = self.__voting_rule(params.get("final_voting_rule"))
+
     
     def optimise(self):
 
@@ -40,7 +42,7 @@ class IterativeVoting:
 
         # List of solution ranking function from each Passenger
         solution_ranking_functions = [agent.rank_solutions for agent in self.agents]
-        return self.voting_rule(candidate_solutions, solution_ranking_functions)
+        return self.final_voting_rule(candidate_solutions, solution_ranking_functions)
 
     def __voting_rule(self, rule: str) -> Callable:
         if rule == "borda_count":
@@ -83,7 +85,7 @@ class IterativeVoting:
 
             # Supply candidate locations AND riders' location ranking function to the voting rule
             location_ranking_functions = [agent.rank_locations for agent in serving]
-            voted_location = self.voting_rule(candidate_locations, location_ranking_functions)
+            voted_location = self.iterative_voting_rule(candidate_locations, location_ranking_functions)
             
             # Grow the Solution if the voted location is different
             # than the current location
