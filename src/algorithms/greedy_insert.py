@@ -3,7 +3,7 @@ from src.utils.info_utils import strategy_info
 from pyllist.dllist import dllistnode
 from src.models.solution import Solution, TourNodeValue
 from typing import List
-import random
+import numpy as np
 from src.models.graph import Graph
 from src.models.agent import GreedyInsertAgent
 
@@ -38,13 +38,13 @@ class GreedyInsert:
 
         solutions = []
         for _ in range(self.params['iterations']):
-            random.shuffle(self.agents)
-            start_agent = random.choice(self.agents)
-            
+            np.random.shuffle(self.agents)
+            start_agent = self.agents[0]
+
             # Create new Solution
             solution = self.__initialise_new_solution(start_agent)
             # Assign n other riders
-            other_agents = set(self.agents) - set([start_agent])
+            other_agents = self.agents[1:]
             for agent in other_agents:
                 self.__best_allocation(agent, solution)
 
@@ -53,7 +53,7 @@ class GreedyInsert:
 
         solution_ranking_functions = [agent.rank_solutions for agent in self.agents]
         borda_solution = self.voting_rule(solutions, solution_ranking_functions)
-        return borda_solution
+        return solutions[0]
     
     def __get_voting_rule(self, voting_rule: str):
         if voting_rule == 'majority':
