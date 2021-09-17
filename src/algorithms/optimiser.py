@@ -34,6 +34,7 @@ class Optimiser:
         algorithm = self.__customise_algorithm(options)
 
         solution: Solution = algorithm.optimise()
+        solution.calculate_objectives()
         return solution
         
     def __prune_graph(self, graph: Graph, passengers: Set[Passenger]) -> Graph:

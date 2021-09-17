@@ -47,8 +47,12 @@ class Solution:
         self.agents = sorted(list(agents), key=lambda x: x.rider.id)
         self.graph = graph
         self.rider_utilities = dict()
-        self.objective_type = None
-        self.objective_value = None
+        self.objectives = dict()
+    
+    def calculate_objectives(self):
+        utils = [util for _, util in self.get_rider_utilities().items()]
+        self.objectives['utilitarian'] = sum(utils)
+        self.objectives['egalitarian'] = min(utils)
 
     def head(self):
         return self.llist.first
