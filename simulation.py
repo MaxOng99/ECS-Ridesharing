@@ -3,6 +3,7 @@ import numpy as np
 from src.models.graph import SyntheticGraphGenerator
 from src.models.passenger import PassengerGenerator
 from src.algorithms.optimiser import Optimiser
+from src.utils.info_utils import write_simulation_output
 
 class Simulation:
     def __init__(self, seed_config, exp_config) -> None:
@@ -15,22 +16,28 @@ class Simulation:
     def run(self):
         
         runs = self.experiment_params['runs']
-        for _ in range(runs):
+        graph_seed = self.seed_config['graph']
+        passenger_seeds = [self.seed_config['passengers'] + x for x in range(runs)]
+        solutions = []
+        for x in range(runs):
             # Generate graph
-            np.random.seed(self.seed_config['graph'])
+            np.random.seed(graph_seed)
             graph_generator = SyntheticGraphGenerator(self.graph_params)
             graph = graph_generator.graph
 
             # Generate passengers
-            np.random.seed(self.seed_config['passengers'])
+            np.random.seed(passenger_seeds[x])
             pass_generator = PassengerGenerator(graph, self.passenger_params)
             passengers = pass_generator.passengers
 
             # Set up optimiser
+            np.random.seed(self.seed_config['algorithm'])
             optimiser = Optimiser(graph, passengers)
             solution = optimiser.optimise(self.optimiser_params)
-            print(solution)
-            
+            solutions.append(solution)
+
+        return solutions
+        
 with open("config.yaml", "r") as file:
     try:
         config = yaml.safe_load(file)
@@ -39,6 +46,8 @@ with open("config.yaml", "r") as file:
 
         for config in experiment_configs:
             simulation = Simulation(seed_config, config)
-            simulation.run()
+            solutions = simulation.run()
+            write_simulation_output(config, solutions)
+
     except yaml.YAMLError as exc:
         print(exc)

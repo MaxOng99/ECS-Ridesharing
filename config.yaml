@@ -1,6 +1,7 @@
 seeds:
   graph: 42
   passengers: 67
+  algorithm: 82
 
 experiments:
   - passenger_params:
