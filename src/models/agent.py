@@ -1,6 +1,7 @@
 from src.models.passenger import Passenger
 from src.models.solution import Solution
 from src.models.graph import Graph
+import numpy as np
 
 from typing import List, Set
 
@@ -12,7 +13,11 @@ class Agent:
         self.departure_node = None
         self.arrival_node = None
         
-    def rank_solutions(self, solutions: Set[Solution]) -> List[Solution]:
+    def rank_solutions(self, solutions: List[Solution]) -> List[Solution]:
+        
+        # 1. Shuffle solutions, to take into account solution with similar utility
+        # 2. Rank the solution
+        np.random.shuffle(solutions)
         return sorted(solutions, key=lambda sol: self.get_solution_utility(sol), reverse=True)
     
     def get_solution_utility(self, solution: Solution):
@@ -30,7 +35,8 @@ class IterativeVotingAgent(Agent):
         board_threshold = 1 - self.rider.beta
         return board_threshold
 
-    def rank_locations(self, location_ids: Set[int]) -> List[int]:
+    def rank_locations(self, location_ids: List[int]) -> List[int]:
+        np.random.shuffle(location_ids)
         return sorted(location_ids, key=lambda id: self.location_utility(id), reverse=True)    
         # return ranked_locations
 

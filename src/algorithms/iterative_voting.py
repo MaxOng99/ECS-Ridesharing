@@ -1,4 +1,4 @@
-from typing import Callable, Set
+from typing import Callable, Set, List
 from src.models.agent import IterativeVotingAgent
 from src.models.solution import Solution, TourNodeValue
 from src.algorithms.voting_rules import VotingRules
@@ -34,11 +34,11 @@ class IterativeVoting:
     
     def optimise(self):
 
-        candidate_solutions = set()
+        candidate_solutions = []
         location_ids = set([source for source, _ in self.graph.time_matrix])
 
         for location_id in location_ids:
-            candidate_solutions.add(self.__initiate_voting(location_id))
+            candidate_solutions.append(self.__initiate_voting(location_id))
 
         # List of solution ranking function from each Passenger
         solution_ranking_functions = [agent.rank_solutions for agent in self.agents]
@@ -50,13 +50,13 @@ class IterativeVoting:
         elif rule == 'majority':
             return VotingRules.majority
     
-    def __stations_to_visit(self, waiting, onboard):
-        stations = set()
+    def __stations_to_visit(self, waiting, onboard) -> List[int]:
+        stations = []
 
         for agent in waiting:
-            stations.add(agent.rider.start_id)
+            stations.append(agent.rider.start_id)
         for agent in onboard:
-            stations.add(agent.rider.destination_id)
+            stations.append(agent.rider.destination_id)
         
         return stations
 
@@ -69,14 +69,14 @@ class IterativeVoting:
         new_solution.append(dllistnode(first_tour_node_value))
 
         # Initialise internal state
-        waiting: Set[IterativeVotingAgent] = set()
-        serving: Set[IterativeVotingAgent] = set()
-        onboard: Set[IterativeVotingAgent] = set()
+        waiting: List[IterativeVotingAgent] = []
+        serving: List[IterativeVotingAgent] = []
+        onboard: List[IterativeVotingAgent] = []
 
         for agent in new_agents:
             agent.current_node = new_solution.tail()
-            waiting.add(agent)
-            serving.add(agent)
+            waiting.append(agent)
+            serving.append(agent)
 
         # Repeat voting process until all Passengers are served
         while len(serving) > 0:
@@ -102,8 +102,8 @@ class IterativeVoting:
                 current_node.value.update_waiting_time(current_node.value.waiting_time + 10)
             
             # Update service status
-            boarded_agents = set()
-            served_agents = set()
+            boarded_agents = []
+            served_agents = []
 
             for agent in waiting:
                 agent.current_node = current_node
@@ -111,20 +111,20 @@ class IterativeVoting:
                     agent.departure_node = current_node
                     current_node.value.add_rider(agent.rider, 'waiting')
                     agent.status = 'onboard'
-                    boarded_agents.add(agent)
+                    boarded_agents.append(agent)
             
             for agent in onboard:
                 agent.current_node = current_node
                 if agent.choose_to_disembark():
                     agent.arrival_node = current_node
-                    served_agents.add(agent)
+                    served_agents.append(agent)
                     current_node.value.add_rider(agent.rider, 'onboard')
                     agent.status = 'served'
 
-            waiting = waiting - boarded_agents
-            onboard = onboard - served_agents
-            onboard = onboard.union(boarded_agents)
-            serving = serving - served_agents
+            waiting = [agent for agent in waiting if agent not in boarded_agents]
+            onboard = [agent for agent in onboard if agent not in served_agents]
+            onboard.extend(boarded_agents)
+            serving = [agent for agent in serving if agent not in served_agents]
         
         new_solution.create_rider_schedule()
         return new_solution
