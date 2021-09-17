@@ -1,4 +1,8 @@
 from prettytable import PrettyTable
+from pathlib import Path
+import yaml
+import csv
+import re
 
 def environment_info(env: 'Environment') -> str:
     """
@@ -94,3 +98,52 @@ def strategy_info(strat_obj):
             f'New_Node_Value: {strat_obj.strat["new_node_value"]}'
         ]
         return "\n".join(info)
+
+def write_simulation_output(config, solutions):
+    output_path = "./simulation_output"
+    regex = re.compile('experiment_[0-9]$')
+    experiment_folders = []
+    for file in Path(output_path).iterdir():
+        if regex.match(file.name):
+            experiment_folders.append(file)
+
+    id = len(experiment_folders) + 1
+    new_dir = Path(output_path, f"experiment_{id}")
+    new_dir.mkdir(parents=True, exist_ok=True)
+    config_file = new_dir / 'config.yaml'
+    csv_file = new_dir / 'output.csv'
+    
+    # Dump config parameters
+    with config_file.open('w') as f:
+        yaml.safe_dump(config, f, default_flow_style=False)
+    
+    # Dump csv 
+    with csv_file.open('w') as f:
+        fieldnames = [
+            'num_passengers',
+            'service_hours',
+            'num_locations',
+            'clusters',
+            'grid_size',
+            'avg_vehicle_speed',
+            'algorithm',
+            'algorithm_params',
+            'utilitarian',
+            'egalitarian'
+        ]
+
+        # Flatten config dict
+        passenger_params = config['passenger_params']
+        graph_params = config['graph_params']
+        optimiser_params = config['optimiser_params']
+        algo_params = {
+            'algorithm': optimiser_params['algorithm'],
+            'algorithm_params': optimiser_params['algorithm_params']
+        }
+
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for solution in solutions:
+            objective_dict = solution.objectives
+            row = {**passenger_params, **graph_params, **algo_params, **objective_dict}
+            writer.writerow(row)
