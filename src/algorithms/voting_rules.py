@@ -1,4 +1,5 @@
 from typing import Callable, Set
+import numpy as np
 
 class VotingRules:
 
@@ -21,7 +22,13 @@ class VotingRules:
             for rank_index, candidate in enumerate(ranked_candidates):
                 scores[candidate] += (num_of_candidates - 1) - rank_index
         
-        return ranked_candidates[0]
+        # Use np.random to account for the fact that there could be ties
+        best_candidate = ranked_candidates[0]
+        best_score = scores[best_candidate]
+        indifferent_candidates = \
+            [candidate for candidate in candidates if scores[candidate] == best_score]
+
+        return np.random.choice(indifferent_candidates)
     
     def majority(candidates: Set[object], ranking_functions: Set[Callable]):
 
@@ -32,4 +39,10 @@ class VotingRules:
             first_choice = ranked_candidates[0]
             scores[first_choice] += 1
         
-        return max(scores, key=scores.get)
+        # Use np.random to account for ties
+        best_candidate = max(scores, key=scores.get)
+        best_score =scores[best_candidate]
+        indifferent_candidates = \
+            [candidate for candidate in candidates if scores[candidate] == best_score]
+            
+        return np.random.choice(indifferent_candidates)
