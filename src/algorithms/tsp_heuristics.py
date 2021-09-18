@@ -1,6 +1,6 @@
 import igraph as ig
-from src.models.solution import Solution
-import src.utils.graph_utils as graph_utils
+from models.solution import Solution
+import utils.graph_utils as graph_utils
 
 def __nn(graph: ig.Graph, solution: Solution) -> Solution:
 

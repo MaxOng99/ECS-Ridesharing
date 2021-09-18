@@ -1,7 +1,7 @@
 from typing import Dict, Set
 from pyllist import dllist, dllistnode
-from src.utils.info_utils import solution_info
-from src.models.graph import Graph
+from utils.info_utils import solution_info
+from models.graph import Graph
 
 class TourNodeValue:
 

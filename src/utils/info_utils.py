@@ -100,7 +100,9 @@ def strategy_info(strat_obj):
         return "\n".join(info)
 
 def write_simulation_output(config, solutions):
-    output_path = "./simulation_output"
+    output_path = Path("./simulation_output")
+    if not output_path.is_dir():
+        output_path.mkdir(parents=True, exist_ok=True)
     regex = re.compile('experiment_[0-9]$')
     experiment_folders = []
     for file in Path(output_path).iterdir():

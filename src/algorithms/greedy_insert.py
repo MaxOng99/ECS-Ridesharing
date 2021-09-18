@@ -1,11 +1,11 @@
-from src.algorithms.voting_rules import VotingRules
-from src.utils.info_utils import strategy_info
+from algorithms.voting_rules import VotingRules
+from utils.info_utils import strategy_info
 from pyllist.dllist import dllistnode
-from src.models.solution import Solution, TourNodeValue
+from models.solution import Solution, TourNodeValue
 from typing import List
 import numpy as np
-from src.models.graph import Graph
-from src.models.agent import GreedyInsertAgent
+from models.graph import Graph
+from models.agent import GreedyInsertAgent
 
 class GreedyInsert:
 

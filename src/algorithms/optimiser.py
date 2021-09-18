@@ -1,12 +1,12 @@
 import igraph as ig
 from typing import Callable, Dict, Set
-from src.models.agent import GreedyInsertAgent, IterativeVotingAgent
-from src.models.passenger import Passenger
-from src.models.solution import Solution
-from src.algorithms import tsp_heuristics as heuristic_algo
-from src.algorithms.iterative_voting import IterativeVoting
-from src.algorithms.greedy_insert import GreedyInsert
-from src.models.graph import Graph
+from models.agent import GreedyInsertAgent, IterativeVotingAgent
+from models.passenger import Passenger
+from models.solution import Solution
+from algorithms import tsp_heuristics as heuristic_algo
+from algorithms.iterative_voting import IterativeVoting
+from algorithms.greedy_insert import GreedyInsert
+from models.graph import Graph
 
 class Optimiser:
     """Wrapper class for the various optimiser algorithms

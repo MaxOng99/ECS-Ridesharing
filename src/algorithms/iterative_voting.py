@@ -1,10 +1,10 @@
 from typing import Callable, Set, List
-from src.models.agent import IterativeVotingAgent
-from src.models.solution import Solution, TourNodeValue
-from src.algorithms.voting_rules import VotingRules
+from models.agent import IterativeVotingAgent
+from models.solution import Solution, TourNodeValue
+from algorithms.voting_rules import VotingRules
 from copy import deepcopy
 from pyllist import dllistnode
-from src.models.graph import Graph
+from models.graph import Graph
 
 class IterativeVoting:
     """Voting algorithm to find sub-optimal Solution

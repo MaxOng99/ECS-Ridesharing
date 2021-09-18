@@ -1,6 +1,6 @@
-from src.models.passenger import Passenger
-from src.models.solution import Solution
-from src.models.graph import Graph
+from models.passenger import Passenger
+from models.solution import Solution
+from models.graph import Graph
 import numpy as np
 
 from typing import List, Set
