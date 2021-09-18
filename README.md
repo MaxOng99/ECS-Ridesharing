@@ -1,18 +1,18 @@
 # ECS RideSharing Research
 
 ## Dependencies
-- python-igraph==0.9.6
-- numpy==1.20.2
-- prettytable==2.1.0
-- pyllist==0.3
-- pyyaml==5.4.1
+- python-igraph
+- numpy
+- prettytable
+- pyllist
+- pyyaml
 
 ## Instructions
-1. Create a python virtual environment and activate it.
-2. Run `python -m pip install -r requirements.txt`
-3. Navigate to the root folder of this project.
+1. Navigate to the root folder of this project.
+2. Run `./setup_env.sh`.
+3. Run `source env/ride_sharing/bin/activate`
 4. Specify different experiments in the `config.yaml` file with the following [format](https://github.com/MaxOng99/ECS-Ridesharing/blob/main/config.yaml)
-5. Run `python simulation.py`
+5. Run `./run_simulation.sh`
 6. View the output in the `simulation_output` folder. Each experiment will have a pair of configuration file and output file.
 
 ## Resources
