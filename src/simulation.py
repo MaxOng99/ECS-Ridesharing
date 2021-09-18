@@ -1,9 +1,9 @@
 import yaml
 import numpy as np
-from src.models.graph import SyntheticGraphGenerator
-from src.models.passenger import PassengerGenerator
-from src.algorithms.optimiser import Optimiser
-from src.utils.info_utils import write_simulation_output
+from models.graph import SyntheticGraphGenerator
+from models.passenger import PassengerGenerator
+from algorithms.optimiser import Optimiser
+from utils.info_utils import write_simulation_output
 
 class Simulation:
     def __init__(self, seed_config, exp_config) -> None:
