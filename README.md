@@ -1,12 +1,11 @@
 # ECS RideSharing Research
 
 ## Dependencies
-- python=3.9.5
-- python-igraph=0.9.6
-- cairo=1.16.0
-- numpy=1.20.2
-- prettytable=2.1.0
-- pyllist=0.3
+- python-igraph==0.9.6
+- numpy==1.20.2
+- prettytable==2.1.0
+- pyllist==0.3
+- pyyaml==5.4.1
 
 ## Instructions
 
