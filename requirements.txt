@@ -1,0 +1,5 @@
+python-igraph==0.9.6
+numpy==1.20.2
+prettytable==2.1.0
+pyyaml==5.4.1
+pyllist==0.3
