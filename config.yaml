@@ -1,46 +1,7 @@
-# Seeds for graph generation, passenger generation
-# and algorithm randomness (some components of greedy insert
-# and iterative voting uses the numpy.random module). 
-
-# Note:
-#  - For each experiment, each run will generate the same graph (with 
-#    the specified graph seed), but different passengers (betas, start/end destination
-#    and time). 
-#  - Passengers seed will increase by 1 for every next run of an experiment. For e.g.,
-#    if runs=5 and passengers seed=67, passengers seeds will be [67, 68, 69, 70, 71]
-#  - These seeds will be used to run the list of experiments specified to carry out comparisons
 seeds:
   graph: 42
   passengers: 67
   algorithm: 82
-
-
-# Specify the list of experiments to run here.
-#  - passenger_params:
-      # 1. num_passengers: int
-      # 2. service_hours: int
-
-#  - graph_parameters:
-      # 1. num_locations: int
-      # 2. clusters: int
-      # 3. grid_size: int
-      # 4. avg_vehicle_speed: float
-
-#  - optimiser_parameters:
-      # 1. algorithm: {'greedy_insert', 'iterative_voting'}
-      # 2. algorithm_params: {
-      #   'greedy_insert': {'iterations': int, 'final_voting_rule': {'borda_count', 'majority'}},
-      #   'iterative_voting': {iterative_voting_rule: {'borda_count', 'majority'}, final_voting_rule: {'borda_count', 'majority'}}'
-      # }
-
-# NOTE
-  # - Individual clusters are not part of the locations
-  # - The specified grid size is always nxn. For e.g., 
-  # - grid_size = 1200 is equal to a 1200x1200 grid
-  # - avg_vehicle_speed is in km/h
-  # - avg_vehicle_speed is in km/h
-  # - To add more experiment, simply create another element for
-  #   the experiments list. An example is shown below (commented)
 
 experiments:
   - passenger_params:
@@ -61,23 +22,23 @@ experiments:
 
     experiment_params:
       runs: 10
+      
+  - passenger_params:
+      num_passengers: 42
+      service_hours: 67
+      algorithm: 82
 
-  # - passenger_params:
-  #     num_passengers: 42
-  #     service_hours: 67
-  #     algorithm: 82
+    graph_params:
+      num_locations: 25
+      clusters: 5
+      grid_size: 1200
+      avg_vehicle_speed: 14.96
 
-  #   graph_params:
-  #     num_locations: 25
-  #     clusters: 5
-  #     grid_size: 1200
-  #     avg_vehicle_speed: 14.96
+    optimiser_params:
+      algorithm: 'iterative_voting'
+      algorithm_params:
+        iterative_voting_rule: 'borda_count'
+        final_voting_rule: "borda_count"
 
-  #   optimiser_params:
-  #     algorithm: 'iterative_voting'
-  #     algorithm_params:
-  #       iterative_voting_rule: 'borda_count'
-  #       final_voting_rule: "borda_count"
-
-  #   experiment_params:
-  #     runs: 10
+    experiment_params:
+      runs: 10
