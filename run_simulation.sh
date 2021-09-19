@@ -1,5 +1,5 @@
 #!/bin/bash
 
 source env/ride_sharing/bin/activate
-python src/simulation.py
+python3 src/simulation.py
 deactivate
