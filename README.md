@@ -14,15 +14,6 @@
 2. Clone the repository.
 3. In the `setup_env.sh` and `run_simulation.sh` files, change `python3` to `<path/to/python_interpreter>`, or `<python_interpreter>` if your python interpreter was added to `PATH` variable. </br>
 
-
-### Running the simulation
-1. Navigate to the root folder of this project.
-3. Run `./setup_env.sh`.
-4. Specify different experiments in the `config.yaml` file with the following [format](https://github.com/MaxOng99/ECS-Ridesharing/blob/main/config.yaml).
-5. Run `./run_simulation.sh`.
-6. Repeat steps 3-4 with different experiments.
-7. View the outputs in the `simulation_output` folder. Each experiment contains a configuration file and an output file.
-
 ### Specifying experiments
 
 Refer to [config.yaml](https://github.com/MaxOng99/ECS-Ridesharing/blob/main/config.yaml) for examples.
@@ -49,7 +40,15 @@ Refer to [config.yaml](https://github.com/MaxOng99/ECS-Ridesharing/blob/main/con
 - `algorithm: 'greedy_insert' | 'iterative_voting'`
 - `algorithm_params (greedy_insert): 'iterations': int, 'final_voting_rule': 'borda_count' | 'majority'`
 - `algorithm_params (iterative_voting): 'iterative_voting_rule': 'borda_count' | 'majority', 'final_voting_rule': 'borda_count' | 'majority'`
- 
+
+### Running the simulation
+1. Navigate to the root folder of this project.
+3. Run `./setup_env.sh`.
+4. Specify different experiments in the `config.yaml` file.
+5. Run `./run_simulation.sh`.
+6. Repeat steps 3-4 with different experiments.
+7. View the outputs in the `simulation_output` folder. Each experiment contains a configuration file and an output file.
+
 ## Packages used in this project
 - [numpy](https://numpy.org/)
 - [python-igraph](https://igraph.org/python/)
