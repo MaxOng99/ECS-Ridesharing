@@ -123,6 +123,9 @@ def write_simulation_output(config, solutions):
     with csv_file.open('w') as f:
         fieldnames = [
             'num_passengers',
+            "beta_distribution",
+            "inter_cluster_travelling",
+            "preference_distribution",
             'service_hours',
             'num_locations',
             'clusters',
@@ -131,7 +134,7 @@ def write_simulation_output(config, solutions):
             'algorithm',
             'algorithm_params',
             'utilitarian',
-            'egalitarian'
+            'egalitarian',
         ]
 
         # Flatten config dict

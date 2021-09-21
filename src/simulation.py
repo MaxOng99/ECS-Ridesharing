@@ -38,14 +38,25 @@ class Simulation:
 
         return solutions
         
+
+def config_param_checker(config):
+    passenger_params = config['passenger_params']
+
+    if passenger_params['service_hours'] != 24 and\
+        passenger_params['preference_distribution'] == "peak_hours":
+        passenger_params['preference_distribution'] = "uniform"
+    
+    return config
+    
 with open("config.yaml", "r") as file:
     try:
         config = yaml.safe_load(file)
         seed_config = config['seeds']
         experiment_configs = config['experiments']
-
+    
         for config in experiment_configs:
-            simulation = Simulation(seed_config, config)
+            checked_config = config_param_checker(config)
+            simulation = Simulation(seed_config, checked_config)
             solutions = simulation.run()
             write_simulation_output(config, solutions)
 
