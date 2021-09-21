@@ -27,6 +27,13 @@ Refer to [config.yaml](https://github.com/MaxOng99/ECS-Ridesharing/blob/main/con
 #### Passenger Parameters
 - `num_passengers: int`
 - `service_hours: int`
+- beta_distribution: "truncated_normal" | "uniform"
+- preference_distribution: "peak_hours" | "uniform"
+- inter_cluster_travelling: True | False
+
+*`truncated_normal` for `beta_distribution` assumes a normal distribution with mean 0.5 and standrad deviation of 0.15, truncated between 0 and 1. These specific parameters give rise to higher probabilities for sampling around 0.5, but lesser probabilities for sampling around the extremes (around 0.1 and around 0.8)*
+
+*`peak_hours` value for `preference_distribution` is only valid when `service_hours=24`. Else, `preference_distribution` defaults to `uniform`.*
 
 #### Graph Parameters
 - `num_locations: int`
