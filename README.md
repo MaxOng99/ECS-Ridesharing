@@ -33,7 +33,7 @@ Refer to [config.yaml](https://github.com/MaxOng99/ECS-Ridesharing/blob/main/con
 
 *`truncated_normal` for `beta_distribution` assumes a normal distribution with mean 0.5 and standrad deviation of 0.15, truncated between 0 and 1. These specific parameters give rise to higher probabilities for sampling around 0.5, but lesser probabilities for sampling around the extremes (around 0.1 and around 0.8)*
 
-*`peak_hours` value for `preference_distribution` is only valid when `service_hours=24`. Else, `preference_distribution` defaults to `uniform`.*
+*`peak_hours` value for `preference_distribution` is only valid when `service_hours=24`. When sampling temporal preferences under this setting, there are 3 time frames (with their respective probabilities); morning, evening, full day (0.4, 0.4, 0.2). Essentially, there is a higher probability of sampling from morning + evening time frame, compared to the full day time frame. Note that if `preference_distribution="peak_hours"` but `service_hours != 24`, `preference_distribution` defaults to `uniform`.*
 
 #### Graph Parameters
 - `num_locations: int`
