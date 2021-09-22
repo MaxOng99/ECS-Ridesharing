@@ -4,9 +4,31 @@ seeds:
   algorithm: 82
 
 experiments:
+  # - passenger_params:
+  #     num_passengers: 120
+  #     service_hours: 16
+  #     beta_distribution: "truncated_normal"
+  #     preference_distribution: "peak_hours"
+  #     inter_cluster_travelling: True
+
+  #   graph_params:
+  #     num_locations: 25
+  #     clusters: 5
+  #     grid_size: 1200
+  #     avg_vehicle_speed: 14.96
+
+  #   optimiser_params:
+  #     algorithm: 'greedy_insert'
+  #     algorithm_params:
+  #       iterations: 5
+  #       final_voting_rule: "borda_count"
+
+  #   experiment_params:
+  #     runs: 10
+      
   - passenger_params:
-      num_passengers: 120
-      service_hours: 16
+      num_passengers: 25
+      service_hours: 24
       beta_distribution: "truncated_normal"
       preference_distribution: "peak_hours"
       inter_cluster_travelling: True
@@ -18,33 +40,11 @@ experiments:
       avg_vehicle_speed: 14.96
 
     optimiser_params:
-      algorithm: 'greedy_insert'
+      algorithm: 'iterative_voting_1'
       algorithm_params:
-        iterations: 5
+        iterative_voting_rule: 'borda_count'
         final_voting_rule: "borda_count"
+        wait_time: 5
 
     experiment_params:
-      runs: 10
-      
-  # - passenger_params:
-  #     num_passengers: 100
-  #     service_hours: 24
-  #     beta_distirbution: "truncated_normal"
-  #     preference_distribution: "peak_hours"
-  #     inter_cluster_travelling: True
-
-  #   graph_params:
-  #     num_locations: 25
-  #     clusters: 5
-  #     grid_size: 1200
-  #     avg_vehicle_speed: 14.96
-
-  #   optimiser_params:
-  #     algorithm: 'iterative_voting'
-  #     algorithm_params:
-  #       iterative_voting_rule: 'borda_count'
-  #       final_voting_rule: "borda_count"
-  #       wait_time: 5
-
-  #   experiment_params:
-  #     runs: 5
+      runs: 5

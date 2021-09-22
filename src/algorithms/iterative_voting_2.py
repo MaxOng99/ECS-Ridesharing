@@ -5,7 +5,7 @@ from algorithms.voting_rules import VotingRules
 from pyllist import dllistnode
 from models.graph import Graph
 
-class IterativeVoting:
+class IterativeVoting2:
     """Voting algorithm to find sub-optimal Solution
 
     Attributes
