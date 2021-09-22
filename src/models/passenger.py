@@ -1,8 +1,5 @@
 import numpy as np
-from numpy.core.function_base import linspace
-from numpy.core.numeric import full
-from numpy.random import choice
-from typing import List, OrderedDict, Tuple
+from typing import List, Tuple
 
 class Passenger:
 
@@ -45,7 +42,7 @@ class Passenger:
             self.beta**(abs(self.optimal_arrival - arrival_time))) / 2
 
         return utility
-    
+        
     def utility(self, departure_time: int, arrival_time: int) -> float:
         return self.__utility_function(departure_time, arrival_time)
     
