@@ -95,7 +95,7 @@ class SyntheticGraphGenerator:
             centroid_x, centroid_y = centroid['coordinate']
 
             theta = np.random.uniform(0,2*np.pi, len(locations))
-            radius = np.random.uniform(self.__centroid_distance/4, self.__centroid_distance/2, len(locations))
+            radius = np.random.uniform(0, self.__centroid_distance/2, len(locations))
             x = centroid_x + radius * np.cos(theta)
             y = centroid_y + radius * np.sin(theta)
 
