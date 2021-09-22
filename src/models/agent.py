@@ -3,7 +3,7 @@ from models.solution import Solution
 from models.graph import Graph
 import numpy as np
 
-from typing import List, Set
+from typing import List
 
 class Agent:
     def __init__(self, rider: Passenger, graph: Graph) -> None:
@@ -29,11 +29,19 @@ class IterativeVotingAgent(Agent):
     def __init__(self, rider: Passenger, graph: Graph) -> None:
         super().__init__(rider, graph)
         self.board_threshold = self.__board_threshold()
+        self.weight = self.board_threshold
         self.current_node = None
     
     def __board_threshold(self):
         board_threshold = 1 - self.rider.beta
         return board_threshold
+
+    def reset_status(self):
+        self.status = "waiting"
+        self.departure_node = None
+        self.arrival_node = None
+        self.current_node = None
+        
 
     def rank_locations(self, location_ids: List[int]) -> List[int]:
         np.random.shuffle(location_ids)
@@ -60,26 +68,11 @@ class IterativeVotingAgent(Agent):
 
     def choose_to_board(self) -> bool:
 
-        rider_end = self.rider.destination_id
         current_location = self.current_node.value.location_id
-        current_depart_time = self.current_node.value.departure_time
 
         if self.status == "waiting" and \
             current_location == self.rider.start_id:
-
-            # Immediately board if actual departure time exceed the preferred departure time
-            if self.rider.optimal_departure - current_depart_time < 0:
-                return True
-
-            # This condition determines whether it is too early to board the bus. 
-            # The board_utility_threshold is computed as (1 - beta)
-            else:
-                start_to_target_time = self.graph.travel_time(current_location, rider_end)
-                potential_arrival_time = current_depart_time + start_to_target_time
-                potential_utility = self.rider.utility(current_depart_time, potential_arrival_time)
-                
-                if potential_utility >= self.board_threshold:
-                    return True
+            return True            
         else:
             return False
 
@@ -93,3 +86,4 @@ class IterativeVotingAgent(Agent):
 class GreedyInsertAgent(Agent):
     def __init__(self, rider: Passenger, graph: Graph) -> None:
         super().__init__(rider, graph)
+        self.weight = 1
