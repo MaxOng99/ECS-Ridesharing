@@ -2,6 +2,7 @@ from typing import Dict, Set
 from pyllist import dllist, dllistnode
 from utils.info_utils import solution_info
 from models.graph import Graph
+import numpy as np
 
 class TourNodeValue:
 
@@ -51,8 +52,10 @@ class Solution:
     
     def calculate_objectives(self):
         utils = [util for _, util in self.get_rider_utilities().items()]
+        self.objectives['avg_utility'] = np.mean(utils)
         self.objectives['utilitarian'] = sum(utils)
         self.objectives['egalitarian'] = min(utils)
+        self.objectives['proportionality'] = np.std(utils)
 
     def head(self):
         return self.llist.first

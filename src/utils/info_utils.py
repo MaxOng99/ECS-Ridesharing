@@ -3,6 +3,7 @@ from pathlib import Path
 import yaml
 import csv
 import re
+import numpy as np
 
 def environment_info(env: 'Environment') -> str:
     """
@@ -113,42 +114,89 @@ def write_simulation_output(config, solutions):
     new_dir = Path(output_path, f"experiment_{id}")
     new_dir.mkdir(parents=True, exist_ok=True)
     config_file = new_dir / 'config.yaml'
-    csv_file = new_dir / 'output.csv'
+    full_csv_file = new_dir / 'full_output.csv'
+    summary_csv_file = new_dir / 'summary_output.csv'
     
+    fieldnames = [
+        'num_passengers',
+        "beta_distribution",
+        "inter_cluster_travelling",
+        "preference_distribution",
+        'service_hours',
+        'num_locations',
+        'clusters',
+        'grid_size',
+        'avg_vehicle_speed',
+        'algorithm',
+        'algorithm_params',
+        'utilitarian',
+        'egalitarian',
+        'proportionality',
+        'avg_utility'
+    ]
+
+    # Flatten config dict
+    passenger_params = config['passenger_params']
+    graph_params = config['graph_params']
+    optimiser_params = config['optimiser_params']
+    algo_params = {
+        'algorithm': optimiser_params['algorithm'],
+        'algorithm_params': optimiser_params['algorithm_params']
+    }
+
     # Dump config parameters
     with config_file.open('w') as f:
         yaml.safe_dump(config, f, default_flow_style=False)
     
-    # Dump csv 
-    with csv_file.open('w') as f:
-        fieldnames = [
-            'num_passengers',
-            "beta_distribution",
-            "inter_cluster_travelling",
-            "preference_distribution",
-            'service_hours',
-            'num_locations',
-            'clusters',
-            'grid_size',
-            'avg_vehicle_speed',
-            'algorithm',
-            'algorithm_params',
-            'utilitarian',
-            'egalitarian',
-        ]
+    # Dump full csv 
 
-        # Flatten config dict
-        passenger_params = config['passenger_params']
-        graph_params = config['graph_params']
-        optimiser_params = config['optimiser_params']
-        algo_params = {
-            'algorithm': optimiser_params['algorithm'],
-            'algorithm_params': optimiser_params['algorithm_params']
-        }
+    utilitarian = []
+    egalitarian = []
+    proportional = []
+    utilities = []
 
+    with full_csv_file.open('w') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         for solution in solutions:
             objective_dict = solution.objectives
+            utilitarian.append(objective_dict['utilitarian'])
+            egalitarian.append(objective_dict['egalitarian'])
+            proportional.append(objective_dict['proportionality'])
+            utilities.append(objective_dict['avg_utility'])
             row = {**passenger_params, **graph_params, **algo_params, **objective_dict}
             writer.writerow(row)
+    
+    # Dump summary csv
+    summary_fieldnames = [
+        'num_passengers',
+        "beta_distribution",
+        "inter_cluster_travelling",
+        "preference_distribution",
+        'service_hours',
+        'num_locations',
+        'clusters',
+        'grid_size',
+        'avg_vehicle_speed',
+        'algorithm',
+        'algorithm_params',
+        'avg_utilitarian',
+        'avg_egalitarian',
+        'avg_proportionality',
+        'avg_utility'
+    ]
+
+    with summary_csv_file.open('w') as f:
+        writer = csv.DictWriter(f, fieldnames=summary_fieldnames)
+        writer.writeheader()
+        objective_dict = {
+            "avg_utilitarian": np.mean(utilitarian),
+            "avg_egalitarian": np.mean(egalitarian),
+            "avg_proportionality": np.mean(proportional),
+            'avg_utility': np.mean(utilities)
+        }
+        row = {**passenger_params, **graph_params, **algo_params, **objective_dict}
+        writer.writerow(row)
+        
+            
+
