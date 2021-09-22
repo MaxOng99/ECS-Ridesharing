@@ -45,8 +45,8 @@ Refer to [config.yaml](https://github.com/MaxOng99/ECS-Ridesharing/blob/main/con
 
 #### Optimiser Parameters
 - `algorithm: 'greedy_insert' | 'iterative_voting'`
-- `algorithm_params (greedy_insert): iterations: int, final_voting_rule: 'borda_count' | 'majority'`
-- `algorithm_params (iterative_voting): iterative_voting_rule: 'borda_count' | 'majority', final_voting_rule: 'borda_count' | 'majority'`
+- `algorithm_params (greedy_insert): iterations: int, final_voting_rule: 'borda_count' | 'popularity'`
+- `algorithm_params (iterative_voting): wait_time: int, iterative_voting_rule: 'borda_count' | 'popularity', final_voting_rule: 'borda_count' | 'popularity'`
 
 ### Running the simulation
 1. Navigate to the root folder of this project.
