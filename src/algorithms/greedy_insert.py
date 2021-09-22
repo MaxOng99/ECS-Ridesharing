@@ -51,9 +51,10 @@ class GreedyInsert:
             solution.create_rider_schedule()
             solutions.append(solution)
 
-        solution_ranking_functions = [agent.rank_solutions for agent in self.agents]
-        borda_solution = self.voting_rule(solutions, solution_ranking_functions)
-        return solutions[0]
+        ranking_functions = [agent.rank_solutions for agent in self.agents]
+        weights = [agent.weight for agent in self.agents]
+        borda_solution = self.voting_rule(solutions, ranking_functions, weights)
+        return borda_solution
     
     def __get_voting_rule(self, voting_rule: str):
         if voting_rule == 'majority':
