@@ -3,3 +3,7 @@ numpy
 prettytable
 pyyaml
 pyllist
+cerberus
+matplotlib
+pycairo
+seaborn
