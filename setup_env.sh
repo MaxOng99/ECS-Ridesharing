@@ -12,3 +12,4 @@ fi
 source env/ride_sharing/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
+pip install -e git+https://github.com/MaxOng99/poisson_disc_sampling#egg=poisson_disc
