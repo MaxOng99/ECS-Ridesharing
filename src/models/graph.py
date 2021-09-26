@@ -1,16 +1,33 @@
 import igraph as ig
 import numpy as np
 import math
+from poisson_disc import Bridson_sampling
 
 # Graph Model. Any custom graph generators should produce a Graph object
 class Graph:
-    def __init__(self, num_locations, num_centroids, location_ids, cluster_info, time_matrix, distance_matrix) -> None:
-        self.num_locations = num_locations
-        self.num_centroids = num_centroids
+    def __init__(self, igraph, location_ids, cluster_info, time_matrix, distance_matrix) -> None:
+        self.igraph = igraph
         self.locations = location_ids
         self.time_matrix = time_matrix
         self.cluster_info = cluster_info
         self.distance_matrix = distance_matrix
+        
+
+        travel_times = list(self.time_matrix.values())
+        non_zero_travel_times = [time for time in travel_times if time > 0 ]
+        self.travel_time_data = {
+            "max": max(non_zero_travel_times),
+            "min": min(non_zero_travel_times),
+            "avg": np.mean(non_zero_travel_times)
+        }
+
+        distances = list(self.distance_matrix.values())
+        non_zero_distances = [distance for distance in distances if distance > 0]
+        self.distance_data = {
+            "max": max(non_zero_distances),
+            "min": min(non_zero_distances),
+            "avg": np.mean(non_zero_distances)
+        }
         
     def travel_time(self, source_id, target_id):
         try:
@@ -33,14 +50,15 @@ class Graph:
             raise KeyError(f"Source({source_id}) and Target({target_id}) not found in distance matrix")
 
 class SyntheticGraphGenerator:
-    def __init__(self, graph_params) -> None:
+    def __init__(self, seed, graph_params) -> None:
         self.graph_params = graph_params
-        self.__igraph = None
+        self.seed = seed
+        self.igraph = None
         self.__centroid_distance = None
         self.__num_centroids_per_axis = None
-        self.__intra_cluster_min_distance = None
         self.__total_vertices = None
 
+        np.random.seed(seed)
         self.graph: Graph = self.generate_graph()
         
     def generate_graph(self) -> Graph:
@@ -59,14 +77,11 @@ class SyntheticGraphGenerator:
         self.__total_vertices = num_locations + num_centroids
         self.__num_centroids_per_axis = math.ceil(np.sqrt(num_centroids))
         self.__centroid_distance = grid_size / self.__num_centroids_per_axis
-        self.__intra_cluster_min_distance = \
-            self.__centroid_distance / (num_locations / num_centroids)
-        
-        
-        self.__igraph = ig.Graph.Full(n=self.__total_vertices)
-        self.__igraph.vs['is_centroid'] = [False for _ in range(self.__total_vertices)]
-        self.__igraph.vs['coordinate'] = [None for _ in range(self.__total_vertices)]
-        self.__igraph.vs['location_id'] = [id for id in range(self.__total_vertices)]
+
+        self.igraph = ig.Graph.Full(n=self.__total_vertices)
+        self.igraph.vs['is_centroid'] = [False for _ in range(self.__total_vertices)]
+        self.igraph.vs['coordinate'] = [None for _ in range(self.__total_vertices)]
+        self.igraph.vs['location_id'] = [id for id in range(self.__total_vertices)]
 
     def __generate_centroids(self):
         
@@ -81,39 +96,41 @@ class SyntheticGraphGenerator:
         centroid_coordinates = map(tuple, np.stack([X.ravel(), Y.ravel()]).T)
 
         for centroid_id, coordinate in zip(range(num_centroids), centroid_coordinates):
-            self.__igraph.vs[centroid_id]['coordinate'] = coordinate
-            self.__igraph.vs[centroid_id]['is_centroid'] = True
-            self.__igraph.vs[centroid_id]['cluster'] = []
+            self.igraph.vs[centroid_id]['coordinate'] = coordinate
+            self.igraph.vs[centroid_id]['is_centroid'] = True
+            self.igraph.vs[centroid_id]['cluster'] = []
     
     def __generate_locations(self):
-        centroids = self.__igraph.vs.select(is_centroid_eq=True)
-        locations = self.__igraph.vs.select(is_centroid_eq=False)
+        centroids = self.igraph.vs.select(is_centroid_eq=True)
+        locations = self.igraph.vs.select(is_centroid_eq=False)
         locations_per_centroid = \
             np.array_split(locations, len(centroids))
         
+        # Bridson Sampling Parameters
+        dims = np.array([self.__centroid_distance, self.__centroid_distance])
+        radius = self.graph_params['min_location_distance']
         for centroid, locations in zip(centroids, locations_per_centroid):
             centroid_x, centroid_y = centroid['coordinate']
-
-            theta = np.random.uniform(0,2*np.pi, len(locations))
-            radius = np.random.uniform(0, self.__centroid_distance/2, len(locations))
-            x = centroid_x + radius * np.cos(theta)
-            y = centroid_y + radius * np.sin(theta)
-
-            location_coordinates = zip(x, y)
+            offset = [centroid_x - dims[0]/2, centroid_y - dims[1]/2]
+            samples = \
+                Bridson_sampling(num_samples=len(locations), dims=dims, radius=radius)
+            location_coordinates = \
+                samples[(samples[:, 0] != dims[0]/2) & (samples[:, 1] != dims[1]/2)] + offset
             
-            for location, coordinate in zip(locations, location_coordinates):
+            for location, coordinate in zip(locations, map(tuple, location_coordinates)):
                 location['coordinate'] = coordinate
+                location['centroid'] = centroid
                 centroid['cluster'].append(location)
         
         # Compute time and distance matrix
         avg_speed = self.graph_params['avg_vehicle_speed'] * 1000 / 60
 
-        for edge in self.__igraph.es:
+        for edge in self.igraph.es:
             source_index = edge.source
             target_index = edge.target
 
-            source_coordinate = np.array(self.__igraph.vs[source_index]["coordinate"])
-            target_coordinate = np.array(self.__igraph.vs[target_index]["coordinate"])
+            source_coordinate = np.array(self.igraph.vs[source_index]["coordinate"])
+            target_coordinate = np.array(self.igraph.vs[target_index]["coordinate"])
             distance = round(np.linalg.norm(source_coordinate - target_coordinate), 2)
             travel_time = round(distance / avg_speed, 0)
 
@@ -124,9 +141,9 @@ class SyntheticGraphGenerator:
         time_matrix = dict()
         distance_matrix = dict()
 
-        for edge in self.__igraph.es:
-            source_vertex = self.__igraph.vs[edge.source]
-            target_vertex = self.__igraph.vs[edge.target]
+        for edge in self.igraph.es:
+            source_vertex = self.igraph.vs[edge.source]
+            target_vertex = self.igraph.vs[edge.target]
 
             source_id = source_vertex["location_id"]
             target_id = target_vertex["location_id"]
@@ -139,26 +156,14 @@ class SyntheticGraphGenerator:
             distance_matrix[(source_id, source_id)] = 0
             distance_matrix[(target_id, target_id)] = 0
         
-        location_vertices = self.__igraph.vs.select(is_centroid_eq=False)
+        location_vertices = self.igraph.vs.select(is_centroid_eq=False)
         location_ids = [location_vertex['location_id'] for location_vertex in location_vertices]
 
         # Cluster info
-        centroids = self.__igraph.vs.select(is_centroid_eq=True)
+        centroids = self.igraph.vs.select(is_centroid_eq=True)
         cluster_info = dict()
 
         for centroid in centroids:
             cluster_info[centroid['location_id']] = [location['location_id'] for location in centroid['cluster']]
 
-        return Graph(self.graph_params['num_locations'], self.graph_params['clusters'], location_ids, cluster_info, time_matrix, distance_matrix)
-
-
-# Might be useful
-# dims = np.array([self.__centroid_distance, self.__centroid_distance])
-# sampled_coordinates = \
-#     pd.Bridson_sampling(num_samples=len(locations)+1, dims=dims, radius=self.__intra_cluster_min_distance)
-# offset = [centroid_x - dims[0]/2, centroid_y - dims[1]/2]
-# location_coordinates = \
-#     [coor for coor in map(tuple, sampled_coordinates + offset)]
-
-# if centroid['coordinate'] in location_coordinates:
-#     location_coordinates.remove(centroid['coordinate'])
+        return Graph(self.igraph, location_ids, cluster_info, time_matrix, distance_matrix)

@@ -47,6 +47,7 @@ class Solution:
         self.rider_schedule = {"departure": dict(), "arrival": dict()} # nullify
         self.agents = sorted(list(agents), key=lambda x: x.rider.id)
         self.graph = graph
+        self.distance_travelled = None
         self.rider_utilities = dict()
         self.objectives = dict()
     
@@ -108,7 +109,16 @@ class Solution:
         return self.rider_utilities
 
     def create_rider_schedule(self) -> Dict[str, Dict[int, int]]:
+        distance_travelled = 0
+        current_node = self.head()
+
         for node in self.llist.iternodes():
+
+            location_i = current_node.value.location_id
+            location_j = node.value.location_id
+            travel_time = self.graph.travel_time(location_i, location_j)
+            distance_travelled += travel_time
+
             departure_time = node.value.departure_time
             arrival_time = node.value.arrival_time
 
@@ -117,7 +127,10 @@ class Solution:
             
             for rider in node.value.drop_off:
                 self.rider_schedule['arrival'][rider.id] = arrival_time
+            
+            current_node = node
         
+        self.distance_travelled = distance_travelled
         return self.rider_schedule
 
     def __valid_insert(self, new_node_value, ref_node, position=None):

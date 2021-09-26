@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Set
+from typing import Callable, Dict, OrderedDict, Set
 from algorithms.iterative_voting_1 import IterativeVoting1
 from algorithms.iterative_voting_2 import IterativeVoting2
 from models.agent import GreedyInsertAgent, IterativeVotingAgent
@@ -7,6 +7,7 @@ from models.solution import Solution
 from algorithms import tsp_heuristics as heuristic_algo
 from algorithms.greedy_insert import GreedyInsert
 from models.graph import Graph
+import numpy as np
 
 class Optimiser:
     """Wrapper class for the various optimiser algorithms
@@ -24,31 +25,36 @@ class Optimiser:
 
     """
 
-    def __init__(self, graph: Graph, passengers: Set[Passenger]):
+    def __init__(self, seed, graph: Graph, passengers: Set[Passenger]):
+        self.seed = seed
         self.graph = graph
         self.passengers = passengers
+        
+        np.random.seed(seed)
         self.pruned_graph = self.__prune_graph(graph, passengers)
         self.objective_function = None
 
     def optimise(self, options) -> Solution:
         algorithm = self.__customise_algorithm(options)
-
         solution: Solution = algorithm.optimise()
         solution.calculate_objectives()
         return solution
         
     def __prune_graph(self, graph: Graph, passengers: Set[Passenger]) -> Graph:
-        passenger_locations = set()
+        passenger_locations = OrderedDict()
 
         for passenger in passengers:
-            passenger_locations.add(passenger.start_id)
-            passenger_locations.add(passenger.destination_id)
-        
+            start = passenger.start_id
+            destination = passenger.destination_id
+
+            passenger_locations[start] = None
+            passenger_locations[destination] = None
+
         # Prune location_ids
-        new_location_ids = set()
+        new_location_ids = []
         for location_id in graph.locations:
             if location_id in passenger_locations:
-                new_location_ids.add(location_id)
+                new_location_ids.append(location_id)
         
         # Update time and distance matrix
         new_time_matrix = dict()
@@ -61,7 +67,7 @@ class Optimiser:
                 new_time_matrix[(source, target)] = graph.time_matrix[(source, target)]
                 new_distance_matrix[(source, target)] = graph.distance_matrix[(source, target)]
         
-        return Graph(None, None, new_location_ids, None, new_time_matrix, new_distance_matrix)
+        return Graph(graph.igraph, new_location_ids, None, new_time_matrix, new_distance_matrix)
 
     def __customise_algorithm(self, options: Dict[str, object]) -> Callable:
 
@@ -73,11 +79,11 @@ class Optimiser:
 
         elif algorithm == "iterative_voting_1":
             agents = [IterativeVotingAgent(rider, self.graph) for rider in self.passengers]
-            return IterativeVoting1(agents, self.graph, params=params)
+            return IterativeVoting1(agents, self.pruned_graph, params=params)
         
         elif algorithm == "iterative_voting_2":
             agents = [IterativeVotingAgent(rider, self.graph) for rider in self.passengers]
-            return IterativeVoting2(agents, self.graph, params=params)
+            return IterativeVoting2(agents, self.pruned_graph, params=params)
         elif algorithm == 'greedy_insert':
             agents = [GreedyInsertAgent(rider, self.graph) for rider in self.passengers]
-            return GreedyInsert(agents, self.graph, params=params)
+            return GreedyInsert(agents, self.pruned_graph, params=params)

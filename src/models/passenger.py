@@ -53,17 +53,25 @@ class Passenger:
         return self.__str__()
 
 class PassengerGenerator:
-    def __init__(self, graph, passenger_params) -> None:
+    def __init__(self, seed, graph, passenger_params) -> None:
+        self.seed = seed
         self.graph = graph
         self.passenger_params = passenger_params
+
+        self.beta_distribution = None
+        self.preference_distribution = None
+
+        np.random.seed(seed)
         self.passengers = self.generate_passengers()
     
     def generate_passengers(self) -> List[Passenger]:
         
         passengers = []
-        beta_distribution = self.__beta_distribution()    
+        beta_distribution = self.__beta_distribution()
+        self.beta_distribution = beta_distribution 
         location_pairs = self.__generate_locations()
         preferences = self.__generate_preferences(location_pairs)
+        self.preference_distribution = preferences
 
         for id, beta, location_pair, preference in \
             zip(
