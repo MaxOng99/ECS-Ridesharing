@@ -46,8 +46,8 @@ class IterativeVoting1:
     def __voting_rule(self, rule: str) -> Callable:
         if rule == "borda_count":
             return VotingRules.borda_count
-        elif rule == 'majority':
-            return VotingRules.majority
+        elif rule == 'popularity':
+            return VotingRules.popularity
     
     def __stations_to_visit(self, waiting, onboard) -> List[int]:
         stations = []

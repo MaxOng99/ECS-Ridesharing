@@ -53,12 +53,12 @@ class GreedyInsert:
 
         ranking_functions = [agent.rank_solutions for agent in self.agents]
         weights = [agent.weight for agent in self.agents]
-        borda_solution = self.voting_rule(solutions, ranking_functions, weights)
-        return borda_solution
+        voted_solution = self.voting_rule(solutions, ranking_functions, weights)
+        return voted_solution
     
     def __get_voting_rule(self, voting_rule: str):
-        if voting_rule == 'majority':
-            return VotingRules.majority
+        if voting_rule == 'popularity':
+            return VotingRules.popularity
         
         elif voting_rule == 'borda_count':
             return VotingRules.borda_count

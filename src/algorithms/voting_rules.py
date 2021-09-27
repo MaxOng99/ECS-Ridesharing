@@ -30,7 +30,7 @@ class VotingRules:
 
         return np.random.choice(indifferent_candidates)
 
-    def majority(candidates: Set[object], ranking_functions: List[Callable], weights: List[float]):
+    def popularity(candidates: Set[object], ranking_functions: List[Callable], weights: List[float]):
 
         scores = {candidate: 0 for candidate in candidates}
     
