@@ -1,5 +1,8 @@
+from os import replace
 import numpy as np
 from typing import List, Tuple
+
+from numpy.core.fromnumeric import size
 
 class Passenger:
 
@@ -90,15 +93,21 @@ class PassengerGenerator:
         location_pairs = []
 
         if cluster_travelling:
-            cluster_info = self.graph.cluster_info
-            for _ in range(num_passengers):
-                source_cluster, destination_cluster = \
-                    np.random.choice(list(cluster_info.keys()), size=2)
-                start, destination = \
-                    (np.random.choice(cluster_info[source_cluster]),
-                    np.random.choice(cluster_info[destination_cluster]))
+            choices = ["cluster", "normal"]
+            probability = [0.6, 0.4]
 
-                location_pairs.append((start, destination))
+            for _ in range(num_passengers):
+                option = np.random.choice(choices, p=probability)
+                if option == "cluster":
+                    cluster_info = self.graph.cluster_info
+                    start, destination = \
+                        np.random.choice(list(cluster_info.keys()), size=2, replace=False)
+                    location_pairs.append((start, destination))
+                else:
+                    location_ids = self.graph.locations
+                    location_pair = np.random.choice(location_ids, size=2, replace=False)
+                    location_pairs.append(tuple(location_pair))
+
     
         else:
             location_ids = self.graph.locations
@@ -112,22 +121,27 @@ class PassengerGenerator:
         beta_dist = self.passenger_params['beta_distribution']
 
         if beta_dist == "truncated_normal":
-            return self.__truncated_normal_dist()
-        
+            return self.__truncated_normal_dist(0.5, 0.15, 0, 1)
         elif beta_dist == "uniform":
             return self.__uniform_dist()
+        
+        elif beta_dist == "sensitive":
+            return np.random.beta(20, 65, self.passenger_params['num_passengers'])
+        
+        elif beta_dist == "non_sensitive":
+            return np.random.beta(65, 20, self.passenger_params['num_passengers'])
+            
 
     def __uniform_dist(self):
         n_samples = self.passenger_params['num_passengers']
         return np.random.uniform(0, 1, n_samples)
     
-    def __truncated_normal_dist(self):
+    def __truncated_normal_dist(self, loc, scale, min, max):
         n_samples = self.passenger_params['num_passengers']
-        amin, amax = 0, 1
         samples = np.zeros((0,))
         while samples.shape[0] < n_samples: 
-            s = np.random.normal(0.5, 0.15, size=(n_samples,))
-            accepted = s[(s >= amin) & (s <= amax)]
+            s = np.random.normal(loc, scale, size=(n_samples,))
+            accepted = s[(s >= min) & (s <= max)]
             samples = np.concatenate((samples, accepted), axis=0)
         samples = samples[:n_samples]
         return samples
