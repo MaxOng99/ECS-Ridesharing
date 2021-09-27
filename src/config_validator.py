@@ -98,7 +98,7 @@ greedy_insert_schema = {
                 'type': 'string',
                 'allowed': [
                     'borda_count',
-                    'populartiy'
+                    'popularity'
                 ]
             }
         }
