@@ -4,6 +4,7 @@ from models.passenger import PassengerGenerator
 from algorithms.optimiser import Optimiser
 from utils.output_writer import write_simulation_output
 from config_validator import validate_yaml
+import time
 
 class Simulation:
     def __init__(self, seed_config, exp_config) -> None:
@@ -21,6 +22,7 @@ class Simulation:
         optimiser_seed = self.seed_params['algorithm']
 
         solutions = []
+        elapsed = []
         graphs = []
         for x in range(runs):
             # Generate graph
@@ -34,10 +36,13 @@ class Simulation:
 
             # Set up optimiser
             optimiser = Optimiser(optimiser_seed, graph, passengers)
+            t_start = time.perf_counter()
             solution = optimiser.optimise(self.optimiser_params)
+            t_end = time.perf_counter()
+            elapsed.append(t_end - t_start)
             solutions.append(solution)
 
-        return solutions
+        return solutions, elapsed
 
 with open("config.yaml", "r") as file:
 
@@ -50,8 +55,8 @@ with open("config.yaml", "r") as file:
 
         for config in experiment_configs:
             simulation = Simulation(seed_config, config)
-            solutions = simulation.run()
-            write_simulation_output(config, solutions)
+            solutions, elapsed = simulation.run()
+            write_simulation_output(config, solutions, elapsed)
 
     except yaml.YAMLError as exc:
         print(exc)

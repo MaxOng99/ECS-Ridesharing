@@ -23,20 +23,19 @@ def write_illustration_output(graphs, beta_dists, preference_dists):
         graph_utils.plot_beta_distribution(beta_dist, path=str(beta_dist_file))
         graph_utils.plot_preference_distribution(preference_dist, path=str(pref_dist_file))
 
-def write_simulation_output(config, solutions):
+def write_simulation_output(config, solutions, elapsed):
     
     output_path = Path("./simulation_output")
     if not output_path.is_dir():
         output_path.mkdir(parents=True, exist_ok=True)
-    regex = re.compile('experiment_[0-9]$')
+    regex = re.compile('experiment_\d+$')
     experiment_folders = []
     for file in Path(output_path).iterdir():
         if regex.match(file.name):
             experiment_folders.append(file.name)
 
     if experiment_folders:
-        last_folder = experiment_folders[-1]
-        id = int(last_folder[-1]) + 1
+        id = len(experiment_folders) + 1
     else:
         id = 1
 
@@ -63,7 +62,8 @@ def write_simulation_output(config, solutions):
         'utilitarian',
         'egalitarian',
         'proportionality',
-        'avg_utility'
+        'avg_utility',
+        'elapsed_time'
     ]
 
     # Flatten config dict
@@ -85,17 +85,20 @@ def write_simulation_output(config, solutions):
     egalitarian = []
     proportional = []
     utilities = []
-    
+    elapsed_times = []
     with full_csv_file.open('w') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
-        for solution in solutions:
+        for solution, elapsed_time in zip(solutions, elapsed):
             objective_dict = solution.objectives
             utilitarian.append(objective_dict['utilitarian'])
             egalitarian.append(objective_dict['egalitarian'])
             proportional.append(objective_dict['proportionality'])
             utilities.append(objective_dict['avg_utility'])
-            row = {**passenger_params, **graph_params, **algo_params, **objective_dict}
+
+            elapsed_times.append(elapsed_time)
+            elapsed_dict = {"elapsed_time": elapsed_time}
+            row = {**passenger_params, **graph_params, **algo_params, **objective_dict, **elapsed_dict}
             writer.writerow(row)
     
     # Dump summary csv
@@ -115,7 +118,8 @@ def write_simulation_output(config, solutions):
         'avg_utilitarian',
         'avg_egalitarian',
         'avg_proportionality',
-        'avg_utility'
+        'avg_utility',
+        'avg_elapsed_time'
     ]
 
     
@@ -135,7 +139,8 @@ def write_simulation_output(config, solutions):
 
         local_writer = csv.DictWriter(local_f, fieldnames=summary_fieldnames)
         local_writer.writeheader()
-        local_row = {**passenger_params, **graph_params, **algo_params, **objective_dict}
+        elapsed_dict = {"avg_elapsed_time": np.mean(elapsed_times)}
+        local_row = {**passenger_params, **graph_params, **algo_params, **objective_dict, **elapsed_dict}
         local_writer.writerow(local_row)
 
 
@@ -148,5 +153,5 @@ def write_simulation_output(config, solutions):
             global_writer.writeheader()
         
         id_dict = {"id": id}
-        global_row = {**local_row, **id_dict}
+        global_row = {**local_row, **id_dict, **elapsed_dict}
         global_writer.writerow(global_row)
