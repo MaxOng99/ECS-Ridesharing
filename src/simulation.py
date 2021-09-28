@@ -1,18 +1,21 @@
-import yaml
 from models.graph import SyntheticGraphGenerator
 from models.passenger import PassengerGenerator
 from algorithms.optimiser import Optimiser
-from utils.output_writer import write_simulation_output
-from config_validator import validate_yaml
 import time
+import yaml
+
+from utils.output_writer import write_simulation_output
 
 class Simulation:
-    def __init__(self, seed_config, exp_config) -> None:
-        self.seed_params = seed_config
-        self.graph_params = exp_config['graph_params']
-        self.passenger_params = exp_config['passenger_params']
-        self.optimiser_params = exp_config['optimiser_params']
-        self.experiment_params = exp_config['experiment_params']
+    def __init__(self, config_file) -> None:
+
+        with open(config_file, "r") as f:
+            self.config = yaml.safe_load(f)
+            self.seed_params = self.config['seeds']
+            self.graph_params = self.config['graph_params']
+            self.passenger_params = self.config['passenger_params']
+            self.optimiser_params = self.config['optimiser_params']
+            self.experiment_params = self.config['experiment_params']
 
     def run(self):
         
@@ -42,24 +45,8 @@ class Simulation:
             elapsed.append(t_end - t_start)
             solutions.append(solution)
 
-        return solutions, elapsed
+        write_simulation_output(self.config, solutions, elapsed)
 
-with open("config.yaml", "r") as file:
-
-    try:
-        config = yaml.safe_load(file)
-        validate_yaml(config)
-        
-        seed_config = config['seeds']
-        experiment_configs = config['experiments']
-
-        for config in experiment_configs:
-            simulation = Simulation(seed_config, config)
-            solutions, elapsed = simulation.run()
-            write_simulation_output(config, solutions, elapsed)
-
-    except yaml.YAMLError as exc:
-        print(exc)
 
 
 
