@@ -1,9 +1,10 @@
-from typing import Callable, List, OrderedDict
+from typing import Callable, List
 from models.agent import IterativeVotingAgent
 from models.solution import Solution, TourNodeValue
 from algorithms.voting_rules import VotingRules
 from pyllist import dllistnode
 from models.graph import Graph
+from collections import OrderedDict
 
 class IterativeVoting2:
     """Voting algorithm to find sub-optimal Solution

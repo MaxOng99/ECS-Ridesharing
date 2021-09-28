@@ -1,4 +1,5 @@
-from typing import Callable, Dict, OrderedDict, Set
+from typing import Callable, Dict, Set
+from collections import OrderedDict
 from algorithms.iterative_voting_1 import IterativeVoting1
 from algorithms.iterative_voting_2 import IterativeVoting2
 from models.agent import GreedyInsertAgent, IterativeVotingAgent
