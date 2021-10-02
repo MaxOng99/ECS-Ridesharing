@@ -85,7 +85,7 @@ graph_schema = {
 greedy_insert_schema = {
     'algorithm': {
         'type': 'string',
-        'allowed': ['greedy_insert']
+        'allowed': ['greedy_insert', 'greedy_insert_2']
     },
     'algorithm_params': {
         'type': 'dict',
@@ -98,7 +98,17 @@ greedy_insert_schema = {
                 'type': 'string',
                 'allowed': [
                     'borda_count',
-                    'popularity'
+                    'popularity',
+                    'none'
+                ]
+            },
+            "objective": {
+                'type': 'string',
+                "allowed": [
+                    'egalitarian',
+                    'utilitarian',
+                    'proportionality',
+                    'avg_utility'
                 ]
             }
         }

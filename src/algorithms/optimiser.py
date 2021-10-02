@@ -7,6 +7,7 @@ from models.passenger import Passenger
 from models.solution import Solution
 from algorithms import tsp_heuristics as heuristic_algo
 from algorithms.greedy_insert import GreedyInsert
+from algorithms.greedy_insert_2 import GreedyInsert2
 from models.graph import Graph
 import numpy as np
 
@@ -38,7 +39,6 @@ class Optimiser:
     def optimise(self, options) -> Solution:
         algorithm = self.__customise_algorithm(options)
         solution: Solution = algorithm.optimise()
-        solution.calculate_objectives()
         return solution
         
     def __prune_graph(self, graph: Graph, passengers: Set[Passenger]) -> Graph:
@@ -88,3 +88,6 @@ class Optimiser:
         elif algorithm == 'greedy_insert':
             agents = [GreedyInsertAgent(rider, self.graph) for rider in self.passengers]
             return GreedyInsert(agents, self.pruned_graph, params=params)
+        elif algorithm == "greedy_insert_2":
+            agents = [GreedyInsertAgent(rider, self.graph) for rider in self.passengers]
+            return GreedyInsert2(agents, self.pruned_graph, params=params)

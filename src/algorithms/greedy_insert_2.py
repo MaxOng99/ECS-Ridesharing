@@ -7,7 +7,7 @@ import numpy as np
 from models.graph import Graph
 from models.agent import GreedyInsertAgent
 
-class GreedyInsert:
+class GreedyInsert2:
 
     """Greedy algorithm to find sub-optimal Solution
 
@@ -45,16 +45,22 @@ class GreedyInsert:
             solution = self.__initialise_new_solution(start_agent)
             # Assign n other riders
             other_agents = self.agents[1:]
+
             for agent in other_agents:
-                self.__best_allocation(agent, solution)
+                self.__best_allocation(agent, solution, "departure")
+            
+            self.agents.reverse()
+
+            for agent in self.agents:
+                self.__best_allocation(agent, solution, "arrival")
 
             solution.create_rider_schedule()
             solution.calculate_objectives()
             solutions.append(solution)
 
+
         if not self.voting_rule:
             return max(solutions, key=lambda sol: sol.objectives[self.params['objective']])
-
         else:
             ranking_functions = [agent.rank_solutions for agent in self.agents]
             weights = [agent.weight for agent in self.agents]
@@ -93,36 +99,38 @@ class GreedyInsert:
 
         return solution
 
-    def __best_allocation(self, agent: GreedyInsertAgent, solution: Solution):
+    def __best_allocation(self, agent: GreedyInsertAgent, solution: Solution, status):
 
-        departure_strategies = []
-        for node in solution.iterator():
-            departure_strategy = self.__create_strategy(agent, node, 'waiting', insert_position='before')
-            if departure_strategy:
-                departure_strategies.append(departure_strategy)
-                
-            # Special case at tail of linked list: Attempt to create an 
-            # additional departure strategy by inserting after the current node
-            if node.next == None:
-                departure_strategy = self.__create_strategy(agent, node, 'waiting', insert_position='after')
+        if status == "departure":
+            departure_strategies = []
+            for node in solution.iterator():
+                departure_strategy = self.__create_strategy(agent, node, 'waiting', insert_position='before')
                 if departure_strategy:
                     departure_strategies.append(departure_strategy)
-        
-        best_departure_strategy = \
-            max(departure_strategies, key=lambda strat: agent.rider.utility(strat.strat['allocated_node'].value.departure_time, 0))
-        departure_node = best_departure_strategy.apply(solution)
-        agent.departure_node = departure_node
+                    
+                # Special case at tail of linked list: Attempt to create an 
+                # additional departure strategy by inserting after the current node
+                if node.next == None:
+                    departure_strategy = self.__create_strategy(agent, node, 'waiting', insert_position='after')
+                    if departure_strategy:
+                        departure_strategies.append(departure_strategy)
+            
+            best_departure_strategy = \
+                max(departure_strategies, key=lambda strat: agent.rider.utility(strat.strat['allocated_node'].value.departure_time, 0))
+            departure_node = best_departure_strategy.apply(solution)
+            agent.departure_node = departure_node
 
-        arrival_strategies = []
-        for node in solution.iterator(start_node=departure_node):
-            arrival_strategy = self.__create_strategy(agent, node, 'onboard', insert_position='after')
-            if arrival_strategy:
-                arrival_strategies.append(arrival_strategy)
-        
-        best_arrival_strategy = \
-            max(arrival_strategies, key=lambda strat: agent.rider.utility(departure_node.value.departure_time, strat.strat['allocated_node'].value.arrival_time))
-        arrival_node = best_arrival_strategy.apply(solution)
-        agent.arrival_node = arrival_node
+        elif status == "arrival":
+            arrival_strategies = []
+            for node in solution.iterator(start_node=agent.departure_node):
+                arrival_strategy = self.__create_strategy(agent, node, 'onboard', insert_position='after')
+                if arrival_strategy:
+                    arrival_strategies.append(arrival_strategy)
+            
+            best_arrival_strategy = \
+                max(arrival_strategies, key=lambda strat: agent.rider.utility(agent.departure_node.value.departure_time, strat.strat['allocated_node'].value.arrival_time))
+            arrival_node = best_arrival_strategy.apply(solution)
+            agent.arrival_node = arrival_node
 
     def __create_strategy(self, agent, ref_node, status, insert_position=None):
         rider = agent.rider
