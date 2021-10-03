@@ -63,6 +63,7 @@ def write_simulation_output(config, solutions, elapsed):
         'egalitarian',
         'proportionality',
         'avg_utility',
+        'gini_index',
         'elapsed_time'
     ]
 
@@ -86,6 +87,7 @@ def write_simulation_output(config, solutions, elapsed):
     proportional = []
     utilities = []
     elapsed_times = []
+    ginis = []
     with full_csv_file.open('w') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -95,6 +97,7 @@ def write_simulation_output(config, solutions, elapsed):
             egalitarian.append(objective_dict['egalitarian'])
             proportional.append(objective_dict['proportionality'])
             utilities.append(objective_dict['avg_utility'])
+            ginis.append(objective_dict['gini_index'])
 
             elapsed_times.append(elapsed_time)
             elapsed_dict = {"elapsed_time": elapsed_time}
@@ -119,6 +122,7 @@ def write_simulation_output(config, solutions, elapsed):
         'avg_egalitarian',
         'avg_proportionality',
         'avg_utility',
+        'avg_gini_index',
         'avg_elapsed_time'
     ]
 
@@ -134,7 +138,8 @@ def write_simulation_output(config, solutions, elapsed):
             "avg_utilitarian": np.mean(utilitarian),
             "avg_egalitarian": np.mean(egalitarian),
             "avg_proportionality": np.mean(proportional),
-            'avg_utility': np.mean(utilities)
+            'avg_utility': np.mean(utilities),
+            'avg_gini_index': np.mean(ginis)
         }
 
         local_writer = csv.DictWriter(local_f, fieldnames=summary_fieldnames)

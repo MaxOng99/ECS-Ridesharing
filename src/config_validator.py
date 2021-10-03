@@ -108,7 +108,8 @@ greedy_insert_schema = {
                     'egalitarian',
                     'utilitarian',
                     'proportionality',
-                    'avg_utility'
+                    'avg_utility',
+                    'gini_index'
                 ]
             }
         }

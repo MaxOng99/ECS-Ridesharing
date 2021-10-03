@@ -3,6 +3,8 @@ from pyllist import dllist, dllistnode
 from utils.info_utils import solution_info
 from models.graph import Graph
 import numpy as np
+from poverty import draw_lorenz
+from poverty import gini
 
 class TourNodeValue:
 
@@ -57,6 +59,7 @@ class Solution:
         self.objectives['utilitarian'] = sum(utils)
         self.objectives['egalitarian'] = min(utils)
         self.objectives['proportionality'] = np.std(utils)
+        self.objectives['gini_index'] = gini(utils)
 
     def head(self):
         return self.llist.first

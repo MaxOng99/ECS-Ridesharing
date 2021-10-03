@@ -53,7 +53,10 @@ class GreedyInsert:
             solutions.append(solution)
 
         if not self.voting_rule:
-            return max(solutions, key=lambda sol: sol.objectives[self.params['objective']])
+            if self.params['objective'] == "gini_index":
+                return min(solutions, key=lambda sol: sol.objectives['gini_index'])
+            else:
+                return max(solutions, key=lambda sol: sol.objectives[self.params['objective']])
 
         else:
             ranking_functions = [agent.rank_solutions for agent in self.agents]
