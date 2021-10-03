@@ -1,8 +1,5 @@
-from os import replace
 import numpy as np
 from typing import List, Tuple
-
-from numpy.core.fromnumeric import size
 
 class Passenger:
 
@@ -45,7 +42,7 @@ class Passenger:
             self.beta**(abs(self.optimal_arrival - arrival_time))) / 2
 
         return utility
-        
+
     def utility(self, departure_time: int, arrival_time: int) -> float:
         return self.__utility_function(departure_time, arrival_time)
     
@@ -90,6 +87,7 @@ class PassengerGenerator:
     def __generate_locations(self):
         num_passengers = self.passenger_params['num_passengers']
         cluster_travelling = self.passenger_params['inter_cluster_travelling']
+        cluster_info = self.graph.cluster_info
         location_pairs = []
 
         if cluster_travelling:
@@ -99,12 +97,17 @@ class PassengerGenerator:
             for _ in range(num_passengers):
                 option = np.random.choice(choices, p=probability)
                 if option == "cluster":
-                    cluster_info = self.graph.cluster_info
+                    
                     start, destination = \
                         np.random.choice(list(cluster_info.keys()), size=2, replace=False)
                     location_pairs.append((start, destination))
                 else:
-                    location_ids = self.graph.locations
+                    location_ids = []
+
+                    for location in self.graph.locations:
+                        if not location in cluster_info.keys():
+                            location_ids.append(location)
+                            
                     location_pair = np.random.choice(location_ids, size=2, replace=False)
                     location_pairs.append(tuple(location_pair))
 
