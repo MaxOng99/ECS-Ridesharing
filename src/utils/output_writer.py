@@ -50,7 +50,8 @@ def write_simulation_output(config, solutions, elapsed):
         config['graph_params']['dataset']
         fieldnames = [
             'num_passengers',
-            "beta_distribution",
+            "alpha",
+            "beta",
             "inter_cluster_travelling",
             "preference_distribution",
             'service_hours',
@@ -71,7 +72,8 @@ def write_simulation_output(config, solutions, elapsed):
 
         fieldnames = [
             'num_passengers',
-            "beta_distribution",
+            "alpha",
+            "beta",
             "inter_cluster_travelling",
             "preference_distribution",
             'service_hours',
@@ -134,7 +136,8 @@ def write_simulation_output(config, solutions, elapsed):
         config['graph_params']['dataset']
         summary_fieldnames = [
             'num_passengers',
-            "beta_distribution",
+            "alpha",
+            "beta",
             "inter_cluster_travelling",
             "preference_distribution",
             'service_hours',
@@ -155,7 +158,8 @@ def write_simulation_output(config, solutions, elapsed):
     except:
         summary_fieldnames = [
             'num_passengers',
-            "beta_distribution",
+            "alpha",
+            "beta",
             "inter_cluster_travelling",
             "preference_distribution",
             'service_hours',

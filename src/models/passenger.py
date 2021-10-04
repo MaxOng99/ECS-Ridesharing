@@ -1,6 +1,8 @@
 import numpy as np
 from typing import List, Tuple
 
+from numpy.random.mtrand import beta
+
 class Passenger:
 
     """Model for Passenger
@@ -58,7 +60,8 @@ class PassengerGenerator:
         self.graph = graph
         self.passenger_params = passenger_params
 
-        self.beta_distribution = None
+        self.beta = self.passenger_params['beta']
+        self.alpha = self.passenger_params['alpha']
         self.preference_distribution = None
 
         np.random.seed(seed)
@@ -67,7 +70,7 @@ class PassengerGenerator:
     def generate_passengers(self) -> List[Passenger]:
         
         passengers = []
-        beta_distribution = self.__beta_distribution()
+        beta_distribution = self.__beta_distribution(self.alpha, self.beta)
         self.beta_distribution = beta_distribution 
         location_pairs = self.__generate_locations()
         preferences = self.__generate_preferences(location_pairs)
@@ -120,35 +123,13 @@ class PassengerGenerator:
         
         return location_pairs
     
-    def __beta_distribution(self):
-        beta_dist = self.passenger_params['beta_distribution']
-
-        if beta_dist == "truncated_normal":
-            return self.__truncated_normal_dist(0.5, 0.15, 0, 1)
-        elif beta_dist == "uniform":
-            return self.__uniform_dist()
-        
-        elif beta_dist == "sensitive":
-            return np.random.beta(20, 65, self.passenger_params['num_passengers'])
-        
-        elif beta_dist == "non_sensitive":
-            return np.random.beta(65, 20, self.passenger_params['num_passengers'])
-            
+    def __beta_distribution(self, alpha, beta):
+        return np.random.beta(alpha, beta, self.passenger_params['num_passengers'])            
 
     def __uniform_dist(self):
         n_samples = self.passenger_params['num_passengers']
         return np.random.uniform(0, 1, n_samples)
     
-    def __truncated_normal_dist(self, loc, scale, min, max):
-        n_samples = self.passenger_params['num_passengers']
-        samples = np.zeros((0,))
-        while samples.shape[0] < n_samples: 
-            s = np.random.normal(loc, scale, size=(n_samples,))
-            accepted = s[(s >= min) & (s <= max)]
-            samples = np.concatenate((samples, accepted), axis=0)
-        samples = samples[:n_samples]
-        return samples
-
     def __generate_preferences(self, location_pairs):
         preference_dist = self.passenger_params['preference_distribution']
         service_hours = self.passenger_params['service_hours']

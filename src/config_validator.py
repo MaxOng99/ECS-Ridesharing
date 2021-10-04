@@ -32,14 +32,11 @@ passengers_schema = {
             'min': 1,
             'max': 24,
         },
-        'beta_distribution': {
-            'type': 'string',
-            'allowed': [
-                'uniform',
-                'sensitive',
-                'non_sensitive',
-                'truncated_normal'
-            ]
+        'alpha': {
+            'type': 'number'
+        },
+        'beta': {
+            'type': 'number'
         },
         'preference_distribution': {
             'type': 'string',
