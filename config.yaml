@@ -4,26 +4,75 @@ seeds:
   algorithm: 82
 
 experiments:
+  # - passenger_params:
+  #     num_passengers: 200
+  #     service_hours: 24
+  #     beta_distribution: "truncated_normal"
+  #     preference_distribution: "peak_hours"
+  #     inter_cluster_travelling: True
+
+  #   graph_params:
+  #     num_locations: 60
+  #     clusters: 4
+  #     min_location_distance: 400
+  #     grid_size: 7000
+  #     short_avg_vehicle_speed: 48
+  #     long_avg_vehicle_speed: 48
+
+  #   optimiser_params:
+  #     algorithm: 'greedy_insert'
+  #     algorithm_params:
+  #       final_voting_rule: "none"
+  #       iterations: 50
+  #       objective: "gini_index"
+
+  #   experiment_params:
+  #     runs: 1
+
   - passenger_params:
-      num_passengers: 100
+      num_passengers: 350
       service_hours: 24
       beta_distribution: "truncated_normal"
-      preference_distribution: "uniform"
+      preference_distribution: "peak_hours"
       inter_cluster_travelling: True
 
     graph_params:
-      num_locations: 150
-      clusters: 4
-      min_location_distance: 400
-      grid_size: 7000
-      avg_vehicle_speed: 30
+      dataset: "westminster_hackney_stops"
+      centroid_codes: [490003384SA, 490009644E]
+      num_locations: [60, 60]
+      short_avg_vehicle_speed: 19.76
+      long_avg_vehicle_speed: 30
 
     optimiser_params:
-      algorithm: 'greedy_insert'
+      algorithm: 'greedy insert ++'
       algorithm_params:
-        iterations: 1
-        final_voting_rule: "borda_count"
+        final_voting_rule: "none"
+        iterations: 50
+        objective: "gini_index"
 
     experiment_params:
-      runs: 10
-      
+      runs: 1
+
+  # - passenger_params:
+  #     num_passengers: 100
+  #     service_hours: 24
+  #     beta_distribution: "truncated_normal"
+  #     preference_distribution: "uniform"
+  #     inter_cluster_travelling: True
+
+  #   graph_params:
+  #     num_locations: 60
+  #     clusters: 4
+  #     min_location_distance: 400
+  #     grid_size: 7000
+  #     avg_vehicle_speed: 19.76
+
+  #   optimiser_params:
+  #     algorithm: 'greedy_insert'
+  #     algorithm_params:
+  #       final_voting_rule: "none"
+  #       iterations: 50
+  #       objective: "gini_index"
+
+  #   experiment_params:
+  #     runs: 1
