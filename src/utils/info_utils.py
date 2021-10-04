@@ -56,8 +56,8 @@ def solution_info(solution: "Solution") -> str:
         schedule.add_row(row_data)
 
     for agent in solution.agents:
-        departure_time = agent.departure_node.value.departure_time
-        arrival_time = agent.arrival_node.value.arrival_time
+        departure_time = solution.rider_schedule['departure'][agent.rider.id]
+        arrival_time = solution.rider_schedule['arrival'][agent.rider.id]
         utility = agent.rider.utility(departure_time, arrival_time)
         row_data = [f'P:{agent.rider.id}', f'{agent.rider.start_id} - {agent.rider.destination_id}', agent.rider.optimal_departure, departure_time, agent.rider.optimal_arrival, arrival_time, utility]
         rider_sched.add_row(row_data)
@@ -67,37 +67,30 @@ def solution_info(solution: "Solution") -> str:
 def strategy_info(strat_obj):
     info = []
 
-    if strat_obj.strat['action'] == 'wait':
+    if strat_obj.strat['action'] == 'stay':
         info = [
-            f'{strat_obj.__class__.__name__}, Wait',
-            f'Ref_Node: {strat_obj.strat["ref_node"]}',
-            f'Ref_Node_Old_Value {strat_obj.strat["ref_node_old_value"]}',
-            f'Ref_Node_New_Value{strat_obj.strat["ref_node_new_value"]}',
-            f'Next_Node: {strat_obj.strat["next_node"]}',
-            f'Next_Node_Old_Value: {strat_obj.strat["next_node_old_value"]}',
-            f'Next_Node_New_Value: {strat_obj.strat["next_node_new_value"]}'
+            f'Action: Wait',
+            f"allocated_node: {strat_obj.strat['allocated_node']}",
+            f"agent: {strat_obj.strat['agent']}"
         ]
         return "\n".join(info)
     
     elif strat_obj.strat['action'] == 'insert_before':
         info = [
-            f'{strat_obj.__class__.__name__}, Insert Before',
+            f'Action: Insert Before',
             f'Ref_Node: {strat_obj.strat["ref_node"]}',
-            f'Next_Node: {strat_obj.strat["next_node"]}',
-            f'Next_Node_Old_Value: {strat_obj.strat["next_node_old_value"]}',
-            f'Next_Node_New_Value: {strat_obj.strat["next_node_new_value"]}',
-            f'New_Node_Value: {strat_obj.strat["new_node_value"]}',
+            f"allocated_node: {strat_obj.strat['allocated_node']}",
+            f"agent: {strat_obj.strat['agent']}"
         ]
         return "\n".join(info)
 
     elif strat_obj.strat['action'] == 'insert_after':
         info = [
-            f'{strat_obj.__class__.__name__}, Insert After',
+            f'Action: Insert After',
             f'Ref_Node: {strat_obj.strat["ref_node"]}',
-            f'Next_Node: {strat_obj.strat["next_node"]}',
-            f'Next_Node_Old_Value: {strat_obj.strat["next_node_old_value"]}',
-            f'Next_Node_New_Value: {strat_obj.strat["next_node_new_value"]}',
-            f'New_Node_Value: {strat_obj.strat["new_node_value"]}'
+            f"allocated_node: {strat_obj.strat['allocated_node']}",
+            f"agent: {strat_obj.strat['agent']}"
         ]
         return "\n".join(info)
-
+    
+    return ""
