@@ -45,35 +45,58 @@ def write_simulation_output(config, solutions, elapsed):
     full_csv_file = new_dir / 'full_output.csv'
     local_summary_csv_file = new_dir / 'summary_output.csv'
     global_summary_csv_file = output_path / "summary_output.csv"
-    
-    fieldnames = [
-        'num_passengers',
-        "beta_distribution",
-        "inter_cluster_travelling",
-        "preference_distribution",
-        'service_hours',
-        'num_locations',
-        'clusters',
-        'min_location_distance',
-        'grid_size',
-        'avg_vehicle_speed',
-        'algorithm',
-        'algorithm_params',
-        'utilitarian',
-        'egalitarian',
-        'proportionality',
-        'avg_utility',
-        'gini_index',
-        'elapsed_time'
-    ]
+    fieldnames = None
+    try:
+        config['graph_params']['dataset']
+        fieldnames = [
+            'num_passengers',
+            "beta_distribution",
+            "inter_cluster_travelling",
+            "preference_distribution",
+            'service_hours',
+            'num_locations',
+            'centroid_codes',
+            'dataset',
+            'short_avg_vehicle_speed',
+            'long_avg_vehicle_speed',
+            'algorithm',
+            'utilitarian',
+            'egalitarian',
+            'proportionality',
+            'avg_utility',
+            'gini_index',
+            'elapsed_time'
+        ]
+    except:
+
+        fieldnames = [
+            'num_passengers',
+            "beta_distribution",
+            "inter_cluster_travelling",
+            "preference_distribution",
+            'service_hours',
+            'num_locations',
+            'clusters',
+            'min_location_distance',
+            'grid_size',
+            'short_avg_vehicle_speed',
+            'long_avg_vehicle_speed',
+            'algorithm',
+            'algorithm_params',
+            'utilitarian',
+            'egalitarian',
+            'proportionality',
+            'avg_utility',
+            'gini_index',
+            'elapsed_time'
+        ]
 
     # Flatten config dict
     passenger_params = config['passenger_params']
     graph_params = config['graph_params']
     optimiser_params = config['optimiser_params']
     algo_params = {
-        'algorithm': optimiser_params['algorithm'],
-        'algorithm_params': optimiser_params['algorithm_params']
+        'algorithm': f"{optimiser_params['algorithm']} ({optimiser_params['algorithm_params']})"
     }
 
     # Dump config parameters
@@ -105,26 +128,52 @@ def write_simulation_output(config, solutions, elapsed):
             writer.writerow(row)
     
     # Dump summary csv
-    summary_fieldnames = [
-        'num_passengers',
-        "beta_distribution",
-        "inter_cluster_travelling",
-        "preference_distribution",
-        'service_hours',
-        'num_locations',
-        'clusters',
-        'min_location_distance',
-        'grid_size',
-        'avg_vehicle_speed',
-        'algorithm',
-        'algorithm_params',
-        'avg_utilitarian',
-        'avg_egalitarian',
-        'avg_proportionality',
-        'avg_utility',
-        'avg_gini_index',
-        'avg_elapsed_time'
-    ]
+    summary_fieldnames = None
+
+    try:
+        config['graph_params']['dataset']
+        summary_fieldnames = [
+            'num_passengers',
+            "beta_distribution",
+            "inter_cluster_travelling",
+            "preference_distribution",
+            'service_hours',
+            'num_locations',
+            'centroid_codes',
+            'dataset',
+            'short_avg_vehicle_speed',
+            'long_avg_vehicle_speed',
+            'algorithm',
+            'avg_utilitarian',
+            'avg_egalitarian',
+            'avg_proportionality',
+            'avg_utility',
+            'avg_gini_index',
+            'avg_elapsed_time'
+        ]
+
+    except:
+        summary_fieldnames = [
+            'num_passengers',
+            "beta_distribution",
+            "inter_cluster_travelling",
+            "preference_distribution",
+            'service_hours',
+            'num_locations',
+            'clusters',
+            'min_location_distance',
+            'grid_size',
+            'short_avg_vehicle_speed',
+            'long_avg_vehicle_speed',
+            'algorithm',
+            'algorithm_params',
+            'avg_utilitarian',
+            'avg_egalitarian',
+            'avg_proportionality',
+            'avg_utility',
+            'avg_gini_index',
+            'avg_elapsed_time'
+        ]
 
     
     global_summary_csv_file.touch(exist_ok=True)

@@ -56,36 +56,64 @@ passengers_schema = {
 }
 
 # Graph
+synthetic_graph_schema = {
+    'num_locations': {
+        'type': 'integer',
+        'min': 2,
+    },
+    'clusters': {
+        'type': 'integer',
+        'min': 1
+    },
+    'grid_size': {
+        'type': 'number',
+    },
+    'min_location_distance': {
+        'type': 'number',
+        'min': 100
+    },
+    'short_avg_vehicle_speed': {
+        'type': 'number'
+    },
+    'long_avg_vehicle_speed': {
+        'type': 'number'
+    },
+    'dataset': {
+        'type': 'string'
+    }
+}
+
+dataset_graph_schema = {
+    'dataset': {
+        'type': 'string'
+    },
+    'num_locations': {
+        'type': 'list'
+    },
+    'short_avg_vehicle_speed': {
+        'type': 'number'
+    },
+    'long_avg_vehicle_speed': {
+        'type': 'number'
+    },
+    'centroid_codes': {
+        'type': 'list'
+    }
+}
+
 graph_schema = {
     'type': 'dict',
-    'schema': {
-        'num_locations': {
-            'type': 'integer',
-            'min': 2,
-        },
-        'clusters': {
-            'type': 'integer',
-            'min': 1
-        },
-        'grid_size': {
-            'type': 'number',
-        },
-        'min_location_distance': {
-            'type': 'number',
-            'min': 100
-        },
-        'avg_vehicle_speed': {
-            'type': 'number'
-        }
-    },
-    'check_with': 'compatible_graph_params'
+    'oneof_schema': [
+        synthetic_graph_schema,
+        dataset_graph_schema
+    ]
 }
 
 # Optimiser
 greedy_insert_schema = {
     'algorithm': {
         'type': 'string',
-        'allowed': ['greedy_insert', 'greedy_insert_2']
+        'allowed': ['greedy insert', 'greedy insert ++']
     },
     'algorithm_params': {
         'type': 'dict',

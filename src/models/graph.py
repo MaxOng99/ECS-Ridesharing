@@ -2,6 +2,40 @@ import igraph as ig
 import numpy as np
 import math
 from poisson_disc import Bridson_sampling
+import pandas as pd
+from haversine import haversine, Unit
+
+
+def to_custom_graph(igraph):
+    time_matrix = dict()
+    distance_matrix = dict()
+
+    for edge in igraph.es:
+        source_vertex = igraph.vs[edge.source]
+        target_vertex = igraph.vs[edge.target]
+
+        source_id = source_vertex["location_id"]
+        target_id = target_vertex["location_id"]
+
+        time_matrix[(source_id, target_id)] = edge["travel_time"]
+        time_matrix[(source_id, source_id)] = 0
+        time_matrix[(target_id, target_id)] = 0
+
+        distance_matrix[(source_id, target_id)] = edge["distance"]
+        distance_matrix[(source_id, source_id)] = 0
+        distance_matrix[(target_id, target_id)] = 0
+    
+    location_vertices = igraph.vs.select(is_centroid_eq=False)
+    location_ids = [location_vertex['location_id'] for location_vertex in location_vertices]
+
+    # Cluster info
+    centroids = igraph.vs.select(is_centroid_eq=True)
+    cluster_info = dict()
+
+    for centroid in centroids:
+        cluster_info[centroid['location_id']] = [location['location_id'] for location in centroid['cluster']]
+
+    return Graph(igraph, location_ids, cluster_info, time_matrix, distance_matrix)
 
 # Graph Model. Any custom graph generators should produce a Graph object
 class Graph:
@@ -11,6 +45,9 @@ class Graph:
         self.time_matrix = time_matrix
         self.cluster_info = cluster_info
         self.distance_matrix = distance_matrix
+        min_travel_time = min(igraph.es['travel_time'])
+        max_travel_time = max(igraph.es['travel_time'])
+        self.avg_travel_time = np.mean(igraph.es['travel_time'])
         
 
         travel_times = list(self.time_matrix.values())
@@ -48,7 +85,7 @@ class Graph:
             return self.distance_matrix[(source_id, target_id)]
         except KeyError:
             raise KeyError(f"Source({source_id}) and Target({target_id}) not found in distance matrix")
-
+        
 class SyntheticGraphGenerator:
     def __init__(self, seed, graph_params) -> None:
         self.graph_params = graph_params
@@ -65,7 +102,7 @@ class SyntheticGraphGenerator:
         self.__calculate_graph_properties()
         self.__generate_centroids()
         self.__generate_locations()
-        return self.__to_custom_graph()
+        return to_custom_graph(self.igraph)
 
     def __calculate_graph_properties(self):
 
@@ -82,6 +119,7 @@ class SyntheticGraphGenerator:
         self.igraph.vs['is_centroid'] = [False for _ in range(self.__total_vertices)]
         self.igraph.vs['coordinate'] = [None for _ in range(self.__total_vertices)]
         self.igraph.vs['location_id'] = [id for id in range(self.__total_vertices)]
+        self.igraph.vs['centroid'] = [None for _ in range(self.__total_vertices)]
 
     def __generate_centroids(self):
         
@@ -99,6 +137,7 @@ class SyntheticGraphGenerator:
             self.igraph.vs[centroid_id]['coordinate'] = coordinate
             self.igraph.vs[centroid_id]['is_centroid'] = True
             self.igraph.vs[centroid_id]['cluster'] = []
+            self.igraph.vs[centroid_id]['centroid'] = centroid_id
     
     def __generate_locations(self):
         centroids = self.igraph.vs.select(is_centroid_eq=True)
@@ -123,47 +162,90 @@ class SyntheticGraphGenerator:
                 centroid['cluster'].append(location)
         
         # Compute time and distance matrix
-        avg_speed = self.graph_params['avg_vehicle_speed'] * 1000 / 60
 
         for edge in self.igraph.es:
             source_index = edge.source
             target_index = edge.target
 
+            speed = None
+            if self.igraph.vs[source_index]['centroid'] != self.igraph.vs[target_index]['centroid']:
+                speed = self.graph_params['long_avg_vehicle_speed'] * 1000 / 60
+            else:
+                speed = self.graph_params['short_avg_vehicle_speed'] * 1000 / 60
+                
             source_coordinate = np.array(self.igraph.vs[source_index]["coordinate"])
             target_coordinate = np.array(self.igraph.vs[target_index]["coordinate"])
             distance = round(np.linalg.norm(source_coordinate - target_coordinate), 2)
-            travel_time = round(distance / avg_speed, 0)
+            travel_time = round(distance / speed, 0)
 
             edge["distance"] = distance
             edge["travel_time"] = travel_time
-    
-    def __to_custom_graph(self):
-        time_matrix = dict()
-        distance_matrix = dict()
 
-        for edge in self.igraph.es:
-            source_vertex = self.igraph.vs[edge.source]
-            target_vertex = self.igraph.vs[edge.target]
+class DatasetGraphGenerator:
 
-            source_id = source_vertex["location_id"]
-            target_id = target_vertex["location_id"]
+    def __init__(self, graph_params) -> None:
+        self.dataset_path = graph_params['dataset']
+        self.short_avg_vehicle_speed = graph_params['short_avg_vehicle_speed']
+        self.long_avg_vehicle_speed = graph_params['long_avg_vehicle_speed']
 
-            time_matrix[(source_id, target_id)] = edge["travel_time"]
-            time_matrix[(source_id, source_id)] = 0
-            time_matrix[(target_id, target_id)] = 0
+        self.num_locations = graph_params['num_locations']
+        self.centroid_codes = graph_params['centroid_codes']
+        self.igraph = None
+        self.graph = None
+        self.generate_graph()
 
-            distance_matrix[(source_id, target_id)] = edge["distance"]
-            distance_matrix[(source_id, source_id)] = 0
-            distance_matrix[(target_id, target_id)] = 0
+    def generate_graph(self) -> Graph:
+        df = pd.read_csv(f"./dataset/{self.dataset_path}.csv", header=0)
+        df.columns = df.columns.str.strip()
+        filtered_df = df[["ATCOCode", "LocalityName", "Longitude", "Latitude"]]
+        locality_centroid_pairs = dict()
+
+        for name, group in filtered_df.groupby(['LocalityName']):
+ 
+            for code in self.centroid_codes:
+                queried = group[group[group.columns[0]] == code]
+                if len(queried) > 0:
+                    locality_centroid_pairs[name] = code
+                    break
         
-        location_vertices = self.igraph.vs.select(is_centroid_eq=False)
-        location_ids = [location_vertex['location_id'] for location_vertex in location_vertices]
+        curr_idx = 0
+        igraph = ig.Graph.Full(n=sum(self.num_locations), loops=False)
+        igraph.vs['is_centroid'] = False
+        igraph.vs['cluster'] = None
 
-        # Cluster info
-        centroids = self.igraph.vs.select(is_centroid_eq=True)
-        cluster_info = dict()
+        for index, (name, group) in enumerate(filtered_df.groupby(['LocalityName'])):
+            start = curr_idx
+            end = curr_idx + self.num_locations[index]
+            igraph.vs[start:end]['location_id'] = list(group[group.columns[0]])
+            igraph.vs[start:end]['coordinate'] = list(zip(group['Latitude'], group['Longitude']))
+            igraph.vs[start:end]['centroid'] = name
 
-        for centroid in centroids:
-            cluster_info[centroid['location_id']] = [location['location_id'] for location in centroid['cluster']]
+            centroid_code = locality_centroid_pairs[name]
+            centroid = igraph.vs[start:end].find(location_id_eq=centroid_code)
+            centroid['is_centroid'] = True
+            centroid['cluster'] = igraph.vs[start:end].select(location_id_ne=centroid_code)
+            curr_idx += end
+        
+        for edge in igraph.es:
+            source_vertex = igraph.vs[edge.source]
+            target_vertex = igraph.vs[edge.target]
+            
+            source_coordinates = source_vertex["coordinate"]
+            target_coordinate = target_vertex["coordinate"]
+            distance = haversine(source_coordinates, target_coordinate, unit=Unit.METERS)
 
-        return Graph(self.igraph, location_ids, cluster_info, time_matrix, distance_matrix)
+            speed = None
+            if source_vertex['centroid'] != target_vertex['centroid']:
+                speed = self.long_avg_vehicle_speed * 1000 / 60
+            else:
+                speed = self.short_avg_vehicle_speed * 1000 / 60
+
+            travel_time = round(distance / speed, 2)
+            edge["distance"] = distance
+            edge["travel_time"] = travel_time
+        
+        self.igraph = igraph
+        for tt in self.igraph.es['travel_time']:
+            if tt < 0:
+                raise ValueError("Wrong")
+        self.graph = to_custom_graph(self.igraph)

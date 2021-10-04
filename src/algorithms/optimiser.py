@@ -85,9 +85,9 @@ class Optimiser:
         elif algorithm == "iterative_voting_2":
             agents = [IterativeVotingAgent(rider, self.graph) for rider in self.passengers]
             return IterativeVoting2(agents, self.pruned_graph, params=params)
-        elif algorithm == 'greedy_insert':
+        elif algorithm == 'greedy insert':
             agents = [GreedyInsertAgent(rider, self.graph) for rider in self.passengers]
             return GreedyInsert(agents, self.pruned_graph, params=params)
-        elif algorithm == "greedy_insert_2":
+        elif algorithm == "greedy insert ++":
             agents = [GreedyInsertAgent(rider, self.graph) for rider in self.passengers]
             return GreedyInsert2(agents, self.pruned_graph, params=params)

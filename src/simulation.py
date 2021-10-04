@@ -1,4 +1,4 @@
-from models.graph import SyntheticGraphGenerator
+from models.graph import DatasetGraphGenerator, SyntheticGraphGenerator
 from models.passenger import PassengerGenerator
 from algorithms.optimiser import Optimiser
 import time
@@ -15,6 +15,7 @@ class Simulation:
             self.graph_params = self.config['graph_params']
             self.passenger_params = self.config['passenger_params']
             self.optimiser_params = self.config['optimiser_params']
+            self.optimiser_params['algorithm_params']['service_hours'] = self.passenger_params['service_hours']
             self.experiment_params = self.config['experiment_params']
 
     def run(self):
@@ -29,9 +30,16 @@ class Simulation:
         graphs = []
         for x in range(runs):
             # Generate graph
-            graph_generator = SyntheticGraphGenerator(graph_seed, self.graph_params)
-            graph = graph_generator.graph
-            graphs.append(graph)
+            graph = None
+            try: 
+                self.graph_params['dataset']
+                generator = DatasetGraphGenerator(self.graph_params)
+                graph = generator.graph
+                graphs.append(graph)
+            except:
+                generator = SyntheticGraphGenerator(graph_seed, self.graph_params)
+                graph = generator.graph
+                graphs.append(graph)
 
             # Generate passengers
             pass_generator = PassengerGenerator(passenger_seeds[x], graph, self.passenger_params)
@@ -45,6 +53,7 @@ class Simulation:
             elapsed.append(t_end - t_start)
             solutions.append(solution)
 
+        print(solutions[0])
         write_simulation_output(self.config, solutions, elapsed)
 
 
