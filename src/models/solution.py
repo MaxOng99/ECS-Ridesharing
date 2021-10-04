@@ -116,7 +116,9 @@ class Solution:
         current_node = self.head()
 
         for node in self.llist.iternodes():
-
+            node.value.departure_time = int(node.value.departure_time)
+            node.value.waiting_time = int(node.value.waiting_time)
+            node.value.arrival_time = int(node.value.arrival_time)
             location_i = current_node.value.location_id
             location_j = node.value.location_id
             travel_time = self.graph.travel_time(location_i, location_j)
@@ -133,6 +135,7 @@ class Solution:
             
             current_node = node
         
+
         self.distance_travelled = distance_travelled
         return self.rider_schedule
 
@@ -171,8 +174,9 @@ class Solution:
                 prev = node.prev
                 travel_time = self.graph.travel_time(prev.value.location_id, node.value.location_id)
                 arrival_time = prev.value.departure_time + travel_time
-
+                new_waiting_time = affected_node.value.departure_time - arrival_time
                 if arrival_time > affected_node.value.departure_time:
+
                     affected_node.value.departure_time = arrival_time
                     affected_node.value.arrival_time = arrival_time
                     affected_node.value.waiting_time = 0
@@ -180,8 +184,8 @@ class Solution:
                     new_waiting_time = affected_node.value.departure_time - arrival_time
                     affected_node.value.arrival_time = arrival_time
                     affected_node.value.waiting_time = new_waiting_time
-                    break
-                
+                break
+
     def __str__(self) -> str:
         return solution_info(self)
 
