@@ -201,7 +201,7 @@ class GreedyInsert:
             if right_node_new_arrival_time > right_node.value.departure_time:
                 return False
         
-            return True
+        return True
         
     def __create_new_value_by_insertion(self, rider, ref_node, insert_position, status):
         new_node_location_id = rider.start_id if status == 'waiting' else rider.destination_id
