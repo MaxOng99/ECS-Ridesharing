@@ -43,7 +43,8 @@ passengers_schema = {
             'type': 'dict',
             'schema': {
                 'inter_cluster_travelling': {'type': 'boolean'},
-                'peak_probabilities': {'type': 'list'}
+                'peak_probabilities': {'type': 'list'},
+                'time_step': {'type': 'number'}
             }
         }
     },
