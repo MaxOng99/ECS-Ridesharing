@@ -1,5 +1,5 @@
 from models.passenger import Passenger
-from models.solution import Solution
+from models.solution import Solution, TourNodeValue
 from models.graph import Graph
 import numpy as np
 
@@ -12,7 +12,13 @@ class Agent:
         self.status = 'waiting'
         self.departure_node = None
         self.arrival_node = None
-        
+
+    def reset_status(self):
+        self.status = "waiting"
+        self.departure_node = None
+        self.arrival_node = None
+        self.current_node = None
+
     def rank_solutions(self, solutions: List[Solution]) -> List[Solution]:
         
         # 1. Shuffle solutions, to take into account solution with similar utility
@@ -36,12 +42,22 @@ class IterativeVotingAgent(Agent):
         board_threshold = 1 - self.rider.beta
         return board_threshold
 
-    def reset_status(self):
-        self.status = "waiting"
-        self.departure_node = None
-        self.arrival_node = None
-        self.current_node = None
+    def rank_tour_nodes(self, tour_nodes: List[TourNodeValue]):
+        interested_nodes = [node for node in tour_nodes if self.node_utility(node) > 0]
+        return sorted(interested_nodes, key=lambda node: self.node_utility(node), reverse=True)
+
+    def node_utility(self, node: TourNodeValue):
         
+        if self.status == "waiting":
+            if node.location_id == self.rider.start_id:
+                return self.rider.utility(node.departure_time, None)
+            else:
+                return 0
+        else:
+            if node.location_id == self.rider.destination_id:
+                return self.rider.utility(self.departure_node.value.departure_time, node.arrival_time)
+            else:
+                return 0
 
     def rank_locations(self, location_ids: List[int]) -> List[int]:
         np.random.shuffle(location_ids)

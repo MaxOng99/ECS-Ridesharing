@@ -1,8 +1,6 @@
 import numpy as np
 from typing import List, Tuple
 
-from numpy.random.mtrand import beta
-
 class Passenger:
 
     """Model for Passenger
@@ -40,10 +38,9 @@ class Passenger:
         self.optimal_arrival = temporal_preferences[1]
 
     def __utility_function(self, departure_time: int, arrival_time: int) -> float:
-        utility = (self.beta**(abs(self.optimal_departure - departure_time)) + \
-            self.beta**(abs(self.optimal_arrival - arrival_time))) / 2
-
-        return utility
+        depart_utility = self.beta**(abs(self.optimal_departure - departure_time))
+        arrival_utility = 0 if not arrival_time else self.beta**(abs(self.optimal_arrival - arrival_time))
+        return (depart_utility + arrival_utility) / 2
 
     def utility(self, departure_time: int, arrival_time: int) -> float:
         return self.__utility_function(departure_time, arrival_time)
@@ -60,20 +57,24 @@ class PassengerGenerator:
         self.graph = graph
         self.passenger_params = passenger_params
 
-        self.beta = self.passenger_params['beta']
-        self.alpha = self.passenger_params['alpha']
+        self.beta = self.passenger_params['beta_distribution']['beta']
+        self.alpha = self.passenger_params['beta_distribution']['alpha']
+        self.inter_cluster_travelling = self.passenger_params['preference_distribution']['inter_cluster_travelling']
+        self.peak_probabilities = self.passenger_params['preference_distribution']['peak_probabilities']
+        self.service_hours = self.passenger_params['service_hours']
+        self.num_passengers = self.passenger_params['num_passengers']
+        self.time_step = self.passenger_params['preference_distribution']['time_step']
         self.preference_distribution = None
+
 
         np.random.seed(seed)
         self.passengers = self.generate_passengers()
     
     def generate_passengers(self) -> List[Passenger]:
-        
         passengers = []
         beta_distribution = self.__beta_distribution(self.alpha, self.beta)
         self.beta_distribution = beta_distribution 
-        location_pairs = self.__generate_locations()
-        preferences = self.__generate_preferences(location_pairs)
+        preferences, location_pairs = self.__generate_preferences()
         self.preference_distribution = preferences
 
         for id, beta, location_pair, preference in \
@@ -83,89 +84,66 @@ class PassengerGenerator:
                 location_pairs,
                 preferences
             ):
-            passengers.append(Passenger(id, beta, location_pair, preference))
+            p = Passenger(id, beta, location_pair, preference)
+            passengers.append(p)
+            self.graph.location_mapping[location_pair[0]] = p
+            self.graph.location_mapping[location_pair[1]] = p
 
         return passengers
-
-    def __generate_locations(self):
-        num_passengers = self.passenger_params['num_passengers']
-        cluster_travelling = self.passenger_params['inter_cluster_travelling']
-        cluster_info = self.graph.cluster_info
-        location_pairs = []
-
-        if cluster_travelling:
-            choices = ["cluster", "normal"]
-            probability = [0.6, 0.4]
-
-            for _ in range(num_passengers):
-                option = np.random.choice(choices, p=probability)
-                if option == "cluster":
-                    
-                    start, destination = \
-                        np.random.choice(list(cluster_info.keys()), size=2, replace=False)
-                    location_pairs.append((start, destination))
-                else:
-                    location_ids = []
-
-                    for location in self.graph.locations:
-                        if not location in cluster_info.keys():
-                            location_ids.append(location)
-                            
-                    location_pair = np.random.choice(location_ids, size=2, replace=False)
-                    location_pairs.append(tuple(location_pair))
-
-    
-        else:
-            location_ids = self.graph.locations
-            for _ in range(num_passengers):
-                location_pair = np.random.choice(location_ids, size=2, replace=False)
-                location_pairs.append(tuple(location_pair))
-        
-        return location_pairs
     
     def __beta_distribution(self, alpha, beta):
         return np.random.beta(alpha, beta, self.passenger_params['num_passengers'])            
-
-    def __uniform_dist(self):
-        n_samples = self.passenger_params['num_passengers']
-        return np.random.uniform(0, 1, n_samples)
     
-    def __generate_preferences(self, location_pairs):
-        preference_dist = self.passenger_params['preference_distribution']
-        service_hours = self.passenger_params['service_hours']
-        service_minutes = service_hours * 60
-    
+    def __generate_preferences(self):
+        
+        service_minutes = self.service_hours * 60
         preferences = []
+        locations = []
 
-        if preference_dist == "peak_hours":
-            morning_time_frame = (420, 560)
-            evening_time_frame = (1020, 1140)
+        if self.inter_cluster_travelling:
+            clusters = list(self.graph.cluster_info.keys())
+            cluster_info = self.graph.cluster_info
+            morning_start, morning_end = np.random.choice(clusters, size=2, replace=False)
+            evening_start, evening_end = morning_end, morning_start
 
-            time_frames = [morning_time_frame, evening_time_frame]
-            probabilities = [0.4, 0.4, 0.2]
+            morning_frame = (420, 560)
+            evening_frame = (1020, 1140)
+            normal_frames = [(0, 420), (560, 1020), (1140, 1440)]
 
-            for start, destination in location_pairs:
-                travel_time = self.graph.travel_time(start, destination)
-                normal_frame = (0, 1440 - travel_time)
+            time_frames = ["morning", "evening", "normal"]
 
-                time_frames.append(normal_frame)
-                idx = np.random.choice(len(time_frames), p=probabilities)
-                selected_time_frame = time_frames[idx]
-                
-    
-                start, end = selected_time_frame[0], selected_time_frame[1]
-                optimal_departure = np.random.uniform(start, end)
-                optimal_arrival = optimal_departure + travel_time
+            probabilities = [0.35, 0.35, 0.3]
 
-                time_frames.remove(normal_frame)
-                preferences.append((optimal_departure, optimal_arrival))
+            for _ in range(self.num_passengers):
+                label_to_range = {
+                    "morning": morning_frame,
+                    "evening": evening_frame,
+                    "normal": normal_frames[np.random.choice(len(normal_frames))]
+                }
 
-        elif preference_dist == "uniform" or \
-            preference_dist == None:
-            for start, destination in location_pairs:
-                travel_time = self.graph.travel_time(start, destination)
-                optimum_departure = int(np.random.uniform(0, service_minutes - travel_time))
+                range_to_location = {
+                    (0, 420): np.random.choice(cluster_info[morning_start], size=2, replace=False),
+                    (420, 560): (morning_start, morning_end),
+                    (560, 1020): np.random.choice(cluster_info[evening_start], size=2, replace=False),
+                    (1020, 1140): (evening_start, evening_end),
+                    (1140, 1440): np.random.choice(cluster_info[morning_start], size=2, replace=False)
+                }
+
+                selected_time_frame = np.random.choice(time_frames, p=probabilities)
+                start_time, end_time = label_to_range[selected_time_frame]
+                start_location, end_location = range_to_location[(start_time, end_time)]
+                optimum_departure = np.random.choice(np.arange(start_time, end_time, self.time_step))
+                optimal_arrival = optimum_departure + self.graph.travel_time(start_location, end_location)
+                preferences.append((optimum_departure, optimal_arrival))
+                locations.append((start_location, end_location))
+
+        else:
+            for _ in range(self.passenger_params['num_passengers']):
+                start, end = np.random.choice(self.graph.locations, size=2, replace=False)
+                travel_time = self.graph.travel_time(start, end)
+                optimum_departure = np.random.choice(np.arange(0, service_minutes, self.time_step))
                 optimum_arrival = optimum_departure + travel_time
                 preferences.append((optimum_departure, optimum_arrival))
+                locations.append((start, end))
 
-        return preferences
+        return preferences, locations  

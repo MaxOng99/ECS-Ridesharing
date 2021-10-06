@@ -47,12 +47,16 @@ class Solution:
     def __init__(self, agents: Set["Agent"], graph: Graph):
         self.llist = dllist()
         self.rider_schedule = {"departure": dict(), "arrival": dict()} # nullify
+        self.existing_locations = set()
         self.agents = sorted(list(agents), key=lambda x: x.rider.id)
         self.graph = graph
         self.distance_travelled = None
         self.rider_utilities = dict()
         self.objectives = dict()
     
+    def to_list(self):
+        return [node for node in self.llist.iternodes()]
+
     def calculate_objectives(self):
         utils = [util for _, util in self.get_rider_utilities().items()]
         self.objectives['avg_utility'] = np.mean(utils)
@@ -60,6 +64,7 @@ class Solution:
         self.objectives['egalitarian'] = min(utils)
         self.objectives['proportionality'] = np.std(utils)
         self.objectives['gini_index'] = gini(utils)
+        self.objectives['percentile'] = np.percentile(utils, 20)
 
     def head(self):
         return self.llist.first
@@ -80,6 +85,7 @@ class Solution:
         affected_node = ref_node.next
         new_node = self.llist.insert(new_node, after=ref_node)
         self.__update_after_insert(affected_node)
+        self.existing_locations.add(new_node.value.location_id)
         return new_node
 
     def insert_before(self, ref_node, new_node: dllistnode):
@@ -89,6 +95,7 @@ class Solution:
         affected_node = ref_node
         new_node = self.llist.insert(new_node, before=ref_node)
         self.__update_after_insert(affected_node)
+        self.existing_locations.add(new_node.value.location_id)
         return new_node
     
     def append(self, new_node: dllistnode):
@@ -96,6 +103,7 @@ class Solution:
             raise Exception("Invalid Insert")
 
         new_node = self.llist.append(new_node)
+        self.existing_locations.add(new_node.value.location_id)
         return new_node
     
     def get_rider_utilities(self) -> Dict:
@@ -114,7 +122,7 @@ class Solution:
     def create_rider_schedule(self) -> Dict[str, Dict[int, int]]:
         distance_travelled = 0
         current_node = self.head()
-
+        
         for node in self.llist.iternodes():
             node.value.departure_time = int(node.value.departure_time)
             node.value.waiting_time = int(node.value.waiting_time)
@@ -134,8 +142,6 @@ class Solution:
                 self.rider_schedule['arrival'][rider.id] = arrival_time
             
             current_node = node
-        
-
         self.distance_travelled = distance_travelled
         return self.rider_schedule
 
