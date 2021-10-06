@@ -34,6 +34,19 @@ class GreedyInsert2:
         self.graph = graph
         self.voting_rule = self.__get_voting_rule(params['final_voting_rule'])
 
+    def __filter_by_location(self, unallocated, solution: Solution):
+
+        if len(solution.llist) == len(self.graph.locations):
+            return unallocated[0]
+
+        else:
+            for agent in unallocated:
+                location_id = agent.rider.start_id if agent.status == "waiting" else agent.rider.destination_id
+                if not location_id in solution.existing_locations:
+                    return agent
+
+        return unallocated[0]
+
     def optimise(self) -> Solution:
 
         solutions = []
@@ -44,15 +57,18 @@ class GreedyInsert2:
             # Create new Solution
             solution = self.__initialise_new_solution(start_agent)
             # Assign n other riders
-            other_agents = self.agents[1:]
+            unallocated = [agent for agent in self.agents[1:]]
 
-            for agent in other_agents:
-                self.__best_allocation(agent, solution, "departure")
+            while len(unallocated) != 0:
+                agent = self.__filter_by_location(unallocated, solution)
+                self.__best_allocation(agent, solution, "waiting")
+                unallocated.remove(agent)
             
-            self.agents.reverse()
+            self.agents[1:].reverse()
+            unallocated = [agent for agent in self.agents[1:]]
 
-            for agent in self.agents:
-                self.__best_allocation(agent, solution, "arrival")
+            for agent in unallocated:
+                self.__best_allocation(agent, solution, "onboard")
 
             solution.create_rider_schedule()
             solution.calculate_objectives()
@@ -67,8 +83,7 @@ class GreedyInsert2:
             
         else:
             ranking_functions = [agent.rank_solutions for agent in self.agents]
-            weights = [agent.weight for agent in self.agents]
-            voted_solution = self.voting_rule(solutions, ranking_functions, weights)
+            voted_solution = self.voting_rule(solutions, ranking_functions)
             return voted_solution
     
     def __get_voting_rule(self, voting_rule: str):
@@ -105,35 +120,63 @@ class GreedyInsert2:
 
     def __best_allocation(self, agent: GreedyInsertAgent, solution: Solution, status):
 
-        if status == "departure":
-            departure_strategies = []
+        if status == "waiting":
+            best_depart_strat = None
             for node in solution.iterator():
                 departure_strategy = self.__create_strategy(agent, node, 'waiting', insert_position='before')
                 if departure_strategy:
-                    departure_strategies.append(departure_strategy)
-                    
+                    if not best_depart_strat:
+                        best_depart_strat = departure_strategy
+
+                    current_depart_time = best_depart_strat.strat['allocated_node'].value.departure_time
+                    new_depart_time = departure_strategy.strat['allocated_node'].value.departure_time
+
+                    if agent.rider.utility(new_depart_time, None) >= agent.rider.utility(current_depart_time, None):
+                        best_depart_strat = departure_strategy
+                    else:
+                        if agent.rider.optimal_departure - departure_strategy.strat['allocated_node'].value.departure_time < 0 and \
+                            departure_strategy.strat['allocated_node'].value.location_id == agent.rider.start_id:
+                            break
+
                 # Special case at tail of linked list: Attempt to create an 
                 # additional departure strategy by inserting after the current node
                 if node.next == None:
                     departure_strategy = self.__create_strategy(agent, node, 'waiting', insert_position='after')
-                    if departure_strategy:
-                        departure_strategies.append(departure_strategy)
-            
-            best_departure_strategy = \
-                max(departure_strategies, key=lambda strat: agent.rider.utility(strat.strat['allocated_node'].value.departure_time, 0))
-            departure_node = best_departure_strategy.apply(solution)
-            agent.departure_node = departure_node
+                    if not best_depart_strat:
+                        best_depart_strat = departure_strategy
+                    current_depart_time = best_depart_strat.strat['allocated_node'].value.departure_time
+                    new_depart_time = departure_strategy.strat['allocated_node'].value.departure_time
 
-        elif status == "arrival":
-            arrival_strategies = []
+                    if agent.rider.utility(new_depart_time, None) >= agent.rider.utility(current_depart_time, None):
+                        best_depart_strat = departure_strategy
+                    else:
+                        if agent.rider.optimal_departure - departure_strategy.strat['allocated_node'].value.departure_time < 0 and \
+                            departure_strategy.strat['allocated_node'].value.location_id == agent.rider.start_id:
+                            break
+
+            depart_node = best_depart_strat.apply(solution)
+            agent.departure_node = depart_node
+
+        else:
+            curr_best_strat = None
             for node in solution.iterator(start_node=agent.departure_node):
                 arrival_strategy = self.__create_strategy(agent, node, 'onboard', insert_position='after')
                 if arrival_strategy:
-                    arrival_strategies.append(arrival_strategy)
+                    if not curr_best_strat:
+                        curr_best_strat = arrival_strategy
+
+                    curr_arrival_time = curr_best_strat.strat['allocated_node'].value.arrival_time
+                    new_arrival_time = arrival_strategy.strat['allocated_node'].value.arrival_time
+
+                    if agent.rider.utility(agent.departure_node.value.departure_time, new_arrival_time) >= \
+                        agent.rider.utility(agent.departure_node.value.departure_time, curr_arrival_time):
+                        curr_best_strat = arrival_strategy
+                    else:
+                        if agent.rider.optimal_arrival - arrival_strategy.strat['allocated_node'].value.arrival_time < 0 and \
+                            arrival_strategy.strat['allocated_node'].value.location_id == agent.rider.destination_id:
+                            break
             
-            best_arrival_strategy = \
-                max(arrival_strategies, key=lambda strat: agent.rider.utility(agent.departure_node.value.departure_time, strat.strat['allocated_node'].value.arrival_time))
-            arrival_node = best_arrival_strategy.apply(solution)
+            arrival_node = curr_best_strat.apply(solution)
             agent.arrival_node = arrival_node
 
     def __create_strategy(self, agent, ref_node, status, insert_position=None):
