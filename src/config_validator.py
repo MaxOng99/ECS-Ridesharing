@@ -32,21 +32,19 @@ passengers_schema = {
             'min': 1,
             'max': 24,
         },
-        'alpha': {
-            'type': 'number'
+        'beta_distribution': {
+            'type': 'dict',
+            'schema': {
+                'alpha': {'type': 'number'},
+                'beta': {'type': 'number'}
+            }
         },
-        'beta': {
-            'type': 'number'
-        },
-        'preference_distribution': {
-            'type': 'string',
-            'allowed': [
-                'uniform',
-                'peak_hours'
-            ]
-        },
-        'inter_cluster_travelling': {
-            'type': 'boolean'
+        'preference_distribution':{
+            'type': 'dict',
+            'schema': {
+                'inter_cluster_travelling': {'type': 'boolean'},
+                'peak_probabilities': {'type': 'list'}
+            }
         }
     },
     'check_with': 'compatible_passenger_params'
@@ -134,7 +132,8 @@ greedy_insert_schema = {
                     'utilitarian',
                     'proportionality',
                     'avg_utility',
-                    'gini_index'
+                    'gini_index',
+                    'percentile'
                 ]
             }
         }
@@ -156,12 +155,21 @@ iterative_voting_schema = {
             },
             'final_voting_rule': {
                 'type': 'string',
-                'allowed': ['borda_count', 'popularity']
+                'allowed': ['none', 'borda_count', 'popularity']
             },
-            'wait_time': {
-                'type': 'integer',
-                'min': 1,
-                'max': 5
+            'iterations': {
+                'type': 'number'
+            },
+            "objective": {
+                'type': 'string',
+                "allowed": [
+                    'egalitarian',
+                    'utilitarian',
+                    'proportionality',
+                    'avg_utility',
+                    'gini_index',
+                    'percentile'
+                ]
             }
         }
     }
@@ -208,11 +216,13 @@ class CustomValidator(Validator):
 
         if field == "passenger_params":
             passenger_params = value
-            service_hours = passenger_params['service_hours']
-            dist = passenger_params['preference_distribution']
 
-            if service_hours != 24 and dist == "peak_hours":
-                self._error(field, f"{value} hour(s) service cannot be used in conjunction with peak_hours preference distribution")
+            inter_cluster_travelling = passenger_params['preference_distribution']['inter_cluster_travelling']
+            peak_probabilities = passenger_params['preference_distribution']['peak_probabilities']
+
+            if not inter_cluster_travelling and \
+                peak_probabilities[0] != 0:
+                self._error(field, "peak probabilities must be 0; inter cluster travelling is disabled")
 
     def _check_with_compatible_graph_params(self, field, value):
         if field == "graph_params":

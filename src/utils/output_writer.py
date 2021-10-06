@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from numpy.lib.function_base import percentile
+from numpy.random.mtrand import beta
 import utils.graph_utils as graph_utils
 import numpy as np
 import csv
@@ -55,7 +56,7 @@ def write_simulation_output(config, solutions, elapsed):
             "alpha",
             "beta",
             "inter_cluster_travelling",
-            "preference_distribution",
+            "peak_probabilities",
             'service_hours',
             'num_locations',
             'centroid_codes',
@@ -78,7 +79,7 @@ def write_simulation_output(config, solutions, elapsed):
             "alpha",
             "beta",
             "inter_cluster_travelling",
-            "preference_distribution",
+            "peak_probabilities",
             'service_hours',
             'num_locations',
             'clusters',
@@ -99,6 +100,13 @@ def write_simulation_output(config, solutions, elapsed):
 
     # Flatten config dict
     passenger_params = config['passenger_params']
+    beta_dist = passenger_params.pop("beta_distribution")
+    preference_dist = passenger_params.pop("preference_distribution")
+    passenger_params['beta'] = beta_dist['beta']
+    passenger_params['alpha'] = beta_dist['alpha']
+    passenger_params['inter_cluster_travelling'] = preference_dist['inter_cluster_travelling']
+    passenger_params['peak_probabilities'] = preference_dist['peak_probabilities']
+
     graph_params = config['graph_params']
     optimiser_params = config['optimiser_params']
     algo_params = {
@@ -145,7 +153,7 @@ def write_simulation_output(config, solutions, elapsed):
             "alpha",
             "beta",
             "inter_cluster_travelling",
-            "preference_distribution",
+            "peak_probabilities",
             'service_hours',
             'num_locations',
             'centroid_codes',
@@ -168,7 +176,7 @@ def write_simulation_output(config, solutions, elapsed):
             "alpha",
             "beta",
             "inter_cluster_travelling",
-            "preference_distribution",
+            "peak_probabilities",
             'service_hours',
             'num_locations',
             'clusters',
