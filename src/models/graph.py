@@ -48,6 +48,7 @@ class Graph:
         min_travel_time = min(igraph.es['travel_time'])
         max_travel_time = max(igraph.es['travel_time'])
         self.avg_travel_time = np.mean(igraph.es['travel_time'])
+        self.location_mapping = dict()
         
 
         travel_times = list(self.time_matrix.values())
@@ -245,7 +246,4 @@ class DatasetGraphGenerator:
             edge["travel_time"] = travel_time
         
         self.igraph = igraph
-        for tt in self.igraph.es['travel_time']:
-            if tt < 0:
-                raise ValueError("Wrong")
         self.graph = to_custom_graph(self.igraph)
