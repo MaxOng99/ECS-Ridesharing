@@ -36,7 +36,7 @@ class GreedyInsert:
 
     def __filter_by_location(self, unallocated, solution: Solution):
 
-        if len(solution.llist) == len(self.graph.locations):
+        if len(solution.existing_locations) == len(self.graph.locations):
             return unallocated[0]
 
         else:
