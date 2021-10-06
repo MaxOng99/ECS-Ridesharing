@@ -1,4 +1,6 @@
 from pathlib import Path
+
+from numpy.lib.function_base import percentile
 import utils.graph_utils as graph_utils
 import numpy as np
 import csv
@@ -66,6 +68,7 @@ def write_simulation_output(config, solutions, elapsed):
             'proportionality',
             'avg_utility',
             'gini_index',
+            'percentile',
             'elapsed_time'
         ]
     except:
@@ -90,6 +93,7 @@ def write_simulation_output(config, solutions, elapsed):
             'proportionality',
             'avg_utility',
             'gini_index',
+            'percentile',
             'elapsed_time'
         ]
 
@@ -113,6 +117,7 @@ def write_simulation_output(config, solutions, elapsed):
     utilities = []
     elapsed_times = []
     ginis = []
+    percentiles = []
     with full_csv_file.open('w') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -123,6 +128,7 @@ def write_simulation_output(config, solutions, elapsed):
             proportional.append(objective_dict['proportionality'])
             utilities.append(objective_dict['avg_utility'])
             ginis.append(objective_dict['gini_index'])
+            percentiles.append(objective_dict['percentile'])
 
             elapsed_times.append(elapsed_time)
             elapsed_dict = {"elapsed_time": elapsed_time}
@@ -152,6 +158,7 @@ def write_simulation_output(config, solutions, elapsed):
             'avg_proportionality',
             'avg_utility',
             'avg_gini_index',
+            'avg_percentile',
             'avg_elapsed_time'
         ]
 
@@ -176,6 +183,7 @@ def write_simulation_output(config, solutions, elapsed):
             'avg_proportionality',
             'avg_utility',
             'avg_gini_index',
+            'avg_percentile',
             'avg_elapsed_time'
         ]
 
@@ -192,7 +200,8 @@ def write_simulation_output(config, solutions, elapsed):
             "avg_egalitarian": np.mean(egalitarian),
             "avg_proportionality": np.mean(proportional),
             'avg_utility': np.mean(utilities),
-            'avg_gini_index': np.mean(ginis)
+            'avg_gini_index': np.mean(ginis),
+            'avg_percentile': np.mean(percentiles)
         }
 
         local_writer = csv.DictWriter(local_f, fieldnames=summary_fieldnames)
