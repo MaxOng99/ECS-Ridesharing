@@ -56,7 +56,7 @@ def write_simulation_output(config, solutions, elapsed):
             "alpha",
             "beta",
             "inter_cluster_travelling",
-            "peak_probabilities",
+            "peak_probability",
             "time_step", 
             'service_hours',
             'num_locations',
@@ -80,7 +80,7 @@ def write_simulation_output(config, solutions, elapsed):
             "alpha",
             "beta",
             "inter_cluster_travelling",
-            "peak_probabilities",
+            "peak_probability",
             "time_step",
             'service_hours',
             'num_locations',
@@ -107,7 +107,7 @@ def write_simulation_output(config, solutions, elapsed):
     passenger_params['beta'] = beta_dist['beta']
     passenger_params['alpha'] = beta_dist['alpha']
     passenger_params['inter_cluster_travelling'] = preference_dist['inter_cluster_travelling']
-    passenger_params['peak_probabilities'] = preference_dist['peak_probabilities']
+    passenger_params['peak_probability'] = preference_dist['peak_probability']
 
     graph_params = config['graph_params']
     optimiser_params = config['optimiser_params']
@@ -155,7 +155,7 @@ def write_simulation_output(config, solutions, elapsed):
             "alpha",
             "beta",
             "inter_cluster_travelling",
-            "peak_probabilities",
+            "peak_probability",
             "time_step", 
             'service_hours',
             'num_locations',
@@ -179,7 +179,7 @@ def write_simulation_output(config, solutions, elapsed):
             "alpha",
             "beta",
             "inter_cluster_travelling",
-            "peak_probabilities",
+            "peak_probability",
             "time_step",
             'service_hours',
             'num_locations',

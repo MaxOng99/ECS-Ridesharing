@@ -43,7 +43,7 @@ passengers_schema = {
             'type': 'dict',
             'schema': {
                 'inter_cluster_travelling': {'type': 'boolean'},
-                'peak_probabilities': {'type': 'list'},
+                'peak_probability': {'type': 'number'},
                 'time_step': {'type': 'number'}
             }
         }
@@ -219,11 +219,11 @@ class CustomValidator(Validator):
             passenger_params = value
 
             inter_cluster_travelling = passenger_params['preference_distribution']['inter_cluster_travelling']
-            peak_probabilities = passenger_params['preference_distribution']['peak_probabilities']
+            peak_probability = passenger_params['preference_distribution']['peak_probability']
 
             if not inter_cluster_travelling and \
-                peak_probabilities[0] != 0:
-                self._error(field, "peak probabilities must be 0; inter cluster travelling is disabled")
+                peak_probability != 0:
+                self._error(field, "peak probability must be 0; inter cluster travelling is disabled")
 
     def _check_with_compatible_graph_params(self, field, value):
         if field == "graph_params":

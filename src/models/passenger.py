@@ -60,7 +60,7 @@ class PassengerGenerator:
         self.beta = self.passenger_params['beta_distribution']['beta']
         self.alpha = self.passenger_params['beta_distribution']['alpha']
         self.inter_cluster_travelling = self.passenger_params['preference_distribution']['inter_cluster_travelling']
-        self.peak_probabilities = self.passenger_params['preference_distribution']['peak_probabilities']
+        self.peak_probability = self.passenger_params['preference_distribution']['peak_probability']
         self.service_hours = self.passenger_params['service_hours']
         self.num_passengers = self.passenger_params['num_passengers']
         self.time_step = self.passenger_params['preference_distribution']['time_step']
@@ -112,7 +112,9 @@ class PassengerGenerator:
 
             time_frames = ["morning", "evening", "normal"]
 
-            probabilities = [0.35, 0.35, 0.3]
+            morning_evening_prob = self.peak_probability / 2
+            normal_prob = 1 - morning_evening_prob
+            probabilities = [morning_evening_prob, morning_evening_prob, normal_prob]
 
             for _ in range(self.num_passengers):
                 label_to_range = {
