@@ -1,6 +1,7 @@
 import igraph as ig
 import numpy as np
 import math
+from pandas.core import groupby
 from poisson_disc import Bridson_sampling
 import pandas as pd
 from haversine import haversine, Unit
@@ -199,29 +200,30 @@ class DatasetGraphGenerator:
         df = pd.read_csv(f"./dataset/{self.dataset_path}.csv", header=0)
         df.columns = df.columns.str.strip()
         filtered_df = df[["ATCOCode", "LocalityName", "Longitude", "Latitude"]]
-        locality_centroid_pairs = dict()
-
-        for name, group in filtered_df.groupby(['LocalityName']):
- 
-            for code in self.centroid_codes:
-                queried = group[group[group.columns[0]] == code]
-                if len(queried) > 0:
-                    locality_centroid_pairs[name] = code
-                    break
+        groups = dict()
         
+        for code in self.centroid_codes:
+            temp = filtered_df[filtered_df[filtered_df.columns[0]] == code]
+            locality_name = temp['LocalityName'].iloc[0]
+            groups[locality_name] = dict()
+            groups[locality_name]["df"] = filtered_df[filtered_df["LocalityName"] == locality_name]
+            groups[locality_name]['code'] = code
+
         curr_idx = 0
         igraph = ig.Graph.Full(n=sum(self.num_locations), loops=False)
         igraph.vs['is_centroid'] = False
         igraph.vs['cluster'] = None
-
-        for index, (name, group) in enumerate(filtered_df.groupby(['LocalityName'])):
+        
+        for index, (locality_name, info_dict) in enumerate(groups.items()):
             start = curr_idx
+            df = info_dict['df']
+            code = info_dict['code']
             end = curr_idx + self.num_locations[index]
-            igraph.vs[start:end]['location_id'] = list(group[group.columns[0]])
-            igraph.vs[start:end]['coordinate'] = list(zip(group['Latitude'], group['Longitude']))
-            igraph.vs[start:end]['centroid'] = name
+            igraph.vs[start:end]['location_id'] = list(df[df.columns[0]])
+            igraph.vs[start:end]['coordinate'] = list(zip(df['Latitude'], df['Longitude']))
+            igraph.vs[start:end]['centroid'] = locality_name
 
-            centroid_code = locality_centroid_pairs[name]
+            centroid_code = code
             centroid = igraph.vs[start:end].find(location_id_eq=centroid_code)
             centroid['is_centroid'] = True
             centroid['cluster'] = igraph.vs[start:end].select(location_id_ne=centroid_code)
