@@ -2,6 +2,8 @@ from cerberus import Validator
 import numpy as np
 import math
 
+from algorithms import tsp_heuristics
+
 # Seeds
 seeds_schema = {
     'type': 'dict',
@@ -176,12 +178,29 @@ iterative_voting_schema = {
     }
 }
 
+tsp_heuristic_schema = {
+    "algorithm": {
+        "type": "string",
+        "allowed": ["tsp algorithms"]
+    },
+    "algorithm_params": {
+        "type": "dict",
+        "schema": {
+            "driver": {
+                "type": "string",
+                "allowed": ["2_opt", "simulated_annealing", "dp"]
+            },
+            "max_processing_time": {"type": "number"}
+        }
+    }
+}
 
 optimiser_schema = {
     'type': 'dict', 
     'oneof_schema': [
         greedy_insert_schema,
-        iterative_voting_schema
+        iterative_voting_schema,
+        tsp_heuristic_schema
     ]
 }
 

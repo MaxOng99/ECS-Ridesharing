@@ -47,6 +47,8 @@ class Simulation:
 
             # Set up optimiser
             optimiser = Optimiser(optimiser_seed, graph, passengers)
+            if self.graph_params['dataset']:
+                self.optimiser_params['algorithm_params']['dataset'] = self.graph_params['dataset']
             t_start = time.perf_counter()
             solution = optimiser.optimise(self.optimiser_params)
             t_end = time.perf_counter()

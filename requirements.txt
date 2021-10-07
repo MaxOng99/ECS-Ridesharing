@@ -9,3 +9,5 @@ pycairo
 seaborn
 poverty
 harversine
+python-tsp
+

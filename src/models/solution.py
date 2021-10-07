@@ -66,6 +66,12 @@ class Solution:
         self.objectives['gini_index'] = gini(utils)
         self.objectives['percentile'] = np.percentile(utils, 20)
 
+    def get_route(self):
+        route = []
+        for node in self.llist.iternodes():
+            route.append(node.value.location_id)
+        
+        return route
     def head(self):
         return self.llist.first
     
@@ -99,8 +105,8 @@ class Solution:
         return new_node
     
     def append(self, new_node: dllistnode):
-        if not self.__valid_insert(new_node.value, self.tail(), position='after'):
-            raise Exception("Invalid Insert")
+        # if not self.__valid_insert(new_node.value, self.tail(), position='after'):
+        #     raise Exception("Invalid Insert")
 
         new_node = self.llist.append(new_node)
         self.existing_locations.add(new_node.value.location_id)

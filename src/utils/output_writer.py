@@ -111,6 +111,7 @@ def write_simulation_output(config, solutions, elapsed):
 
     graph_params = config['graph_params']
     optimiser_params = config['optimiser_params']
+    
     algo_params = {
         'algorithm': f"{optimiser_params['algorithm']} ({optimiser_params['algorithm_params']})"
     }

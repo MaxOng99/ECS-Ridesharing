@@ -2,7 +2,7 @@ from typing import Callable, Dict, Set
 from collections import OrderedDict
 from algorithms.iterative_voting_1 import IterativeVoting1
 from algorithms.iterative_voting_2 import IterativeVoting2
-from models.agent import GreedyInsertAgent, IterativeVotingAgent
+from models.agent import GreedyInsertAgent, IterativeVotingAgent, Agent
 from models.passenger import Passenger
 from models.solution import Solution
 from algorithms import tsp_heuristics as heuristic_algo
@@ -75,19 +75,22 @@ class Optimiser:
         algorithm = options.get("algorithm")
         params = options.get("algorithm_params", None)
 
-        if algorithm == "nearest_neighbour":
-            return heuristic_algo.nearest_neighbour
+        if algorithm == "tsp algorithms":
+            agents = [Agent(rider, self.graph) for rider in self.passengers]
+            return heuristic_algo.TspHeuristic(agents, self.pruned_graph, params=params)
 
-        elif algorithm == "iterative_voting_1":
+        elif algorithm == "iterative voting 1":
             agents = [IterativeVotingAgent(rider, self.graph) for rider in self.passengers]
             return IterativeVoting1(agents, self.pruned_graph, params=params)
         
-        elif algorithm == "iterative_voting_2":
+        elif algorithm == "iterative voting 2":
             agents = [IterativeVotingAgent(rider, self.graph) for rider in self.passengers]
             return IterativeVoting2(agents, self.pruned_graph, params=params)
+
         elif algorithm == 'greedy insert':
             agents = [GreedyInsertAgent(rider, self.graph) for rider in self.passengers]
             return GreedyInsert(agents, self.pruned_graph, params=params)
+
         elif algorithm == "greedy insert ++":
             agents = [GreedyInsertAgent(rider, self.graph) for rider in self.passengers]
             return GreedyInsert2(agents, self.pruned_graph, params=params)
