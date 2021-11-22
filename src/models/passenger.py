@@ -106,28 +106,26 @@ class PassengerGenerator:
             morning_start, morning_end = np.random.choice(clusters, size=2, replace=False)
             evening_start, evening_end = morning_end, morning_start
 
-            morning_frame = (420, 560)
-            evening_frame = (1020, 1140)
+            peak_frames = [(420, 560), (1020, 1140)]
             normal_frames = [(0, 420), (560, 1020), (1140, 1440)]
 
-            time_frames = ["morning", "evening", "normal"]
+            time_frames = ["peak", "normal"]
 
-            morning_evening_prob = self.peak_probability / 2
-            normal_prob = 1 - morning_evening_prob
-            probabilities = [morning_evening_prob, morning_evening_prob, normal_prob]
+            peak_prob = self.peak_probability 
+            normal_prob = 1 - self.peak_probability
+            probabilities = [peak_prob, normal_prob]
 
             for _ in range(self.num_passengers):
                 label_to_range = {
-                    "morning": morning_frame,
-                    "evening": evening_frame,
+                    "peak": peak_frames[np.random.choice(len(peak_frames))],
                     "normal": normal_frames[np.random.choice(len(normal_frames))]
                 }
 
                 range_to_location = {
                     (0, 420): np.random.choice(cluster_info[morning_start], size=2, replace=False),
-                    (420, 560): (morning_start, morning_end),
+                    (420, 560): (np.random.choice(cluster_info[morning_start]), np.random.choice(cluster_info[morning_end])),
                     (560, 1020): np.random.choice(cluster_info[evening_start], size=2, replace=False),
-                    (1020, 1140): (evening_start, evening_end),
+                    (1020, 1140): (np.random.choice(cluster_info[evening_start]), np.random.choice(cluster_info[evening_end])),
                     (1140, 1440): np.random.choice(cluster_info[morning_start], size=2, replace=False)
                 }
 
@@ -140,12 +138,28 @@ class PassengerGenerator:
                 locations.append((start_location, end_location))
 
         else:
+
+            peak_frames = [(420, 560), (1020, 1140)]
+            normal_frames = [(0, 420), (560, 1020), (1140, 1440)]
+
+            time_frames = ["peak", "normal"]
+
+            peak_prob = self.peak_probability 
+            normal_prob = 1 - self.peak_probability
+            probabilities = [peak_prob, normal_prob]
+
             for _ in range(self.passenger_params['num_passengers']):
-                start, end = np.random.choice(self.graph.locations, size=2, replace=False)
-                travel_time = self.graph.travel_time(start, end)
-                optimum_departure = np.random.choice(np.arange(0, service_minutes, self.time_step))
-                optimum_arrival = optimum_departure + travel_time
-                preferences.append((optimum_departure, optimum_arrival))
-                locations.append((start, end))
+                label_to_range = {
+                    "peak": peak_frames[np.random.choice(len(peak_frames))],
+                    "normal": normal_frames[np.random.choice(len(normal_frames))]
+                }
+
+                selected_time_frame = np.random.choice(time_frames, p=probabilities)
+                start_time, end_time = label_to_range[selected_time_frame]
+                start_location, end_location = np.random.choice(self.graph.locations, size=2, replace=False)
+                optimum_departure = np.random.choice(np.arange(start_time, end_time, self.time_step))
+                optimal_arrival = optimum_departure + self.graph.travel_time(start_location, end_location)
+                preferences.append((optimum_departure, optimal_arrival))
+                locations.append((start_location, end_location))
 
         return preferences, locations  

@@ -57,110 +57,38 @@ class IterativeVoting2:
         
         np.random.shuffle(self.agents)
 
-        # # Create TourNodeValue for departure
-        # start_rider = start_agent.rider
-        # depart_node_value = TourNodeValue(start_rider.start_id, 0, start_rider.optimal_departure)
-        # depart_node_value.add_rider(start_rider, 'waiting')
+        # initialise solution
+        solution = Solution(self.agents, self.graph)
+        candidate_nodes = []
+        funcs = []
+        candidate_voter_map = dict()
+
+        for voter in self.agents:
+            node = TourNodeValue(voter.rider.start_id, voter.rider.optimal_departure, 0)
+            candidate_nodes.append(node)
+            funcs.append(voter.rank_tour_nodes)
+            candidate_voter_map[node] = voter
+
+        best_candidate = self.iterative_voting_rule(candidate_nodes, funcs)
+        winner = candidate_voter_map[best_candidate]
+        best_candidate.add_rider(winner.rider, "waiting")
+        solution.append(dllistnode(best_candidate))
+        winner.departure_node = solution.tail()
+        winner.status = "onboard"
+
+        unallocated = [agent for agent in self.agents]
+
+        while len(unallocated) != 0:
+            agents = self.__filter_by_location(unallocated, solution)
+            agent = self.iterative_voting(agents, solution)
+            if agent.status == "served":
+                unallocated.remove(agent)
+
+        solution.create_rider_schedule()
+        solution.calculate_objectives()
+
+        return solution
         
-        # # Create TourNodeValue for arrival
-        # depart_to_arrival_travel_time = self.graph.travel_time(start_rider.start_id, start_rider.destination_id)
-        # arrival_time = start_rider.optimal_departure + depart_to_arrival_travel_time
-        # waiting_time = start_rider.optimal_arrival - arrival_time
-        # arrive_node_value = TourNodeValue(start_rider.destination_id, arrival_time, waiting_time)
-        # arrive_node_value.add_rider(start_rider, 'onboard')
-
-        # depart_node = solution.llist.append(dllistnode(depart_node_value))
-        # arrival_node = solution.llist.append(dllistnode(arrive_node_value))
-
-        # start_agent.departure_node = depart_node
-        # start_agent.arrival_node = arrival_node
-
-        # unallocated = [agent for agent in self.agents if agent.rider.id != start_agent.rider.id]
-
-        solutions = []
-        for _ in range(self.params['iterations']):
-
-            np.random.shuffle(self.agents)
-            for agent in self.agents:
-                agent.reset_status()
-
-            start_agent = self.agents[0]
-
-            # Create new Solution
-            solution = Solution(self.agents, self.graph)
-            # Create TourNodeValue for departure
-            start_rider = start_agent.rider
-            depart_node_value = TourNodeValue(start_rider.start_id, 0, start_rider.optimal_departure)
-            depart_node_value.add_rider(start_rider, 'waiting')
-            
-            # Create TourNodeValue for arrival
-            depart_to_arrival_travel_time = self.graph.travel_time(start_rider.start_id, start_rider.destination_id)
-            arrival_time = start_rider.optimal_departure + depart_to_arrival_travel_time
-            waiting_time = start_rider.optimal_arrival - arrival_time
-            arrive_node_value = TourNodeValue(start_rider.destination_id, arrival_time, waiting_time)
-            arrive_node_value.add_rider(start_rider, 'onboard')
-
-            depart_node = solution.llist.append(dllistnode(depart_node_value))
-            arrival_node = solution.llist.append(dllistnode(arrive_node_value))
-
-            start_agent.departure_node = depart_node
-            start_agent.arrival_node = arrival_node
-            start_agent.status = "served"
-
-            # Assign n other riders
-            unallocated = [agent for agent in self.agents if agent.rider.id != start_agent.rider.id]
-            while len(unallocated) != 0:
-                agents = self.__filter_by_location(unallocated, solution)
-                agent = self.iterative_voting(agents, solution)
-                if agent.status == "served":
-                    unallocated.remove(agent)
-
-            solution.create_rider_schedule()
-            solution.calculate_objectives()
-            solutions.append(solution)
-
-            # # initialise solution
-            # solution = Solution(self.agents, self.graph)
-            # candidate_nodes = []
-            # funcs = []
-            # candidate_voter_map = dict()
-
-            # for voter in self.agents:
-            #     node = TourNodeValue(voter.rider.start_id, voter.rider.optimal_departure, 0)
-            #     candidate_nodes.append(node)
-            #     funcs.append(voter.rank_tour_nodes)
-            #     candidate_voter_map[node] = voter
-
-            # best_candidate = self.iterative_voting_rule(candidate_nodes, funcs)
-            # winner = candidate_voter_map[best_candidate]
-            # best_candidate.add_rider(winner.rider, "waiting")
-            # solution.append(dllistnode(best_candidate))
-            # winner.departure_node = solution.tail()
-            # winner.status = "onboard"
-
-            # unallocated = [agent for agent in self.agents]
-
-            # while len(unallocated) != 0:
-            #     agents = self.__filter_by_location(unallocated, solution)
-            #     agent = self.iterative_voting(agents, solution)
-            #     unallocated.remove(agent)
-
-            # solution.create_rider_schedule()
-            # solution.calculate_objectives()
-            # solutions.append(solution)
-        
-        if not self.final_voting_rule:
-            if self.params['objective'] == "gini_index":
-                return min(solutions, key=lambda sol: sol.objectives['gini_index'])
-            else:
-                return max(solutions, key=lambda sol: sol.objectives[self.params['objective']])
-
-        else:
-            ranking_functions = [agent.rank_solutions for agent in self.agents]
-            voted_solution = self.final_voting_rule(solutions, ranking_functions)
-            return voted_solution
-
-
     def iterative_voting(self, voters, solution: Solution):
         strats = []
         candidate_nodes = []
@@ -190,14 +118,6 @@ class IterativeVoting2:
             arrival_node = best_strategy.apply(solution)
             agent.arrival_node = arrival_node
 
-        # agent.departure_node = depart_node
-
-        # agent.status = "onboard"
-        # strat = self.__best_allocation(agent, solution)
-        # arrival_node = strat.apply(solution)
-        # agent.status = "served"
-        # agent.arrival_node = arrival_node
-        # return agent
         return agent
 
 

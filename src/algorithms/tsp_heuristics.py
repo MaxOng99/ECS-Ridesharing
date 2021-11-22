@@ -15,6 +15,7 @@ class TspHeuristic:
         self.algorithm = self.__get_algorithm()
         self.time_matrix = self.__construct_time_matrix()
         self.mapping = {id: location for id, location in enumerate(self.graph.locations)}
+        self.journey_time = 0
     
     def __check_route(self):
         path = Path(f"./tsp_solutions/{self.dataset}/{self.__format_params()}.pkl")
@@ -64,7 +65,7 @@ class TspHeuristic:
             travel_time = self.graph.travel_time(curr_node.value.location_id, location)
             arrival_time = curr_node.value.departure_time + travel_time
             solution.append(dllistnode(TourNodeValue(location, arrival_time, 0)))
-        
+        self.journey_time = solution.tail().value.arrival_time
         return solution
 
     def optimise(self) -> Solution:
@@ -83,6 +84,8 @@ class TspHeuristic:
                     route, travel_time = self.algorithm(np.array(self.time_matrix))
                 routes.append(route)
                 journey_time += travel_time
+            
+            self.journey_time = journey_time
 
             # Construct solution based on solved TSP route
             solution = Solution(self.agents, self.graph)

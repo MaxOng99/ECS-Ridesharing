@@ -65,6 +65,7 @@ def write_simulation_output(config, solutions, elapsed):
             'short_avg_vehicle_speed',
             'long_avg_vehicle_speed',
             'algorithm',
+            'travel_time',
             'utilitarian',
             'egalitarian',
             'proportionality',
@@ -91,6 +92,7 @@ def write_simulation_output(config, solutions, elapsed):
             'long_avg_vehicle_speed',
             'algorithm',
             'algorithm_params',
+            'travel_time',
             'utilitarian',
             'egalitarian',
             'proportionality',
@@ -108,6 +110,7 @@ def write_simulation_output(config, solutions, elapsed):
     passenger_params['alpha'] = beta_dist['alpha']
     passenger_params['inter_cluster_travelling'] = preference_dist['inter_cluster_travelling']
     passenger_params['peak_probability'] = preference_dist['peak_probability']
+    passenger_params['time_step'] = preference_dist['time_step']
 
     graph_params = config['graph_params']
     optimiser_params = config['optimiser_params']
@@ -129,6 +132,7 @@ def write_simulation_output(config, solutions, elapsed):
     elapsed_times = []
     ginis = []
     percentiles = []
+    travel_times = []
     with full_csv_file.open('w') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
@@ -140,7 +144,7 @@ def write_simulation_output(config, solutions, elapsed):
             utilities.append(objective_dict['avg_utility'])
             ginis.append(objective_dict['gini_index'])
             percentiles.append(objective_dict['percentile'])
-
+            travel_times.append(solution.total_travel_time)
             elapsed_times.append(elapsed_time)
             elapsed_dict = {"elapsed_time": elapsed_time}
             row = {**passenger_params, **graph_params, **algo_params, **objective_dict, **elapsed_dict}
@@ -165,6 +169,7 @@ def write_simulation_output(config, solutions, elapsed):
             'short_avg_vehicle_speed',
             'long_avg_vehicle_speed',
             'algorithm',
+            'avg_travel_time',
             'avg_utilitarian',
             'avg_egalitarian',
             'avg_proportionality',
@@ -191,6 +196,7 @@ def write_simulation_output(config, solutions, elapsed):
             'long_avg_vehicle_speed',
             'algorithm',
             'algorithm_params',
+            'avg_travel_time',
             'avg_utilitarian',
             'avg_egalitarian',
             'avg_proportionality',
@@ -214,7 +220,8 @@ def write_simulation_output(config, solutions, elapsed):
             "avg_proportionality": np.mean(proportional),
             'avg_utility': np.mean(utilities),
             'avg_gini_index': np.mean(ginis),
-            'avg_percentile': np.mean(percentiles)
+            'avg_percentile': np.mean(percentiles),
+            'avg_travel_time': np.mean(travel_times)
         }
 
         local_writer = csv.DictWriter(local_f, fieldnames=summary_fieldnames)

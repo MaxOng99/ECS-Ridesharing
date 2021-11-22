@@ -147,7 +147,7 @@ greedy_insert_schema = {
 iterative_voting_schema = {
     'algorithm': {
         'type': 'string',
-        'allowed': ['iterative_voting_1', 'iterative_voting_2']
+        'allowed': ['iterative voting']
     },
     'algorithm_params': {
         'type': 'dict',
@@ -239,10 +239,6 @@ class CustomValidator(Validator):
 
             inter_cluster_travelling = passenger_params['preference_distribution']['inter_cluster_travelling']
             peak_probability = passenger_params['preference_distribution']['peak_probability']
-
-            if not inter_cluster_travelling and \
-                peak_probability != 0:
-                self._error(field, "peak probability must be 0; inter cluster travelling is disabled")
 
     def _check_with_compatible_graph_params(self, field, value):
         if field == "graph_params":

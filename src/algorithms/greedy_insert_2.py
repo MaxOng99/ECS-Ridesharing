@@ -62,13 +62,14 @@ class GreedyInsert2:
             while len(unallocated) != 0:
                 agent = self.__filter_by_location(unallocated, solution)
                 self.__best_allocation(agent, solution, "waiting")
+                agent.status = "onboard"
                 unallocated.remove(agent)
             
-            self.agents[1:].reverse()
-            unallocated = [agent for agent in self.agents[1:]]
-
-            for agent in unallocated:
+            self.agents.reverse()
+ 
+            for agent in self.agents:
                 self.__best_allocation(agent, solution, "onboard")
+                agent.status = "served"
 
             solution.create_rider_schedule()
             solution.calculate_objectives()
@@ -102,20 +103,10 @@ class GreedyInsert2:
         start_rider = start_agent.rider
         depart_node_value = TourNodeValue(start_rider.start_id, 0, start_rider.optimal_departure)
         depart_node_value.add_rider(start_rider, 'waiting')
-        
-        # Create TourNodeValue for arrival
-        depart_to_arrival_travel_time = self.graph.travel_time(start_rider.start_id, start_rider.destination_id)
-        arrival_time = start_rider.optimal_departure + depart_to_arrival_travel_time
-        waiting_time = start_rider.optimal_arrival - arrival_time
-        arrive_node_value = TourNodeValue(start_rider.destination_id, arrival_time, waiting_time)
-        arrive_node_value.add_rider(start_rider, 'onboard')
-
+        start_agent.status = "onboard"
         depart_node = solution.llist.append(dllistnode(depart_node_value))
-        arrival_node = solution.llist.append(dllistnode(arrive_node_value))
 
         start_agent.departure_node = depart_node
-        start_agent.arrival_node = arrival_node
-
         return solution
 
     def __best_allocation(self, agent: GreedyInsertAgent, solution: Solution, status):
@@ -157,7 +148,7 @@ class GreedyInsert2:
             depart_node = best_depart_strat.apply(solution)
             agent.departure_node = depart_node
 
-        else:
+        elif status == "onboard":
             curr_best_strat = None
             for node in solution.iterator(start_node=agent.departure_node):
                 arrival_strategy = self.__create_strategy(agent, node, 'onboard', insert_position='after')

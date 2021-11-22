@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source env/ride_sharing/bin/activate
+# source env/ride_sharing/bin/activate
 
 if [ -d "./temp" ]
 then
@@ -14,9 +14,3 @@ for config in ./temp/*; do
     python3 src/run_single_simulation.py $config &
 done
 
-wait $(jobs -rp)
-
-
-rm -r ./temp
-
-deactivate

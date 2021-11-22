@@ -4,128 +4,683 @@ seeds:
   algorithm: 82
 
 experiments:
+
+  # GREEDY
+
+## EFFECT OF TIMESTEP ON GREEDY, GREEDY ++ AND IV FOR INTER CLUSTER TRAVELLING IN WESTMINSTER / HACKNEY
+
+
   - passenger_params:
-      num_passengers: 200
+      num_passengers: 50
       service_hours: 24
-      alpha: 10
-      beta: 10
-      preference_distribution: "peak_hours"
-      inter_cluster_travelling: True
+      beta_distribution:
+        alpha: 10
+        beta: 10
+      preference_distribution:
+        inter_cluster_travelling: True
+        peak_probability: 0.6
+        time_step: 20
 
     graph_params:
       dataset: "westminster_hackney_stops"
       centroid_codes: [490003384SA, 490009644E]
-      num_locations: [60, 60]
-      short_avg_vehicle_speed: 19.76
+      num_locations: [66, 60]
+      short_avg_vehicle_speed: 13
       long_avg_vehicle_speed: 48
 
     optimiser_params:
-      algorithm: 'greedy insert ++'
+      algorithm: "greedy insert"
       algorithm_params:
         final_voting_rule: "none"
-        iterations: 100
+        iterations: 1
         objective: "gini_index"
+          
+    experiment_params:
+      runs: 100
+    
 
+  - passenger_params:
+      num_passengers: 100
+      service_hours: 24
+      beta_distribution:
+        alpha: 10
+        beta: 10
+      preference_distribution:
+        inter_cluster_travelling: True
+        peak_probability: 0.6
+        time_step: 20
+
+    graph_params:
+      dataset: "westminster_hackney_stops"
+      centroid_codes: [490003384SA, 490009644E]
+      num_locations: [66, 60]
+      short_avg_vehicle_speed: 13
+      long_avg_vehicle_speed: 48
+
+    optimiser_params:
+      algorithm: "greedy insert"
+      algorithm_params:
+        final_voting_rule: "none"
+        iterations: 1
+        objective: "gini_index"
+          
+    experiment_params:
+      runs: 100
+
+
+  - passenger_params:
+      num_passengers: 150
+      service_hours: 24
+      beta_distribution:
+        alpha: 10
+        beta: 10
+      preference_distribution:
+        inter_cluster_travelling: True
+        peak_probability: 0.6
+        time_step: 20
+
+    graph_params:
+      dataset: "westminster_hackney_stops"
+      centroid_codes: [490003384SA, 490009644E]
+      num_locations: [66, 60]
+      short_avg_vehicle_speed: 13
+      long_avg_vehicle_speed: 48
+
+    optimiser_params:
+      algorithm: "greedy insert"
+      algorithm_params:
+        final_voting_rule: "none"
+        iterations: 1
+        objective: "gini_index"
+          
+    experiment_params:
+      runs: 100
+
+
+  - passenger_params:
+      num_passengers: 200
+      service_hours: 24
+      beta_distribution:
+        alpha: 10
+        beta: 10
+      preference_distribution:
+        inter_cluster_travelling: True
+        peak_probability: 0.6
+        time_step: 20
+
+    graph_params:
+      dataset: "westminster_hackney_stops"
+      centroid_codes: [490003384SA, 490009644E]
+      num_locations: [66, 60]
+      short_avg_vehicle_speed: 13
+      long_avg_vehicle_speed: 48
+
+    optimiser_params:
+      algorithm: "greedy insert"
+      algorithm_params:
+        final_voting_rule: "none"
+        iterations: 1
+        objective: "gini_index"
+          
+    experiment_params:
+      runs: 100
+
+  - passenger_params:
+      num_passengers: 50
+      service_hours: 24
+      beta_distribution:
+        alpha: 10
+        beta: 10
+      preference_distribution:
+        inter_cluster_travelling: True
+        peak_probability: 0.6
+        time_step: 20
+
+    graph_params:
+      dataset: "westminster_hackney_stops"
+      centroid_codes: [490003384SA, 490009644E]
+      num_locations: [66, 60]
+      short_avg_vehicle_speed: 13
+      long_avg_vehicle_speed: 48
+
+    optimiser_params:
+      algorithm: "greedy insert ++"
+      algorithm_params:
+        final_voting_rule: "none"
+        iterations: 1
+        objective: "gini_index"
+          
+    experiment_params:
+      runs: 100
+
+  - passenger_params:
+      num_passengers: 100
+      service_hours: 24
+      beta_distribution:
+        alpha: 10
+        beta: 10
+      preference_distribution:
+        inter_cluster_travelling: True
+        peak_probability: 0.6
+        time_step: 20
+
+    graph_params:
+      dataset: "westminster_hackney_stops"
+      centroid_codes: [490003384SA, 490009644E]
+      num_locations: [66, 60]
+      short_avg_vehicle_speed: 13
+      long_avg_vehicle_speed: 48
+
+    optimiser_params:
+      algorithm: "greedy insert ++"
+      algorithm_params:
+        final_voting_rule: "none"
+        iterations: 1
+        objective: "gini_index"
+          
+    experiment_params:
+      runs: 100
+
+
+  - passenger_params:
+      num_passengers: 150
+      service_hours: 24
+      beta_distribution:
+        alpha: 10
+        beta: 10
+      preference_distribution:
+        inter_cluster_travelling: True
+        peak_probability: 0.6
+        time_step: 20
+
+    graph_params:
+      dataset: "westminster_hackney_stops"
+      centroid_codes: [490003384SA, 490009644E]
+      num_locations: [66, 60]
+      short_avg_vehicle_speed: 13
+      long_avg_vehicle_speed: 48
+
+    optimiser_params:
+      algorithm: "greedy insert ++"
+      algorithm_params:
+        final_voting_rule: "none"
+        iterations: 1
+        objective: "gini_index"
+          
     experiment_params:
       runs: 100
 
   - passenger_params:
       num_passengers: 200
       service_hours: 24
-      alpha: 10
-      beta: 20
-      preference_distribution: "peak_hours"
-      inter_cluster_travelling: True
+      beta_distribution:
+        alpha: 10
+        beta: 10
+      preference_distribution:
+        inter_cluster_travelling: True
+        peak_probability: 0.6
+        time_step: 20
 
     graph_params:
       dataset: "westminster_hackney_stops"
       centroid_codes: [490003384SA, 490009644E]
-      num_locations: [60, 60]
-      short_avg_vehicle_speed: 19.76
+      num_locations: [66, 60]
+      short_avg_vehicle_speed: 13
       long_avg_vehicle_speed: 48
 
     optimiser_params:
-      algorithm: 'greedy insert ++'
+      algorithm: "greedy insert ++"
       algorithm_params:
         final_voting_rule: "none"
-        iterations: 100
+        iterations: 1
         objective: "gini_index"
-
+          
     experiment_params:
       runs: 100
 
-  - passenger_params:
-      num_passengers: 200
-      service_hours: 24
-      alpha: 10
-      beta: 30
-      preference_distribution: "peak_hours"
-      inter_cluster_travelling: True
+#   - passenger_params:
+#       num_passengers: 150
+#       service_hours: 24
+#       beta_distribution:
+#         alpha: 10
+#         beta: 10
+#       preference_distribution:
+#         inter_cluster_travelling: False
+#         peak_probability: 0.6
+#         time_step: 40
 
-    graph_params:
-      dataset: "westminster_hackney_stops"
-      centroid_codes: [490003384SA, 490009644E]
-      num_locations: [60, 60]
-      short_avg_vehicle_speed: 19.76
-      long_avg_vehicle_speed: 48
+#     graph_params:
+#       dataset: "westminster_hackney_stops"
+#       centroid_codes: [490003384SA, 490009644E]
+#       num_locations: [66, 60]
+#       short_avg_vehicle_speed: 13
+#       long_avg_vehicle_speed: 48
 
-    optimiser_params:
-      algorithm: 'greedy insert ++'
-      algorithm_params:
-        final_voting_rule: "none"
-        iterations: 100
-        objective: "gini_index"
+#     optimiser_params:
+#       algorithm: "iterative voting"
+#       algorithm_params:
+#         final_voting_rule: "none"
+#         iterative_voting_rule: "borda_count"
+#         iterations: 1
+#         objective: "gini_index"
+          
+#     experiment_params:
+#       runs: 100
 
-    experiment_params:
-      runs: 100
+#   - passenger_params:
+#       num_passengers: 150
+#       service_hours: 24
+#       beta_distribution:
+#         alpha: 10
+#         beta: 10
+#       preference_distribution:
+#         inter_cluster_travelling: False
+#         peak_probability: 0.6
+#         time_step: 60
 
-  - passenger_params:
-      num_passengers: 200
-      service_hours: 24
-      alpha: 20
-      beta: 10
-      preference_distribution: "peak_hours"
-      inter_cluster_travelling: True
+#     graph_params:
+#       dataset: "westminster_hackney_stops"
+#       centroid_codes: [490003384SA]
+#       num_locations: [66]
+#       short_avg_vehicle_speed: 13
+#       long_avg_vehicle_speed: 48
 
-    graph_params:
-      dataset: "westminster_hackney_stops"
-      centroid_codes: [490003384SA, 490009644E]
-      num_locations: [60, 60]
-      short_avg_vehicle_speed: 19.76
-      long_avg_vehicle_speed: 48
+#     optimiser_params:
+#       algorithm: "iterative voting"
+#       algorithm_params:
+#         final_voting_rule: "none"
+#         iterative_voting_rule: "borda_count"
+#         iterations: 1
+#         objective: "gini_index"
+          
+#     experiment_params:
+#       runs: 100
 
-    optimiser_params:
-      algorithm: 'greedy insert ++'
-      algorithm_params:
-        final_voting_rule: "none"
-        iterations: 100
-        objective: "gini_index"
+#   - passenger_params:
+#       num_passengers: 150
+#       service_hours: 24
+#       beta_distribution:
+#         alpha: 10
+#         beta: 10
+#       preference_distribution:
+#         inter_cluster_travelling: False
+#         peak_probability: 0.6
+#         time_step: 80
 
-    experiment_params:
-      runs: 100
+#     graph_params:
+#       dataset: "westminster_hackney_stops"
+#       centroid_codes: [490003384SA]
+#       num_locations: [66]
+#       short_avg_vehicle_speed: 13
+#       long_avg_vehicle_speed: 48
 
-  - passenger_params:
-      num_passengers: 200
-      service_hours: 24
-      alpha: 30
-      beta: 10
-      preference_distribution: "peak_hours"
-      inter_cluster_travelling: True
+#     optimiser_params:
+#       algorithm: "iterative voting"
+#       algorithm_params:
+#         final_voting_rule: "none"
+#         iterative_voting_rule: "borda_count"
+#         iterations: 1
+#         objective: "gini_index"
+          
+#     experiment_params:
+#       runs: 100
 
-    graph_params:
-      dataset: "westminster_hackney_stops"
-      centroid_codes: [490003384SA, 490009644E]
-      num_locations: [60, 60]
-      short_avg_vehicle_speed: 19.76
-      long_avg_vehicle_speed: 48
+# ### BORDA
 
-    optimiser_params:
-      algorithm: 'greedy insert ++'
-      algorithm_params:
-        final_voting_rule: "none"
-        iterations: 100
-        objective: "gini_index"
+#   - passenger_params:
+#       num_passengers: 150
+#       service_hours: 24
+#       beta_distribution:
+#         alpha: 10
+#         beta: 10
+#       preference_distribution:
+#         inter_cluster_travelling: False
+#         peak_probability: 0.6
+#         time_step: 20
 
-    experiment_params:
-      runs: 100
+#     graph_params:
+#       dataset: "westminster_hackney_stops"
+#       centroid_codes: [490003384SA]
+#       num_locations: [66]
+#       short_avg_vehicle_speed: 13
+#       long_avg_vehicle_speed: 48
 
+#     optimiser_params:
+#       algorithm: "iterative voting"
+#       algorithm_params:
+#         final_voting_rule: "none"
+#         iterative_voting_rule: "popularity"
+#         iterations: 1
+#         objective: "gini_index"
+          
+#     experiment_params:
+#       runs: 100
+
+#   - passenger_params:
+#       num_passengers: 150
+#       service_hours: 24
+#       beta_distribution:
+#         alpha: 10
+#         beta: 10
+#       preference_distribution:
+#         inter_cluster_travelling: False
+#         peak_probability: 0
+#         time_step: 40
+
+#     graph_params:
+#       dataset: "westminster_hackney_stops"
+#       centroid_codes: [490003384SA]
+#       num_locations: [66]
+#       short_avg_vehicle_speed: 13
+#       long_avg_vehicle_speed: 48
+
+#     optimiser_params:
+#       algorithm: "iterative voting"
+#       algorithm_params:
+#         final_voting_rule: "none"
+#         iterative_voting_rule: "popularity"
+#         iterations: 1
+#         objective: "gini_index"
+          
+#     experiment_params:
+#       runs: 100
+
+#   - passenger_params:
+#       num_passengers: 150
+#       service_hours: 24
+#       beta_distribution:
+#         alpha: 10
+#         beta: 10
+#       preference_distribution:
+#         inter_cluster_travelling: False
+#         peak_probability: 0.6
+#         time_step: 60
+
+#     graph_params:
+#       dataset: "westminster_hackney_stops"
+#       centroid_codes: [490003384SA]
+#       num_locations: [66]
+#       short_avg_vehicle_speed: 13
+#       long_avg_vehicle_speed: 48
+
+#     optimiser_params:
+#       algorithm: "iterative voting"
+#       algorithm_params:
+#         final_voting_rule: "none"
+#         iterative_voting_rule: "popularity"
+#         iterations: 1
+#         objective: "gini_index"
+          
+#     experiment_params:
+#       runs: 100
+
+#   - passenger_params:
+#       num_passengers: 150
+#       service_hours: 24
+#       beta_distribution:
+#         alpha: 10
+#         beta: 10
+#       preference_distribution:
+#         inter_cluster_travelling: False
+#         peak_probability: 0.6
+#         time_step: 80
+
+#     graph_params:
+#       dataset: "westminster_hackney_stops"
+#       centroid_codes: [490003384SA]
+#       num_locations: [66]
+#       short_avg_vehicle_speed: 13
+#       long_avg_vehicle_speed: 48
+
+#     optimiser_params:
+#       algorithm: "iterative voting"
+#       algorithm_params:
+#         final_voting_rule: "none"
+#         iterative_voting_rule: "popularity"
+#         iterations: 1
+#         objective: "gini_index"
+          
+#     experiment_params:
+#       runs: 100
+
+  # - passenger_params:
+  #     num_passengers: 150
+  #     service_hours: 24
+  #     beta_distribution:
+  #       alpha: 20
+  #       beta: 10
+  #     preference_distribution:
+  #       inter_cluster_travelling: True
+  #       peak_probability: 0.6
+  #       time_step: 20
+
+  #   graph_params:
+  #     dataset: "westminster_hackney_stops"
+  #     centroid_codes: [490003384SA, 490009644E]
+  #     num_locations: [66, 60]
+  #     short_avg_vehicle_speed: 13
+  #     long_avg_vehicle_speed: 48
+
+  #   optimiser_params:
+  #     algorithm: "iterative voting"
+  #     algorithm_params:
+  #       final_voting_rule: "none"
+  #       iterative_voting_rule: "borda_count"
+  #       iterations: 1
+  #       objective: "gini_index"
+          
+  #   experiment_params:
+  #     runs: 100
+
+  # - passenger_params:
+  #     num_passengers: 150
+  #     service_hours: 24
+  #     beta_distribution:
+  #       alpha: 30
+  #       beta: 10
+  #     preference_distribution:
+  #       inter_cluster_travelling: True
+  #       peak_probability: 0.6
+  #       time_step: 20
+
+  #   graph_params:
+  #     dataset: "westminster_hackney_stops"
+  #     centroid_codes: [490003384SA, 490009644E]
+  #     num_locations: [66, 60]
+  #     short_avg_vehicle_speed: 13
+  #     long_avg_vehicle_speed: 48
+
+  #   optimiser_params:
+  #     algorithm: "iterative voting"
+  #     algorithm_params:
+  #       final_voting_rule: "none"
+  #       iterative_voting_rule: "borda_count"
+  #       iterations: 1
+  #       objective: "gini_index"
+          
+  #   experiment_params:
+  #     runs: 100
+
+
+  # - passenger_params:
+  #     num_passengers: 150
+  #     service_hours: 24
+  #     beta_distribution:
+  #       alpha: 10
+  #       beta: 20
+  #     preference_distribution:
+  #       inter_cluster_travelling: True
+  #       peak_probability: 0.6
+  #       time_step: 20
+
+  #   graph_params:
+  #     dataset: "westminster_hackney_stops"
+  #     centroid_codes: [490003384SA, 490009644E]
+  #     num_locations: [66, 60]
+  #     short_avg_vehicle_speed: 13
+  #     long_avg_vehicle_speed: 48
+
+  #   optimiser_params:
+  #     algorithm: "iterative voting"
+  #     algorithm_params:
+  #       final_voting_rule: "none"
+  #       iterative_voting_rule: "borda_count"
+  #       iterations: 1
+  #       objective: "gini_index"
+          
+  #   experiment_params:
+  #     runs: 100
+
+  # - passenger_params:
+  #     num_passengers: 150
+  #     service_hours: 24
+  #     beta_distribution:
+  #       alpha: 10
+  #       beta: 30
+  #     preference_distribution:
+  #       inter_cluster_travelling: True
+  #       peak_probability: 0.6
+  #       time_step: 20
+
+  #   graph_params:
+  #     dataset: "westminster_hackney_stops"
+  #     centroid_codes: [490003384SA, 490009644E]
+  #     num_locations: [66, 60]
+  #     short_avg_vehicle_speed: 13
+  #     long_avg_vehicle_speed: 48
+
+  #   optimiser_params:
+  #     algorithm: "iterative voting"
+  #     algorithm_params:
+  #       final_voting_rule: "none"
+  #       iterative_voting_rule: "borda_count"
+  #       iterations: 1
+  #       objective: "gini_index"
+          
+  #   experiment_params:
+  #     runs: 100
+
+
+
+
+
+  # WINCHESTER 
+
+  ## GREEDY
+
+  # - passenger_params:
+  #     num_passengers: 100
+  #     service_hours: 24
+  #     beta_distribution:
+  #       alpha: 10
+  #       beta: 10
+  #     preference_distribution:
+  #       inter_cluster_travelling: False
+  #       peak_probabilities: [0]
+  #       time_step: 35
+
+  #   graph_params:
+  #     dataset: "winchester_stops"
+  #     centroid_codes: [1900HA110053]
+  #     num_locations: [64]
+  #     short_avg_vehicle_speed: 19.76
+  #     long_avg_vehicle_speed: 48
+
+  #   optimiser_params:
+  #     algorithm: "greedy insert"
+  #     algorithm_params:
+  #       final_voting_rule: "none"
+  #       iterations: 1
+  #       objective: "gini_index"
+          
+  #   experiment_params:
+  #     runs: 25
+  
+
+  ## ITERATIVE
+  # - passenger_params:
+  #     num_passengers: 100
+  #     service_hours: 24
+  #     beta_distribution:
+  #       alpha: 10
+  #       beta: 10
+  #     preference_distribution:
+  #       inter_cluster_travelling: False
+  #       peak_probabilities: [0]
+  #       time_step: 35
+
+  #   graph_params:
+  #     dataset: "winchester_stops"
+  #     centroid_codes: [1900HA110053]
+  #     num_locations: [64]
+  #     short_avg_vehicle_speed: 19.76
+  #     long_avg_vehicle_speed: 48
+
+  #   optimiser_params:
+  #     algorithm: "iterative_voting_2"
+  #     algorithm_params:
+  #       final_voting_rule: "none"
+  #       iterative_voting_rule: "popularity"
+  #       objective: "gini_index"
+  #       iterations: 1
+          
+  #   experiment_params:
+  #     runs: 25
+  
+# Hackney + Westminster
+
+  # TSP
+
+  # - passenger_params:
+  #     num_passengers: 50
+  #     service_hours: 24
+  #     beta_distribution:
+  #       alpha: 10
+  #       beta: 10
+  #     preference_distribution:
+  #       inter_cluster_travelling: False
+  #       peak_probability: 0
+  #       time_step: 10
+
+  #   graph_params:
+  #     dataset: "westminster_hackney_stops"
+  #     centroid_codes: [490003384SA]
+  #     num_locations: [66]
+  #     short_avg_vehicle_speed: 13
+  #     long_avg_vehicle_speed: 48
+
+  #   optimiser_params:
+  #     algorithm: "tsp algorithms"
+  #     algorithm_params: 
+  #       driver: "2_opt"
+  #       max_processing_time: 50
+
+  #   experiment_params:
+  #     runs: 100
+  
+  # - passenger_params:
+  #     num_passengers: 50
+  #     service_hours: 24
+  #     beta_distribution:
+  #       alpha: 10
+  #       beta: 10
+  #     preference_distribution:
+  #       inter_cluster_travelling: False
+  #       peak_probability: 0
+  #       time_step: 10
+
+  #   graph_params:
+  #     dataset: "westminster_hackney_stops"
+  #     centroid_codes: [490003384SA]
+  #     num_locations: [66]
+  #     short_avg_vehicle_speed: 13
+  #     long_avg_vehicle_speed: 48
+
+  #   optimiser_params:
+  #     algorithm: "tsp algorithms"
+  #     algorithm_params: 
+  #       driver: "simulated_annealing"
+  #       max_processing_time: 50
+
+  #   experiment_params:
+  #     runs: 100

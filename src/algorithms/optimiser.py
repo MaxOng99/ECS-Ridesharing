@@ -77,13 +77,13 @@ class Optimiser:
 
         if algorithm == "tsp algorithms":
             agents = [Agent(rider, self.graph) for rider in self.passengers]
-            return heuristic_algo.TspHeuristic(agents, self.pruned_graph, params=params)
+            return heuristic_algo.TspHeuristic(agents, self.graph, params=params)
 
         elif algorithm == "iterative voting 1":
             agents = [IterativeVotingAgent(rider, self.graph) for rider in self.passengers]
             return IterativeVoting1(agents, self.pruned_graph, params=params)
         
-        elif algorithm == "iterative voting 2":
+        elif algorithm == "iterative voting":
             agents = [IterativeVotingAgent(rider, self.graph) for rider in self.passengers]
             return IterativeVoting2(agents, self.pruned_graph, params=params)
 

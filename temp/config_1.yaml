@@ -1,0 +1,32 @@
+experiment_params:
+  runs: 100
+graph_params:
+  centroid_codes:
+  - 490003384SA
+  - 490009644E
+  dataset: westminster_hackney_stops
+  long_avg_vehicle_speed: 48
+  num_locations:
+  - 66
+  - 60
+  short_avg_vehicle_speed: 13
+optimiser_params:
+  algorithm: greedy insert
+  algorithm_params:
+    final_voting_rule: none
+    iterations: 1
+    objective: gini_index
+passenger_params:
+  beta_distribution:
+    alpha: 10
+    beta: 10
+  num_passengers: 50
+  preference_distribution:
+    inter_cluster_travelling: true
+    peak_probability: 0.6
+    time_step: 20
+  service_hours: 24
+seeds:
+  algorithm: 82
+  graph: 80
+  passengers: 67
