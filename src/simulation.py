@@ -1,6 +1,7 @@
+import algorithms
 from models.graph import DatasetGraphGenerator, SyntheticGraphGenerator
 from models.passenger import PassengerGenerator
-from algorithms.optimiser import Optimiser
+from algorithms.optimiser import create_algorithm
 import time
 import yaml
 
@@ -46,11 +47,11 @@ class Simulation:
             passengers = pass_generator.passengers
 
             # Set up optimiser
-            optimiser = Optimiser(optimiser_seed, graph, passengers)
             if self.graph_params['dataset']:
                 self.optimiser_params['algorithm_params']['dataset'] = self.graph_params['dataset']
+            algorithm = create_algorithm(optimiser_seed, self.optimiser_params, graph, passengers)
             t_start = time.perf_counter()
-            solution = optimiser.optimise(self.optimiser_params)
+            solution = algorithm.optimise()
             t_end = time.perf_counter()
             elapsed.append(t_end - t_start)
             solutions.append(solution)
