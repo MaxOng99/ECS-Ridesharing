@@ -1,40 +1,40 @@
-from typing import Dict, Set
-from pyllist import dllist, dllistnode
-from utils.info_utils import solution_info
-from models.graph import Graph
+from collections import Counter
+from typing import Dict, Set, Any
+from dataclasses import dataclass, field
+
 import numpy as np
+from pyllist import dllist, dllistnode
 from poverty import draw_lorenz
 from poverty import gini
 
+from models.passenger import Passenger
+from utils.info_utils import solution_info
+from models.graph import Graph
+
+@dataclass(frozen=True)
 class TourNodeValue:
+    location_id: Any
+    arrival_time: int
+    waiting_time: int
+    pick_ups: Set[Passenger] = field(default_factory=list)
+    drop_offs: Set[Passenger] = field(default_factory=list)
 
-    def __init__(self, location_id: int, arrival_time: int, waiting_time: int) -> None:
-
-        self.location_id = location_id
-        self.arrival_time = arrival_time
-        self.waiting_time = waiting_time
-        self.departure_time = self.arrival_time + self.waiting_time
-
-        self.pick_up = set()
-        self.drop_off = set()
-
-    def add_rider(self, rider, current_status):
-        if current_status == 'waiting':
-            self.pick_up.add(rider)
+    def __post_init__(self):
+        if self.arrival_time < 0:
+            raise TourNodeValueError("Arrival time of TourNode cannot be less than 0")
         
-        elif current_status == 'onboard':
-            self.drop_off.add(rider)
-    
-    def remove_rider(self, rider, current_status):
-        if current_status == 'waiting':
-            self.pick_up.remove(rider)
-        
-        elif current_status == 'onboard':
-            self.drop_off.remove(rider)
-    
-    def update_waiting_time(self, new_waiting_time):
-        self.waiting_time = new_waiting_time
-        self.departure_time = self.arrival_time + new_waiting_time
+        if self.waiting_time < 0:
+            raise TourNodeValueError("Waiting time of TourNode cannot be less than 0")
+        object.__setattr__(self, 'departure_time', self.arrival_time + self.waiting_time)
+
+## Exception Messages
+class TourNodeValueError(Exception):
+    def __init__(self, message) -> None:
+        super().__init__(message)
+
+class SolutionConstraintError(Exception):
+    def __init__(self, message) -> None:
+        super().__init__(message)
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -44,16 +44,46 @@ class TourNodeValue:
 
 class Solution:
 
-    def __init__(self, agents: Set["Agent"], graph: Graph):
+    def __init__(self, riders, graph: Graph):
         self.llist = dllist()
         self.rider_schedule = {"departure": dict(), "arrival": dict()} # nullify
         self.existing_locations = set()
-        self.agents = sorted(list(agents), key=lambda x: x.rider.id)
+        self.riders = sorted(list(riders), key=lambda rider: rider.id)
         self.graph = graph
         self.total_travel_time = None
         self.rider_utilities = dict()
         self.objectives = dict()
+
+    def check_constraint(self, complete=False) -> bool:
+        pick_ups = []
+        drop_offs = []
+
+        for node in self.llist.first.iternext():
+            if node.next:
+                # Check time matrix consistency
+                arrival_time = node.value.departure_time + self.graph.travel_time(
+                    node.value.location_id,
+                    node.next.value.location_id
+                )
+                if not arrival_time == node.next.value.arrival_time:
+                    raise SolutionConstraintError("Inconsistent time matrix")
+
+                # Check location constraint
+                if node.value.location_id == node.next.value.location_id:
+                    raise SolutionConstraintError("Adjacent location constraint not satisfied")
+
+            pick_ups.extend(node.value.pick_ups)
+            drop_offs.extend(node.value.drop_offs)
+            
+        # Check rider allocation duplication
     
+        pick_up_counter = Counter(pick_ups)
+        drop_off_counter = Counter(drop_offs)
+        invalid_pick_ups = list(filter(lambda counter: counter > 1, pick_up_counter.values()))
+        invalid_drop_offs = list(filter(lambda counter: counter > 1, drop_off_counter.values()))
+        if invalid_drop_offs or invalid_pick_ups:
+            raise SolutionConstraintError("Riders are being allocated twice")
+
     def to_list(self):
         return [node for node in self.llist.iternodes()]
 
@@ -117,8 +147,7 @@ class Solution:
             if not self.rider_schedule:
                 self.create_rider_schedule()
             
-            for agent in self.agents:
-                rider = agent.rider
+            for rider in self.riders:
                 departure_time = self.rider_schedule.get("departure").get(rider.id)
                 arrival_time = self.rider_schedule.get("arrival").get(rider.id)
                 self.rider_utilities[rider] = rider.utility(departure_time, arrival_time)
@@ -130,9 +159,6 @@ class Solution:
         current_node = self.head()
         
         for node in self.llist.iternodes():
-            node.value.departure_time = int(node.value.departure_time)
-            node.value.waiting_time = int(node.value.waiting_time)
-            node.value.arrival_time = int(node.value.arrival_time)
             location_i = current_node.value.location_id
             location_j = node.value.location_id
             travel_time = self.graph.travel_time(location_i, location_j)
@@ -141,10 +167,10 @@ class Solution:
             departure_time = node.value.departure_time
             arrival_time = node.value.arrival_time
 
-            for rider in node.value.pick_up:
+            for rider in node.value.pick_ups:
                 self.rider_schedule['departure'][rider.id] = departure_time
             
-            for rider in node.value.drop_off:
+            for rider in node.value.drop_offs:
                 self.rider_schedule['arrival'][rider.id] = arrival_time
             
             current_node = node

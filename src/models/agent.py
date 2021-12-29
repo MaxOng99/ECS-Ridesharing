@@ -98,8 +98,3 @@ class IterativeVotingAgent(Agent):
             return True
         else:
             return False
-
-class GreedyInsertAgent(Agent):
-    def __init__(self, rider: Passenger, graph: Graph) -> None:
-        super().__init__(rider, graph)
-        self.weight = 1

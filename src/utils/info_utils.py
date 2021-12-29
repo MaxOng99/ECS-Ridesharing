@@ -52,14 +52,14 @@ def solution_info(solution: "Solution") -> str:
     rider_sched.field_names = ['Passenger', 'Travel Locations', 'Departure', 'Actual Departure', 'Arrival', 'Actual Arrival', 'Utility']
 
     for index, tour_node in enumerate(solution.llist.iternodes()):
-        row_data = [index, tour_node.value.location_id, list(tour_node.value.pick_up), list(tour_node.value.drop_off), tour_node.value.arrival_time, tour_node.value.waiting_time, tour_node.value.departure_time]
+        row_data = [index, tour_node.value.location_id, list(tour_node.value.pick_ups), list(tour_node.value.drop_offs), tour_node.value.arrival_time, tour_node.value.waiting_time, tour_node.value.departure_time]
         schedule.add_row(row_data)
 
-    for agent in solution.agents:
-        departure_time = solution.rider_schedule['departure'][agent.rider.id]
-        arrival_time = solution.rider_schedule['arrival'][agent.rider.id]
-        utility = agent.rider.utility(departure_time, arrival_time)
-        row_data = [f'P:{agent.rider.id}', f'{agent.rider.start_id} - {agent.rider.destination_id}', agent.rider.optimal_departure, departure_time, agent.rider.optimal_arrival, arrival_time, utility]
+    for rider in solution.riders:
+        departure_time = solution.rider_schedule['departure'][rider.id]
+        arrival_time = solution.rider_schedule['arrival'][rider.id]
+        utility = rider.utility(departure_time, arrival_time)
+        row_data = [f'P:{rider.id}', f'{rider.start_id} - {rider.destination_id}', rider.optimal_departure, departure_time, rider.optimal_arrival, arrival_time, utility]
         rider_sched.add_row(row_data)
     
     return "\n".join(['Schedule', f'{schedule.get_string()}', 'Rider Utils', rider_sched.get_string()]) 

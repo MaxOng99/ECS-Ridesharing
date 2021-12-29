@@ -1,337 +1,238 @@
-from algorithms.voting_rules import VotingRules
-from utils.info_utils import strategy_info
-from pyllist.dllist import dllistnode
-from models.solution import Solution, TourNodeValue
-from typing import List
+from typing import List, Union
+from dataclasses import dataclass, replace
+
 import numpy as np
+from pyllist.dllist import dllistnode
+
 from models.graph import Graph
-from models.agent import GreedyInsertAgent
+from models.passenger import Passenger
+from models.solution import TourNodeValue, Solution
+from models.utility_functions import node_utility
+
+@dataclass(frozen=True)
+class InsertPosition:
+    ref_node: dllistnode
+    position: str
+
+@dataclass(frozen=True)
+class NewNodeContext:
+    value: TourNodeValue
+    ref_node: dllistnode
+    position: str
+
+class WaitTimeError(Exception):
+    def __init__(self, message) -> None:
+        super().__init__(message)
+
+class CreateNodeError(Exception):
+    def __init__(self, message) -> None:
+        super().__init__(message)
 
 class GreedyInsert:
-
-    """Greedy algorithm to find sub-optimal Solution
-
-    Attributes
-    ----------
-    riders: List[Passenger]
-        List of Passengers for this simulation instance
-    time_matrix: Dict[Tuple[int, int], int]
-        Keys consist of location_id tuples, and values 
-        consist of the travel time between the 2 location_ids
-    params: Dict
-        Additional options for the algorithm in the form of key-value pairs
-        - 'iterations': <an integer>
-        - <Potential parameters, to be added>
-
-    Methods
-    ----------
-    optimise()
-        Constructs n solutions based on the greedy insert procedure
-    """
-    def __init__(self, agents: List[GreedyInsertAgent], graph: Graph, params) -> None:
-        self.agents = agents
-        self.params = params
+    def __init__(self, riders, graph: Graph, params) -> None:
+        self.riders = riders
         self.graph = graph
-        self.voting_rule = self.__get_voting_rule(params['final_voting_rule'])
-
-    def __filter_by_location(self, unallocated, solution: Solution):
-
-        if len(solution.existing_locations) == len(self.graph.locations):
-            return unallocated[0]
-
-        else:
-            for agent in unallocated:
-                location_id = agent.rider.start_id if agent.status == "waiting" else agent.rider.destination_id
-                if not location_id in solution.existing_locations:
-                    return agent
-
-        return unallocated[0]
+        self.params = params
 
     def optimise(self) -> Solution:
+        np.random.shuffle(self.riders)
+        first_rider: Passenger = self.riders[0]
 
-        solutions = []
-        for _ in range(self.params['iterations']):
-            np.random.shuffle(self.agents)
-            start_agent = self.agents[0]
+        # Initialize solution by allocating first rider
+        solution: Solution = self.initialise_solution(first_rider)
 
-            # Create new Solution
-            solution = self.__initialise_new_solution(start_agent)
-            # Assign n other riders
-            unallocated = [agent for agent in self.agents[1:]]
-
-            while len(unallocated) != 0:
-                agent = self.__filter_by_location(unallocated, solution)
-                self.__best_allocation(agent, solution)
-                unallocated.remove(agent)
-
-            solution.create_rider_schedule()
-            solution.calculate_objectives()
-            solutions.append(solution)
-        if not self.voting_rule:
-            if self.params['objective'] == "gini_index":
-                return min(solutions, key=lambda sol: sol.objectives['gini_index'])
-            else:
-                return max(solutions, key=lambda sol: sol.objectives[self.params['objective']])
-
-        else:
-            ranking_functions = [agent.rank_solutions for agent in self.agents]
-            voted_solution = self.voting_rule(solutions, ranking_functions)
-            return voted_solution
-
-    def __get_voting_rule(self, voting_rule: str):
-        if voting_rule == 'popularity':
-            return VotingRules.popularity
+        # Allocate n other riders
+        for rider in self.riders[1:]:
+            departure_node = self.allocate_rider(rider, solution, departure_node=None)
+            arrival_node = self.allocate_rider(rider, solution, departure_node=departure_node)
         
-        elif voting_rule == 'borda_count':
-            return VotingRules.borda_count
-        
-        return None
-        
-    def __initialise_new_solution(self, start_agent):
-        solution = Solution(self.agents, self.graph)
 
-        # Create TourNodeValue for departure
-        start_rider = start_agent.rider
-        depart_node_value = TourNodeValue(start_rider.start_id, 0, start_rider.optimal_departure)
-        depart_node_value.add_rider(start_rider, 'waiting')
-        
-        # Create TourNodeValue for arrival
-        depart_to_arrival_travel_time = self.graph.travel_time(start_rider.start_id, start_rider.destination_id)
-        arrival_time = start_rider.optimal_departure + depart_to_arrival_travel_time
-        waiting_time = start_rider.optimal_arrival - arrival_time
-        arrive_node_value = TourNodeValue(start_rider.destination_id, arrival_time, waiting_time)
-        arrive_node_value.add_rider(start_rider, 'onboard')
-
-        depart_node = solution.llist.append(dllistnode(depart_node_value))
-        arrival_node = solution.llist.append(dllistnode(arrive_node_value))
-
-        start_agent.departure_node = depart_node
-        start_agent.arrival_node = arrival_node
-
+        solution.check_constraint(complete=True)
+        solution.create_rider_schedule()
+        solution.calculate_objectives()
         return solution
+        # raise Exception("Stop here first")
 
-    def __best_allocation(self, agent: GreedyInsertAgent, solution: Solution):
+    def initialise_solution(self, first_rider: Passenger) -> None:
+        sol = Solution(self.riders, self.graph)
+        optimal_depart = first_rider.optimal_departure
+        depart_loc = first_rider.start_id
+        optimal_arrival = first_rider.optimal_arrival
+        arrival_loc = first_rider.destination_id
 
-        best_depart_strat = None
-        for node in solution.iterator():
-            departure_strategy = self.__create_strategy(agent, node, 'waiting', insert_position='before')
-            if departure_strategy:
-                if not best_depart_strat:
-                    best_depart_strat = departure_strategy
-
-                current_depart_time = best_depart_strat.strat['allocated_node'].value.departure_time
-                new_depart_time = departure_strategy.strat['allocated_node'].value.departure_time
-
-                if agent.rider.utility(new_depart_time, None) >= agent.rider.utility(current_depart_time, None):
-                    best_depart_strat = departure_strategy
-                else:
-                    if agent.rider.optimal_departure - departure_strategy.strat['allocated_node'].value.departure_time < 0 and \
-                        departure_strategy.strat['allocated_node'].value.location_id == agent.rider.start_id:
-                        break
-
-            # Special case at tail of linked list: Attempt to create an 
-            # additional departure strategy by inserting after the current node
-            if node.next == None:
-                departure_strategy = self.__create_strategy(agent, node, 'waiting', insert_position='after')
-                if not best_depart_strat:
-                    best_depart_strat = departure_strategy
-
-                current_depart_time = best_depart_strat.strat['allocated_node'].value.departure_time
-                new_depart_time = departure_strategy.strat['allocated_node'].value.departure_time
-
-                if agent.rider.utility(new_depart_time, None) >= agent.rider.utility(current_depart_time, None):
-                    best_depart_strat = departure_strategy
-                else:
-                    if agent.rider.optimal_departure - departure_strategy.strat['allocated_node'].value.departure_time < 0 and \
-                        departure_strategy.strat['allocated_node'].value.location_id == agent.rider.start_id:
-                        break
-
-        depart_node = best_depart_strat.apply(solution)
-        agent.departure_node = depart_node
-
-        curr_best_strat = None
-        for node in solution.iterator(start_node=agent.departure_node):
-            arrival_strategy = self.__create_strategy(agent, node, 'onboard', insert_position='after')
-            if arrival_strategy:
-                if not curr_best_strat:
-                    curr_best_strat = arrival_strategy
-
-                curr_arrival_time = curr_best_strat.strat['allocated_node'].value.arrival_time
-                new_arrival_time = arrival_strategy.strat['allocated_node'].value.arrival_time
-
-                if agent.rider.utility(agent.departure_node.value.departure_time, new_arrival_time) >= \
-                    agent.rider.utility(agent.departure_node.value.departure_time, curr_arrival_time):
-                    curr_best_strat = arrival_strategy
-                else:
-                    if agent.rider.optimal_arrival - arrival_strategy.strat['allocated_node'].value.arrival_time < 0 and \
-                        arrival_strategy.strat['allocated_node'].value.location_id == agent.rider.destination_id:
-                        break
+        depart_node_val = TourNodeValue(depart_loc, 0, optimal_depart, pick_ups=[first_rider])
         
-        arrival_node = curr_best_strat.apply(solution)
-        agent.arrival_node = arrival_node
+        arrival_time = self.__calc_new_node_arrival_time(dllistnode(depart_node_val), arrival_loc)
+        waiting_time = self.calc_wait_time(arrival_time, optimal_arrival, None, None)
+        arrival_node_val = TourNodeValue(arrival_loc, arrival_time, waiting_time, drop_offs=[first_rider])
+        sol.llist.append(depart_node_val)
+        sol.llist.append(arrival_node_val)
 
-    def __create_strategy(self, agent, ref_node, status, insert_position=None):
-        rider = agent.rider
-        location_id = rider.start_id if status == 'waiting' else rider.destination_id
+        return sol
+        
+    def allocate_rider(self, rider, solution, departure_node=None):
+        loc_id = rider.start_id if not departure_node else rider.destination_id
+        pref_time = rider.optimal_departure if not departure_node else rider.optimal_arrival
+        start_node = solution.llist.first if not departure_node else departure_node
+        pos = "before" if not departure_node else "after"
 
-        if self.__check_valid_insert(ref_node, location_id, position=insert_position):
-            strategy = self.__insert_at_node(agent, ref_node, status, position=insert_position)
+        valid_existing_nodes = self.__valid_existing_nodes(loc_id, start_node)
+        valid_insert_pos = self.__valid_insert_positions(loc_id, pos, start_node)
+        new_node_ctxs = list(map(lambda insert_pos: self.__create_node(
+            insert_pos.ref_node,
+            insert_pos.position,
+            loc_id,
+            pref_time
+        ), valid_insert_pos))
 
-        elif ref_node.value.location_id == location_id:
-            strategy = self.__stay_at_node(agent, ref_node, status)
-            return strategy
+        options = valid_existing_nodes + new_node_ctxs
+        best_option = self.__best_option(rider, options, departure_node=departure_node)
+        val = best_option.value
+
+        if departure_node is None:
+            updated_val = replace(val, pick_ups=val.pick_ups + [rider])
         else:
-            strategy = None        
-        return strategy
-
-    def __stay_at_node(self, agent, ref_node, current_status):
-        strategy_details = {
-            'action': 'stay',
-            'agent': agent,
-            'current_status': current_status,
-            'allocated_node': ref_node
-        }
-        return Strategy(strategy_details)
-
-    def __insert_at_node(self, agent, ref_node, current_status, position='before'):
-        new_node_value = self.__create_new_value_by_insertion(agent.rider, ref_node, position, current_status)
-        strategy_details = {
-            'action': f'insert_{position}',
-            'agent': agent,
-            'ref_node': ref_node,
-            'current_status': current_status,
-            'allocated_node': dllistnode(new_node_value)
-        }
-        return Strategy(strategy_details)
-
-    def __check_valid_insert(self, ref_node, location_id, position='before'):
+            updated_val = replace(val, drop_offs=val.drop_offs + [rider])
         
-        # Verify adjacent nodes, before attempting to insert between them
-        if position == 'before':
-            left_node = ref_node.prev
-            right_node = ref_node
+        if type(best_option) is NewNodeContext:
+            if best_option.position == "before":
+                new_node = solution.llist.insert(updated_val, before=best_option.ref_node)
+                self.__update_next_node(new_node.next)
+            elif best_option.position == "after":
+                new_node = solution.llist.insert(updated_val, after=best_option.ref_node)
+                self.__update_next_node(new_node.next)
+            # solution.check_constraint()
+            return new_node
+
+        elif type(best_option) is dllistnode:
+            best_option.value = updated_val
+            return best_option
+
+    def __valid_existing_nodes(self, input_loc, start_node) -> List[dllistnode]:
+        return list(filter(
+            lambda node: node.value.location_id == input_loc,
+            start_node.iternext()
+        ))
+
+    def __valid_insert_positions(self, input_loc, position: str, start_node: dllistnode) -> List[InsertPosition]:
+        insert_positions = []
+        for node in start_node.iternext():
+            if self.insertion_constraint_satisfied(input_loc, node, position=position):
+                insert_positions.append(InsertPosition(node, position))
+        return insert_positions
+        
+    def __best_option(self, rider, obj_list: List[Union[dllistnode, NewNodeContext]], departure_node: dllistnode=None) -> Union[dllistnode, NewNodeContext]:
+        if departure_node is None:
+            return max(obj_list, key=lambda obj: node_utility(rider, depart_node_val=obj.value, arrival_node_val=None))
         else:
-            left_node = ref_node
-            right_node = ref_node.next
+            return max(obj_list, key=lambda obj: node_utility(rider, depart_node_val=departure_node.value, arrival_node_val=obj.value))
+
+    def __calc_new_node_arrival_time(self, prev_node, location_id):
+        if prev_node:
+            prev_location = prev_node.value.location_id
+            prev_departure_time = prev_node.value.departure_time
+            return prev_departure_time + self.graph.travel_time(prev_location, location_id)
+        else:
+            return 0
+    
+    def __calc_next_node_new_arrival_time(self, next_node, location_id):
+        if next_node is None:
+            raise ValueError("calc_next_node_new_arrival_time argument next_node cannot be None")
         
-        # If either nodes have the same location_id, reject insert
-        if left_node and left_node.value.location_id == location_id or \
-            right_node and right_node.value.location_id == location_id:
+        input_to_next = self.graph.travel_time(location_id, next_node.value.location_id)
+
+        if next_node.prev:
+            prev_departure_time = next_node.prev.value.departure_time
+            prev_location_id = next_node.prev.value.location_id
+
+            prev_to_input = self.graph.travel_time(prev_location_id, location_id)
+            return prev_departure_time + prev_to_input + input_to_next
+        else:
+            return input_to_next
+
+    def calc_wait_time(self, rider_arrival, rider_preferred, next_arrival=None, next_departure=None):
+        if next_arrival is None and next_departure is None:
+            return max(rider_preferred - rider_arrival, 0)
+        
+        negative_nums = filter(
+            lambda time: time < 0,
+            [rider_arrival, rider_preferred, next_arrival, next_departure]
+        )
+
+        if len(list(negative_nums)) > 0:
+            raise WaitTimeError("Unable to calculate wait time, some arguments are negative")
+        elif next_departure < next_arrival:
+            raise WaitTimeError("Next node's departure time must not be less than its arrival time")
+
+        else:
+            allowable_wait_time = next_departure - next_arrival
+            preferred_wait_time = max(rider_preferred - rider_arrival, 0)
+            return min(allowable_wait_time, preferred_wait_time)
+
+    def __create_node(self, ref_node, pos, loc_id, pref_time):
+        if not self.insertion_constraint_satisfied(loc_id, ref_node, pos):
+            raise CreateNodeError("Insertion constraint is not satisfied")
+
+        prev_node, next_node = self.adjacent_nodes_after_insertion(ref_node, pos)
+        new_node_arrival_time = self.__calc_new_node_arrival_time(prev_node, loc_id)
+
+        if next_node:
+            next_node_new_arrival_time = self.__calc_next_node_new_arrival_time(next_node, loc_id)
+            new_node_wait_time = self.calc_wait_time(
+                new_node_arrival_time,
+                pref_time,
+                next_node_new_arrival_time,
+                next_node.value.departure_time
+            )
+            new_val = TourNodeValue(loc_id, new_node_arrival_time, new_node_wait_time)
+            return NewNodeContext(new_val, ref_node, pos)
+        else:
+            new_node_wait_time = self.calc_wait_time(new_node_arrival_time, pref_time, None, None)
+            new_val = TourNodeValue(loc_id, new_node_arrival_time, new_node_wait_time)
+            return NewNodeContext(new_val, ref_node, pos)
+
+    def __update_next_node(self, next_affected_node: dllistnode) -> None:
+        if next_affected_node:
+            prev_node_val = next_affected_node.prev.value
+            travel_time = self.graph.travel_time(prev_node_val.location_id, next_affected_node.value.location_id)
+            next_new_arrival_time = prev_node_val.departure_time + travel_time
+            next_new_wait_time = next_affected_node.value.departure_time - next_new_arrival_time
+            updated_val = replace(next_affected_node.value, arrival_time=next_new_arrival_time, waiting_time=next_new_wait_time)
+            next_affected_node.value = updated_val
+
+    def adjacent_nodes_after_insertion(self, ref_node: dllistnode, position: str):
+        prev_node = ref_node.prev if position == "before" else ref_node
+        next_node = ref_node if position == "before" else ref_node.next
+        return prev_node, next_node
+
+    def insertion_constraint_satisfied(self, location_id, ref_node: dllistnode, position: str) -> bool:
+        if self.__adjacent_loc_constraint_satisfied(location_id, ref_node, position) and \
+            self.__departure_constraint_satisfied(location_id, ref_node, position):
+            return True
+        else:
             return False
         
-        # Left node is empty: right_node is the head of linked list.
-        # Accept the insertion if inserting before the head node does not cause
-        # the new arrival time of the head node to exceed its departure time
-        elif not left_node:
-            right_node_new_arrival_time = self.graph.travel_time(location_id, right_node.value.location_id)
-            if right_node_new_arrival_time > right_node.value.departure_time:
-                return False
+    def __adjacent_loc_constraint_satisfied(self, location_id, node: dllistnode, position: str) -> bool:
+        prev_node, next_node = self.adjacent_nodes_after_insertion(node, position)
 
-        # Right node is empty (left_node is the tail of linked list) There is no right_node
-        # to check wehther it's new arrival time exceeds its departure time due to the insert.
-        # Therefore, always accept the insertion in this case
-        elif not right_node:
+        if prev_node and prev_node.value.location_id == location_id or \
+            next_node and next_node.value.location_id == location_id:
+            return False
+        else:
             return True
+        
+    def __departure_constraint_satisfied(self, location_id, ref_node: dllistnode, position: str) -> bool:
+        prev_node, next_node = self.adjacent_nodes_after_insertion(ref_node, position)
 
-        # Accept insertion if inserting between these two nodes do not cause the new 
-        # arrival time of the right_node to exceed its departure time
+        if next_node:
+            next_node_val = next_node.value
+            input_to_next = self.graph.travel_time(location_id, next_node_val.location_id)
+            if prev_node:
+                prev_node_val = prev_node.value
+                prev_to_input = self.graph.travel_time(prev_node_val.location_id, location_id)
+                return prev_node_val.departure_time + prev_to_input + input_to_next <= \
+                    next_node_val.departure_time
+            else:
+                return input_to_next <= next_node_val.departure_time
         else:
-            left_to_new_travel_time = self.graph.travel_time(left_node.value.location_id, location_id)
-            new_to_right_travel_time = self.graph.travel_time(location_id, right_node.value.location_id)
-
-            new_node_arrival_time = left_node.value.departure_time + left_to_new_travel_time
-            right_node_new_arrival_time = new_node_arrival_time + new_to_right_travel_time
-            if right_node_new_arrival_time > right_node.value.departure_time:
-                return False
-        
-        return True
-        
-    def __create_new_value_by_insertion(self, rider, ref_node, insert_position, status):
-        new_node_location_id = rider.start_id if status == 'waiting' else rider.destination_id
-        preferred_time = rider.optimal_departure if status == 'waiting' else rider.optimal_arrival
-
-        # Verify adjacent nodes, before calculating time features for the new TourNodeValue
-        if insert_position == 'before':
-            left_node = ref_node.prev
-            right_node = ref_node
-        else:
-            left_node = ref_node
-            right_node = ref_node.next
-        
-        # Inserting before the start node. Here, right_node is the start node
-        if not left_node:
-            right_node_new_arrival_time = self.graph.travel_time(new_node_location_id, right_node.value.location_id)
-
-            # Waiting time for new TourNodeValue is dependent on the remainding waiting time
-            # for right_node after performing the insert before right_node.
-            allowable_waiting_time = right_node.value.departure_time - right_node_new_arrival_time
-            new_node_wait_time = min(allowable_waiting_time, preferred_time)
-            
-            # arrival time is 0, since insertion happens before the head node
-            new_node_arrival_time = 0
-        
-        # Inserting after the tail node. Here, left_node is the tail node
-        elif not right_node:
-
-            # Waiting time is 
-            new_node_arrival_time = left_node.value.departure_time + self.graph.travel_time(left_node.value.location_id, new_node_location_id)
-            new_node_wait_time = max(preferred_time - new_node_arrival_time, 0)
-        
-        else:
-            prev_to_new_travel_time = self.graph.travel_time(left_node.value.location_id, new_node_location_id)
-            new_to_next_travel_time = self.graph.travel_time(new_node_location_id, right_node.value.location_id)
-
-            new_node_arrival_time = left_node.value.departure_time + prev_to_new_travel_time
-            next_node_arrival_time = new_node_arrival_time + new_to_next_travel_time
-
-            allowable_delay = right_node.value.departure_time - next_node_arrival_time
-            new_node_wait_time = min(allowable_delay, max(preferred_time - new_node_arrival_time, 0))
-
-        new_node_value = TourNodeValue(new_node_location_id, new_node_arrival_time, new_node_wait_time)
-        new_node_value.add_rider(rider, status)
-        
-        return new_node_value
-
-# HELPER CLASS
-class Strategy:
-    """Helper class that records the previous state of the linked list before applying
-    this strategy (wait/insert). This form of state management is helpful to find the best
-    strategy, before applying it.
-
-    Attributes
-    ----------
-
-    strategy_dictionary: Dict[str, object]
-        Key value pairs consisting of affected nodes due to applying
-        this strategy, as well as their previous and updated state. Additionally,
-        any new TourNode objects will also be recorded (if this is an insert
-        strategy).
-
-    allocated_node: dllistnode(TourNode)
-        The allocated departure/arrival node for the current Passenger
-        after applying this strategy.
-
-    """
-    def __init__(self, strategy_dictionary) -> None:
-        self.strat = strategy_dictionary
-
-    def apply(self, solution: Solution):
-        """Carry out this strategy (wait/insert), affecting the state of llist.
-        """
-        strat = self.strat
-        # Either wait at the current node, or insert a new one
-        if strat['action'] == 'stay':
-            strat['allocated_node'].value.add_rider(strat['agent'].rider, strat['current_status'])
-            return strat['allocated_node']
-
-        elif strat['action'] == 'insert_before':
-            new_node = solution.insert_before(strat['ref_node'], strat['allocated_node'])
-            return new_node
-        elif strat['action'] == 'insert_after':
-            return solution.insert_after(strat['ref_node'], strat['allocated_node'])
-
-    def __repr__(self) -> str:
-        return self.__str__()
-
-    def __str__(self) -> str:
-        return strategy_info(self)
+            return True
