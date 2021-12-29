@@ -18,11 +18,11 @@ def to_custom_graph(igraph):
         source_id = source_vertex["location_id"]
         target_id = target_vertex["location_id"]
 
-        time_matrix[(source_id, target_id)] = edge["travel_time"]
+        time_matrix[(source_id, target_id)] = int(edge["travel_time"])
         time_matrix[(source_id, source_id)] = 0
         time_matrix[(target_id, target_id)] = 0
 
-        distance_matrix[(source_id, target_id)] = edge["distance"]
+        distance_matrix[(source_id, target_id)] = int(edge["distance"])
         distance_matrix[(source_id, source_id)] = 0
         distance_matrix[(target_id, target_id)] = 0
     
