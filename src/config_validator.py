@@ -147,7 +147,7 @@ greedy_insert_schema = {
 iterative_voting_schema = {
     'algorithm': {
         'type': 'string',
-        'allowed': ['iterative voting']
+        'allowed': ['iterative voting 1', 'iterative voting 2']
     },
     'algorithm_params': {
         'type': 'dict',

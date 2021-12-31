@@ -1,14 +1,15 @@
 from typing import Set
 from collections import OrderedDict
+
+import numpy as np
+
+from models.graph import Graph
+from models.passenger import Passenger
 from algorithms.iterative_voting_1 import IterativeVoting1
 from algorithms.iterative_voting_2 import IterativeVoting2
-from models.agent import IterativeVotingAgent
-from models.passenger import Passenger
 from algorithms import tsp_heuristics as heuristic_algo
 from algorithms.greedy_insert import GreedyInsert
 from algorithms.greedy_insert_plus import GreedyInsertPlus
-from models.graph import Graph
-import numpy as np
 
 def prune_graph(graph: Graph, passengers: Set[Passenger]) -> Graph:
     passenger_locations = OrderedDict()
@@ -47,8 +48,8 @@ def create_algorithm(seed, params, graph, riders):
     np.random.seed(seed)
     algorithm_mapping = {
         # First one not gonna work
-        "iterative voting 1": IterativeVoting1([IterativeVotingAgent(rider, graph) for rider in riders], pruned_graph, algo_params),
-        "iterative voting 2": IterativeVoting2([IterativeVotingAgent(rider, graph) for rider in riders], pruned_graph, algo_params),
+        "iterative voting 1": IterativeVoting1(riders, pruned_graph, algo_params),
+        "iterative voting 2": IterativeVoting2(riders, pruned_graph, algo_params),
         "greedy insert": GreedyInsert(riders, pruned_graph, algo_params),
         "greedy insert ++": GreedyInsertPlus(riders, pruned_graph, algo_params)
         # "tsp algorithms": heuristic_algo.TspHeuristic([Agent(rider, graph) for rider in riders], pruned_graph, algo_params)
