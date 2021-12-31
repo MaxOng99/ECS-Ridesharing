@@ -10,13 +10,18 @@ from models.solution import TourNodeValue, Solution
 from models.utility_functions import node_utility
 
 @dataclass(frozen=True)
-class InsertPosition:
+class ExistingValidTourNode:
     ref_node: dllistnode
-    position: str
+    value: TourNodeValue
 
 @dataclass(frozen=True)
-class NewNodeContext:
+class NewValidTourNode:
     value: TourNodeValue
+    ref_node: dllistnode
+    insert_position: str
+
+@dataclass(frozen=True)
+class InsertionContext:
     ref_node: dllistnode
     position: str
 
@@ -45,13 +50,13 @@ class GreedyInsert:
         for rider in self.riders[1:]:
             departure_node = self.allocate_rider(rider, solution, departure_node=None)
             arrival_node = self.allocate_rider(rider, solution, departure_node=departure_node)
-        
 
         solution.check_constraint(complete=True)
         solution.create_rider_schedule()
         solution.calculate_objectives()
-        return solution
         # raise Exception("Stop here first")
+        return solution
+        
 
     def initialise_solution(self, first_rider: Passenger) -> None:
         sol = Solution(self.riders, self.graph)
@@ -60,11 +65,11 @@ class GreedyInsert:
         optimal_arrival = first_rider.optimal_arrival
         arrival_loc = first_rider.destination_id
 
-        depart_node_val = TourNodeValue(depart_loc, 0, optimal_depart, pick_ups=[first_rider])
+        depart_node_val = TourNodeValue(depart_loc, 0, optimal_depart, pick_ups=tuple([first_rider]))
         
         arrival_time = self.__calc_new_node_arrival_time(dllistnode(depart_node_val), arrival_loc)
         waiting_time = self.calc_wait_time(arrival_time, optimal_arrival, None, None)
-        arrival_node_val = TourNodeValue(arrival_loc, arrival_time, waiting_time, drop_offs=[first_rider])
+        arrival_node_val = TourNodeValue(arrival_loc, arrival_time, waiting_time, drop_offs=tuple([first_rider]))
         sol.llist.append(depart_node_val)
         sol.llist.append(arrival_node_val)
 
@@ -76,57 +81,60 @@ class GreedyInsert:
         start_node = solution.llist.first if not departure_node else departure_node
         pos = "before" if not departure_node else "after"
 
-        valid_existing_nodes = self.__valid_existing_nodes(loc_id, start_node)
-        valid_insert_pos = self.__valid_insert_positions(loc_id, pos, start_node)
-        new_node_ctxs = list(map(lambda insert_pos: self.__create_node(
-            insert_pos.ref_node,
-            insert_pos.position,
-            loc_id,
-            pref_time
-        ), valid_insert_pos))
-
-        options = valid_existing_nodes + new_node_ctxs
-        best_option = self.__best_option(rider, options, departure_node=departure_node)
-        val = best_option.value
-
+        valid_tns = self.valid_tour_nodes(loc_id, pref_time, start_node, pos)
+        best_tn = max(valid_tns, key=lambda node: node_utility(rider, node, additional_info={rider: departure_node}))
+        allocated_node = self.update_sol(rider, solution, best_tn, departure_node)
+        return allocated_node
+    def update_sol(self, rider, sol, best_tn, departure_node):
         if departure_node is None:
-            updated_val = replace(val, pick_ups=val.pick_ups + [rider])
+            updated_val = replace(best_tn.value, pick_ups=best_tn.value.pick_ups + tuple([rider]))
         else:
-            updated_val = replace(val, drop_offs=val.drop_offs + [rider])
+            updated_val = replace(best_tn.value, drop_offs=best_tn.value.drop_offs + tuple([rider]))
         
-        if type(best_option) is NewNodeContext:
-            if best_option.position == "before":
-                new_node = solution.llist.insert(updated_val, before=best_option.ref_node)
+        if type(best_tn) is NewValidTourNode:
+            if best_tn.insert_position == "before":
+                new_node = sol.llist.insert(updated_val, before=best_tn.ref_node)
                 self.__update_next_node(new_node.next)
-            elif best_option.position == "after":
-                new_node = solution.llist.insert(updated_val, after=best_option.ref_node)
+            elif best_tn.insert_position == "after":
+                new_node = sol.llist.insert(updated_val, after=best_tn.ref_node)
                 self.__update_next_node(new_node.next)
-            # solution.check_constraint()
+            sol.check_constraint()
             return new_node
 
-        elif type(best_option) is dllistnode:
-            best_option.value = updated_val
-            return best_option
+        elif type(best_tn) is ExistingValidTourNode:
+            best_tn.ref_node.value = updated_val
+            return best_tn.ref_node
 
-    def __valid_existing_nodes(self, input_loc, start_node) -> List[dllistnode]:
-        return list(filter(
-            lambda node: node.value.location_id == input_loc,
-            start_node.iternext()
+    def valid_tour_nodes(self, input_loc, pref_time, start_node, pos) -> List[Union[ExistingValidTourNode, NewValidTourNode]]:
+        valid_existing_tour_nodes = self.__valid_existing_nodes(input_loc, start_node)
+        valid_insert_contexts = self.__valid_insert_positions(input_loc, pos, start_node)
+        valid_new_tour_nodes = list(map(lambda insert_ctx: self.__create_node(
+            insert_ctx.ref_node,
+            insert_ctx.position,
+            input_loc,
+            pref_time
+        ), valid_insert_contexts))
+        return valid_existing_tour_nodes + valid_new_tour_nodes
+        
+    def __valid_existing_nodes(self, input_loc, start_node) -> List[ExistingValidTourNode]:
+        filtered = filter(lambda node: node.value.location_id == input_loc, start_node.iternext())
+        valid_existing_nodes = list(map(
+            lambda node: ExistingValidTourNode(node, node.value),
+            filtered
         ))
+        return valid_existing_nodes
 
-    def __valid_insert_positions(self, input_loc, position: str, start_node: dllistnode) -> List[InsertPosition]:
+    def __valid_insert_positions(self, input_loc, position: str, start_node: dllistnode) -> List[InsertionContext]:
         insert_positions = []
         for node in start_node.iternext():
             if self.insertion_constraint_satisfied(input_loc, node, position=position):
-                insert_positions.append(InsertPosition(node, position))
+                insert_positions.append(InsertionContext(node, position))
+            
+            if node.next is None and position == "before":
+                if self.insertion_constraint_satisfied(input_loc, node, position="after"):
+                    insert_positions.append(InsertionContext(node, "after"))
         return insert_positions
-        
-    def __best_option(self, rider, obj_list: List[Union[dllistnode, NewNodeContext]], departure_node: dllistnode=None) -> Union[dllistnode, NewNodeContext]:
-        if departure_node is None:
-            return max(obj_list, key=lambda obj: node_utility(rider, depart_node_val=obj.value, arrival_node_val=None))
-        else:
-            return max(obj_list, key=lambda obj: node_utility(rider, depart_node_val=departure_node.value, arrival_node_val=obj.value))
-
+    
     def __calc_new_node_arrival_time(self, prev_node, location_id):
         if prev_node:
             prev_location = prev_node.value.location_id
@@ -169,7 +177,7 @@ class GreedyInsert:
             preferred_wait_time = max(rider_preferred - rider_arrival, 0)
             return min(allowable_wait_time, preferred_wait_time)
 
-    def __create_node(self, ref_node, pos, loc_id, pref_time):
+    def __create_node(self, ref_node, pos, loc_id, pref_time) -> NewValidTourNode:
         if not self.insertion_constraint_satisfied(loc_id, ref_node, pos):
             raise CreateNodeError("Insertion constraint is not satisfied")
 
@@ -185,11 +193,11 @@ class GreedyInsert:
                 next_node.value.departure_time
             )
             new_val = TourNodeValue(loc_id, new_node_arrival_time, new_node_wait_time)
-            return NewNodeContext(new_val, ref_node, pos)
+            return NewValidTourNode(new_val, ref_node, pos)
         else:
             new_node_wait_time = self.calc_wait_time(new_node_arrival_time, pref_time, None, None)
             new_val = TourNodeValue(loc_id, new_node_arrival_time, new_node_wait_time)
-            return NewNodeContext(new_val, ref_node, pos)
+            return NewValidTourNode(new_val, ref_node, pos)
 
     def __update_next_node(self, next_affected_node: dllistnode) -> None:
         if next_affected_node:

@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import Dict, Set, Any
+from typing import Dict, Any, Tuple
 from dataclasses import dataclass, field
 
 import numpy as np
@@ -16,8 +16,8 @@ class TourNodeValue:
     location_id: Any
     arrival_time: int
     waiting_time: int
-    pick_ups: Set[Passenger] = field(default_factory=list)
-    drop_offs: Set[Passenger] = field(default_factory=list)
+    pick_ups: Tuple[Passenger] = field(default_factory=tuple)
+    drop_offs: Tuple[Passenger] = field(default_factory=tuple)
 
     def __post_init__(self):
         if self.arrival_time < 0:
