@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import Dict
 
 
 class OrderedSet:
@@ -24,3 +25,15 @@ class OrderedSet:
         for item in self.ordered_dict.keys():
             yield item
         
+
+def flatten_dict(dict_var: Dict):
+    flattened_dict_var = dict()
+
+    for key, val in dict_var.items():
+        if isinstance(val, dict):
+            temp = flatten_dict(val)
+            flattened_dict_var = {**flattened_dict_var, **temp}
+        else:
+            flattened_dict_var[key] = val
+        
+    return flattened_dict_var

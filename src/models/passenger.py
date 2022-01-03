@@ -57,13 +57,13 @@ class PassengerGenerator:
         self.graph = graph
         self.passenger_params = passenger_params
 
-        self.beta = self.passenger_params['beta_distribution']['beta']
-        self.alpha = self.passenger_params['beta_distribution']['alpha']
-        self.inter_cluster_travelling = self.passenger_params['preference_distribution']['inter_cluster_travelling']
-        self.peak_probability = self.passenger_params['preference_distribution']['peak_probability']
+        self.beta = self.passenger_params['beta']
+        self.alpha = self.passenger_params['alpha']
+        self.inter_cluster_travelling = self.passenger_params['inter_cluster_travelling']
+        self.peak_probability = self.passenger_params['peak_probability']
         self.service_hours = self.passenger_params['service_hours']
         self.num_passengers = self.passenger_params['num_passengers']
-        self.time_step = self.passenger_params['preference_distribution']['time_step']
+        self.time_step = self.passenger_params['time_step']
         self.preference_distribution = None
 
 

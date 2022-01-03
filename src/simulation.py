@@ -3,21 +3,17 @@ from models.graph import DatasetGraphGenerator, SyntheticGraphGenerator
 from models.passenger import PassengerGenerator
 from algorithms.optimiser import create_algorithm
 import time
-import yaml
 
-from utils.output_writer import write_simulation_output
 
 class Simulation:
-    def __init__(self, config_file) -> None:
+    def __init__(self, config) -> None:
 
-        with open(config_file, "r") as f:
-            self.config = yaml.safe_load(f)
-            self.seed_params = self.config['seeds']
-            self.graph_params = self.config['graph_params']
-            self.passenger_params = self.config['passenger_params']
-            self.optimiser_params = self.config['optimiser_params']
-            self.optimiser_params['algorithm_params']['service_hours'] = self.passenger_params['service_hours']
-            self.experiment_params = self.config['experiment_params']
+        self.config = config
+        self.seed_params = self.config['seeds']
+        self.graph_params = self.config['graph_params']
+        self.passenger_params = self.config['passenger_params']
+        self.optimiser_params = self.config['optimiser_params']
+        self.experiment_params = self.config['experiment_params']
 
     def run(self):
         
@@ -47,17 +43,16 @@ class Simulation:
             passengers = pass_generator.passengers
 
             # Set up optimiser
-            if self.graph_params['dataset']:
-                self.optimiser_params['algorithm_params']['dataset'] = self.graph_params['dataset']
             algorithm = create_algorithm(optimiser_seed, self.optimiser_params, graph, passengers)
             t_start = time.perf_counter()
             solution = algorithm.optimise()
             t_end = time.perf_counter()
             elapsed.append(t_end - t_start)
-            solutions.append(solution)
-
-        print(solutions[0])
-        write_simulation_output(self.config, solutions, elapsed)
+            solutions.append(solution.objectives)
+        
+        return (self.config, solutions)
+        
+        
 
 
 

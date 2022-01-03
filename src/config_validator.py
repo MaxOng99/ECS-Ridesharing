@@ -1,8 +1,7 @@
-from cerberus import Validator
-import numpy as np
-import math
+import copy
+from pathlib import Path
 
-from algorithms import tsp_heuristics
+from cerberus import Validator
 
 # Seeds
 seeds_schema = {
@@ -21,36 +20,17 @@ seeds_schema = {
 }
 
 # Passengers
-
 passengers_schema = {
-    'type': 'dict',
-    'schema': {
-        'num_passengers': {
-            "type": "integer",
-            "min": 1
-        },
-        'service_hours': {
-            'type': 'integer',
-            'min': 1,
-            'max': 24,
-        },
-        'beta_distribution': {
-            'type': 'dict',
-            'schema': {
-                'alpha': {'type': 'number'},
-                'beta': {'type': 'number'}
-            }
-        },
-        'preference_distribution':{
-            'type': 'dict',
-            'schema': {
-                'inter_cluster_travelling': {'type': 'boolean'},
-                'peak_probability': {'type': 'number'},
-                'time_step': {'type': 'number'}
-            }
-        }
-    },
-    'check_with': 'compatible_passenger_params'
+    "type": "dict",
+    "schema": {
+        "num_passengers": {"type": "integer", "min": 1},
+        "service_hours": {"type": "integer", "min": 1, "max": 24},
+        "alpha": {"type": "number"},
+        "beta": {"type": "number"},
+        "peak_probability": {"type": "number"},
+        "time_step": {"type": "number"},
+        "inter_cluster_travelling": {"type": "boolean"}
+    }
 }
 
 # Graph
@@ -211,64 +191,80 @@ experiment_schema = {
         'runs': {
             'type': 'integer',
             'min': 1
+        },
+        "name": {
+            "type": "string"
         }
     }
 }
 
 config_schema = {
-    'seeds': seeds_schema,
-    'experiments': {
-        'type': 'list',
-        'schema': {
-            'type': 'dict',
-            'schema': {
-                'passenger_params': passengers_schema,
-                'graph_params': graph_schema,
-                'optimiser_params': optimiser_schema,
-                'experiment_params': experiment_schema
-            }
-        }
-    }
+    "seeds": seeds_schema,
+    "optimiser_params": optimiser_schema,
+    "passenger_params": passengers_schema,
+    "graph_params": graph_schema,
+    "experiment_params": experiment_schema,
+    "var_param": {"type": "dict"}
 }
 
-class CustomValidator(Validator):
-    def _check_with_compatible_passenger_params(self, field, value):
-
-        if field == "passenger_params":
-            passenger_params = value
-
-            inter_cluster_travelling = passenger_params['preference_distribution']['inter_cluster_travelling']
-            peak_probability = passenger_params['preference_distribution']['peak_probability']
-
-    def _check_with_compatible_graph_params(self, field, value):
-        if field == "graph_params":
-            graph_params = value
-            num_locations = graph_params['num_locations']
-            clusters = graph_params['clusters']
-            grid_size = graph_params['grid_size']
-            min_location_distance = graph_params['min_location_distance']
-
-            locations_per_cluster = num_locations / clusters
-            num_centroids_per_axis = math.ceil(np.sqrt(clusters))
-            centroid_distance = grid_size / num_centroids_per_axis
-            radius = centroid_distance / 2
-
-            # Max possible locations
-            utilised_locations = 0
-            ring_index = 0
-            max_ring_index = radius // min_location_distance
-
-            while utilised_locations < locations_per_cluster:
-                if ring_index > (max_ring_index // 2):
-                    self._error(field, "num_locations value is too big")
-                    break
-                ring_index += 1
-                utilised_locations += math.ceil(2 * np.pi * ring_index)
 
 class ConfigException(Exception):
     pass
 
-def validate_yaml(config_dict):
-    v = CustomValidator(config_schema)
+def __validate_yaml(config_dict):
+    v = Validator(config_schema)
     if not v.validate(config_dict):
         raise ConfigException(v.errors)
+
+def __get_variable_param(config_dict):
+    var_param = config_dict['var_params']
+    param_type, param_dict = list(var_param.items())[0]
+    param_key, param_list = list(param_dict.items())[0]
+
+    if not isinstance(param_list, list):
+        msg = "Variable parameters need to be supplied with " + \
+            "a list of values."
+        raise Exception(msg)
+
+    return (param_type, param_key, param_list)
+
+def __get_optimiser_params(config_dict):
+    optimisers = config_dict['optimiser_params']
+    if not isinstance(optimisers, list):
+        raise Exception("Please supply list of optimisers")
+    return optimisers
+
+def parse_config(config_dict):
+
+    # Check if experiment already exist by name
+    exp_name = config_dict['const_params']['experiment_params']['name']
+    output_path = Path(f"./simulation_output/{exp_name}")
+
+    if output_path.is_dir():
+        msg = f"Experiment {exp_name} already exists. If you are " + \
+            "creating a new experiment, supply a new value for the experiment " + \
+                "name parameter"
+        raise Exception(msg)
+
+    # create params combination configuration
+    params_config_list = []
+    const_params = config_dict['const_params']
+    const_params['seeds'] = config_dict['seeds']
+    param_type, param_key, param_list = __get_variable_param(config_dict)
+
+    for value in param_list:
+        temp_dict = copy.deepcopy(const_params)
+        temp_dict[param_type][param_key] = value
+        temp_dict["var_param"] = {param_key: value}
+        params_config_list.append(temp_dict)
+
+    # For each param combination config, run all specified optimisers
+    final_config_list = []
+    optimisers = __get_optimiser_params(config_dict)
+    for optimiser in optimisers:
+        for config in params_config_list:
+            temp = copy.deepcopy(config)
+            temp['optimiser_params'] = optimiser
+            __validate_yaml(temp)
+            final_config_list.append(temp)
+    return final_config_list
