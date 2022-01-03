@@ -18,7 +18,7 @@ class GreedyInsertPlus:
         sol = Solution(self.riders, self.graph)
         optimal_depart = first_rider.optimal_departure
         depart_loc = first_rider.start_id
-        depart_node_val = TourNodeValue(depart_loc, 0, optimal_depart, pick_ups=[first_rider])
+        depart_node_val = TourNodeValue(depart_loc, 0, optimal_depart, pick_ups=tuple([first_rider]))
         sol.llist.append(depart_node_val)
         return sol
 
@@ -42,6 +42,5 @@ class GreedyInsertPlus:
         sol.check_constraint(complete=True)
         sol.create_rider_schedule()
         sol.calculate_objectives()
-        print(sol)
         return sol
 
