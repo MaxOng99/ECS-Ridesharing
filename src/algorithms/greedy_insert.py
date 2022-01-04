@@ -1,3 +1,4 @@
+import copy
 from typing import List, Union
 from dataclasses import dataclass, replace
 
@@ -41,22 +42,39 @@ class GreedyInsert:
 
     def optimise(self) -> Solution:
         np.random.shuffle(self.riders)
-        first_rider: Passenger = self.riders[0]
 
-        # Initialize solution by allocating first rider
-        solution: Solution = self.initialise_solution(first_rider)
+        if self.params['multiple_iterations']:
+            solutions: List[Solution] = []
+            for rider in self.riders:
+                # Initialize solution by allocating first rider
+                solution: Solution = self.initialise_solution(rider)
+                temp_riders = copy.copy(self.riders)
+                temp_riders.remove(rider)
 
-        # Allocate n other riders
-        for rider in self.riders[1:]:
-            departure_node = self.allocate_rider(rider, solution, departure_node=None)
-            arrival_node = self.allocate_rider(rider, solution, departure_node=departure_node)
+                # Allocate n other riders
+                for rider in temp_riders:
+                    departure_node = self.allocate_rider(rider, solution, departure_node=None)
+                    arrival_node = self.allocate_rider(rider, solution, departure_node=departure_node)
 
-        solution.check_constraint(complete=True)
-        solution.create_rider_schedule()
-        solution.calculate_objectives()
-        # raise Exception("Stop here first")
-        return solution
-        
+                solution.check_constraint(complete=True)
+                solution.create_rider_schedule()
+                solution.calculate_objectives()
+                solutions.append(solution)
+            
+            return max(solutions, key=lambda sol: sol.objectives[self.params['objective']])
+            
+        else:
+            solution: Solution = self.initialise_solution(self.riders[0])
+
+            # Allocate n other riders
+            for rider in self.riders[1:]:
+                departure_node = self.allocate_rider(rider, solution, departure_node=None)
+                arrival_node = self.allocate_rider(rider, solution, departure_node=departure_node)
+
+            solution.check_constraint(complete=True)
+            solution.create_rider_schedule()
+            solution.calculate_objectives()
+            return solution
 
     def initialise_solution(self, first_rider: Passenger) -> None:
         sol = Solution(self.riders, self.graph)
@@ -85,6 +103,7 @@ class GreedyInsert:
         best_tn = max(valid_tns, key=lambda node: node_utility(rider, node, additional_info={rider: departure_node}))
         allocated_node = self.update_sol(rider, solution, best_tn, departure_node)
         return allocated_node
+
     def update_sol(self, rider, sol, best_tn, departure_node):
         if departure_node is None:
             updated_val = replace(best_tn.value, pick_ups=best_tn.value.pick_ups + tuple([rider]))

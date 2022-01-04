@@ -89,28 +89,16 @@ graph_schema = {
 }
 
 # Optimiser
-greedy_insert_schema = {
-    'algorithm': {
-        'type': 'string',
-        'allowed': ['greedy insert', 'greedy insert ++']
+RGA_schema = {
+    "algorithm":{
+        "type": "string",
+        "allowed": ["RGA", "RGA ++"]
     },
-    'algorithm_params': {
-        'type': 'dict',
-        'schema': {
-            'iterations': {
-                'type': 'integer',
-                'min': 1
-            },
-            'final_voting_rule': {
-                'type': 'string',
-                'allowed': [
-                    'borda_count',
-                    'popularity',
-                    'none'
-                ]
-            },
+    "algorithm_params": {
+        "type": "dict",
+        "schema": {
             "objective": {
-                'type': 'string',
+                "type": "string",
                 "allowed": [
                     'egalitarian',
                     'utilitarian',
@@ -119,41 +107,65 @@ greedy_insert_schema = {
                     'gini_index',
                     'percentile'
                 ]
+            },
+            "multiple_iterations": {
+                "type": "boolean"
+            }
+        }
+    }
+}
+
+RGVA_schema = {
+    "algorithm": {
+        "type": "string",
+        "allowed": ["RGVA"]
+    },
+    "algorithm_params": {
+        "type": "dict",
+        "schema": {
+            "final_voting_rule": {
+                "type": "string",
+                "allowed": [
+                    "borda_count",
+                    "popularity"
+                ]
+            }
+        }
+    }
+}
+
+IV1_schema = {
+    "algorithm": {
+        "type": "string",
+        "allowed": ["IV1"]
+    },
+    "algorithm_params": {
+        "type": "dict",
+        "schema": {
+            "iterative_voting_rule": {
+                "type": "string",
+                "allowed": ["borda_count", "popularity"]
+            },
+            "final_voting_rule": {
+                "type": "string",
+                "allowed": ["borda_count", "popularity"]
             }
         }
 
     }
 }
 
-iterative_voting_schema = {
-    'algorithm': {
-        'type': 'string',
-        'allowed': ['iterative voting 1', 'iterative voting 2']
+IV2_schema = {
+    "algorithm": {
+        "type": "string",
+        "allowed": ["IV2"]
     },
-    'algorithm_params': {
-        'type': 'dict',
-        'schema': {
-            'iterative_voting_rule': {
-                'type': 'string',
-                'allowed': ['borda_count', 'popularity']
-            },
-            'final_voting_rule': {
-                'type': 'string',
-                'allowed': ['none', 'borda_count', 'popularity']
-            },
-            'iterations': {
-                'type': 'number'
-            },
-            "objective": {
-                'type': 'string',
-                "allowed": [
-                    'egalitarian',
-                    'utilitarian',
-                    'proportionality',
-                    'avg_utility',
-                    'gini_index',
-                    'percentile'
-                ]
+    "algorithm_params": {
+        "type": "dict",
+        "schema": {
+            "iterative_voting_rule": {
+                "type": "string",
+                "allowed": ["borda_count", "poplarity"]
             }
         }
     }
@@ -179,8 +191,10 @@ tsp_heuristic_schema = {
 optimiser_schema = {
     'type': 'dict', 
     'oneof_schema': [
-        greedy_insert_schema,
-        iterative_voting_schema,
+        RGA_schema,
+        RGVA_schema,
+        IV1_schema,
+        IV2_schema,
         tsp_heuristic_schema
     ]
 }

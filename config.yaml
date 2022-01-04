@@ -4,22 +4,37 @@ seeds:
   algorithm: 82
 
 optimiser_params:
-  - algorithm: "greedy insert"
+  - algorithm: "RGA"
     algorithm_params: 
-      final_voting_rule: "none"
-      iterations: 1
       objective: "gini_index"
-
-  - algorithm: "greedy insert ++"
+      multiple_iterations: True
+    
+  - algorithm: "RGA ++"
     algorithm_params:
-      final_voting_rule: "none"
-      iterations: 1
       objective: "gini_index"
+      multiple_iterations: True
+  
+  - algorithm: "RGVA"
+    algorithm_params:
+      final_voting_rule: "borda_count"
+  
+  - algorithm: "RGVA"
+    algorithm_params:
+      final_voting_rule: "popularity"
+  
+  # - algorithm: "IV1"
+  #   algorithm_params:
+  #     iterative_voting_rule: "borda_count"
+  #     final_voting_rule: "borda_count"
 
+  # - algorithm: "IV2"
+  #   algorithm_params:
+  #     iterative_voting_rule: "borda_count"
+  
 const_params:
   experiment_params:
     runs: 1
-    name: "num_pass"
+    name: "test_RGA_variants"
 
   passenger_params:
     service_hours: 24
@@ -40,5 +55,5 @@ const_params:
   
 var_params:
   passenger_params:
-    num_passengers: [50, 100, 150]
+    num_passengers: [50, 80]
     
