@@ -107,6 +107,6 @@ def plot_graph(main_config, mean_data_rows):
     for key in keys:
         _, ax = plt.subplots()
         sns.lineplot(data=df, ax=ax, x=var_key, y=key, hue="algorithm")
-        plt.legend(fontsize="x-small")
+        plt.legend(fontsize="xx-small")
         plt.savefig(f"{output_path}/{key}_vs_{var_key}.png")
 
