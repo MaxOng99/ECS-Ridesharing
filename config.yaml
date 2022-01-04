@@ -15,25 +15,19 @@ optimiser_params:
       final_voting_rule: "none"
       iterations: 1
       objective: "gini_index"
-  
-  - algorithm: "iterative voting 2"
-    algorithm_params:
-      final_voting_rule: "none"
-      iterative_voting_rule: "borda_count"
-      iterations: 1
-      objective: "gini_index"
-
 
 const_params:
   experiment_params:
     runs: 1
-    name: "num_passengers"
+    name: "num_pass"
 
   passenger_params:
     service_hours: 24
+    num_passengers: 80
+    inter_cluster_probability: 0
     alpha: 10
     beta: 10
-    inter_cluster_travelling: True
+    centroid_likelihood: 0
     peak_probability: 0.6
     time_step: 20
   
@@ -47,3 +41,4 @@ const_params:
 var_params:
   passenger_params:
     num_passengers: [50, 100, 150]
+    

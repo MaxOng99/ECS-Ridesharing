@@ -29,7 +29,8 @@ passengers_schema = {
         "beta": {"type": "number"},
         "peak_probability": {"type": "number"},
         "time_step": {"type": "number"},
-        "inter_cluster_travelling": {"type": "boolean"}
+        "inter_cluster_probability": {"type": "number", "min":0, "max":1},
+        "centroid_likelihood": {"type": "number", "min": 0, "max": 1}
     }
 }
 
