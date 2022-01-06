@@ -75,7 +75,7 @@ class TspHeuristic:
             )
             for start in start_nodes:
                 end_nodes = filter(
-                    lambda node: node.value.arrival_time >= start.value.departure_time,
+                    lambda node: node.value.arrival_time >= start.value.departure_time and node.value.location_id == rider.destination_id,
                     start.iternext() 
                 )
                 for end in end_nodes:
