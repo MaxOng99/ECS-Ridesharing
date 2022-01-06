@@ -1,10 +1,4 @@
-from os import closerange
 from prettytable import PrettyTable
-from pathlib import Path
-import yaml
-import csv
-import re
-import numpy as np
 
 def environment_info(env: 'Environment') -> str:
     """
@@ -63,34 +57,3 @@ def solution_info(solution: "Solution") -> str:
         rider_sched.add_row(row_data)
     
     return "\n".join(['Schedule', f'{schedule.get_string()}', 'Rider Utils', rider_sched.get_string()]) 
-    
-def strategy_info(strat_obj):
-    info = []
-
-    if strat_obj.strat['action'] == 'stay':
-        info = [
-            f'Action: Wait',
-            f"allocated_node: {strat_obj.strat['allocated_node']}",
-            f"agent: {strat_obj.strat['agent']}"
-        ]
-        return "\n".join(info)
-    
-    elif strat_obj.strat['action'] == 'insert_before':
-        info = [
-            f'Action: Insert Before',
-            f'Ref_Node: {strat_obj.strat["ref_node"]}',
-            f"allocated_node: {strat_obj.strat['allocated_node']}",
-            f"agent: {strat_obj.strat['agent']}"
-        ]
-        return "\n".join(info)
-
-    elif strat_obj.strat['action'] == 'insert_after':
-        info = [
-            f'Action: Insert After',
-            f'Ref_Node: {strat_obj.strat["ref_node"]}',
-            f"allocated_node: {strat_obj.strat['allocated_node']}",
-            f"agent: {strat_obj.strat['agent']}"
-        ]
-        return "\n".join(info)
-    
-    return ""
