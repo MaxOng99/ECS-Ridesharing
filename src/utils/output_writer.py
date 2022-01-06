@@ -7,25 +7,6 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 from utils.data_structure import flatten_dict
-import utils.graph_utils as graph_utils
-
-def write_illustration_output(graphs, beta_dists, preference_dists):
-    output_path = Path("./illustrations")
-    output_path.mkdir(parents=True, exist_ok=True)
-    
-    for id, (graph, beta_dist, preference_dist) in \
-        enumerate(zip(graphs, beta_dists, preference_dists)):
-
-        # Paths
-        new_dir = Path(f"./illustrations/experiment_{id+1}")
-        new_dir.mkdir(parents=True, exist_ok=True)
-        graph_file = new_dir / "graph.png"
-        beta_dist_file = new_dir / "beta_distribution.png"
-        pref_dist_file = new_dir / "preference_distribution.png"
-
-        graph_utils.plot_graph(graph, path=str(graph_file))
-        graph_utils.plot_beta_distribution(beta_dist, path=str(beta_dist_file))
-        graph_utils.plot_preference_distribution(preference_dist, path=str(pref_dist_file))
 
 def write_mean_output(main_config, result_list):
 
