@@ -1,8 +1,8 @@
 import time
 
-from models.graph import DatasetGraphGenerator
-from models.passenger import PassengerGenerator
-from algorithms.optimiser import create_algorithm
+from ridesharing.models.graph import DatasetGraphGenerator
+from ridesharing.models.passenger import PassengerGenerator
+from ridesharing.algorithms.optimiser import create_algorithm
 
 
 

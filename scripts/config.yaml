@@ -7,35 +7,33 @@ optimiser_params:
   - algorithm: "RGA"
     algorithm_params: 
       objective: "gini_index"
-      multiple_iterations: True
-    
-  - algorithm: "RGA ++"
-    algorithm_params:
-      objective: "gini_index"
-      multiple_iterations: True
+      multiple_iterations: False
+  # - algorithm: "RGA ++"
+  #   algorithm_params:
+  #     objective: "gini_index"
+  #     multiple_iterations: True
   
-  - algorithm: "RGVA"
-    algorithm_params:
-      final_voting_rule: "borda_count"
+  # - algorithm: "RGVA"
+  #   algorithm_params:
+  #     final_voting_rule: "borda_count"
   
-  - algorithm: "RGVA"
-    algorithm_params:
-      final_voting_rule: "popularity"
+  # - algorithm: "RGVA"
+  #   algorithm_params:
+  #     final_voting_rule: "popularity"
   
   # - algorithm: "IV1"
   #   algorithm_params:
   #     iterative_voting_rule: "borda_count"
   #     final_voting_rule: "borda_count"
 
-  - algorithm: "IV2"
-    algorithm_params:
-      iterative_voting_rule: "borda_count"
+  # - algorithm: "IV2"
+  #   algorithm_params:
+  #     iterative_voting_rule: "borda_count"
   
 const_params:
   experiment_params:
     runs: 1
-    name: "test"
-
+    name: "testing"
   passenger_params:
     service_hours: 24
     num_passengers: 80
@@ -54,5 +52,5 @@ const_params:
   
 var_params:
   passenger_params:
-    num_passengers: [50, 80, 120]
+    num_passengers: [50, 60]
     

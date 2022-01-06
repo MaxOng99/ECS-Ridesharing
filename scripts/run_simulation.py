@@ -1,8 +1,13 @@
+import sys
+import os
+sys.path.insert(0, f"{os.getcwd()}")
+sys.path.insert(0, f"{os.getcwd()}/ridesharing/")
+
 import yaml
 from multiprocessing import Pool
 
-from utils import output_writer
-from simulation import Simulation
+import output_writer
+from scripts.simulation import Simulation
 from config_validator import parse_config
 
 def __run_simulation(config):
@@ -15,7 +20,7 @@ if __name__ == "__main__":
     # Parses config.yaml and returns a list of configuration.
     # Number of unique configurations depend on the number of optimisers, 
     # and the number of variable parameters specified
-    with open('config.yaml', 'r') as file:
+    with open('./scripts/config.yaml', 'r') as file:
         config = yaml.safe_load(file)
         config_list = parse_config(config)
 

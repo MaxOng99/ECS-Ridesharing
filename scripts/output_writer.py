@@ -6,7 +6,7 @@ import seaborn as sns
 import pandas as pd
 from matplotlib import pyplot as plt
 
-from utils.data_structure import flatten_dict
+from ridesharing.utils.data_structure import flatten_dict
 
 def write_mean_output(main_config, result_list):
 

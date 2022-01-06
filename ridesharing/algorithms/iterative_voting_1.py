@@ -134,9 +134,9 @@ class IterativeVoting1:
                 current_node.value = updated_val
                 to_drop_off.remove(rider)
             
-            new_solution.check_constraint()
+        #     new_solution.check_constraint()
 
-        new_solution.check_constraint(complete=True)
+        # new_solution.check_constraint(complete=True)
         new_solution.create_rider_schedule()
         new_solution.calculate_objectives()
 

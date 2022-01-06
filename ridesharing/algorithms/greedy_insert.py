@@ -56,7 +56,7 @@ class GreedyInsert:
                     departure_node = self.allocate_rider(rider, solution, departure_node=None)
                     arrival_node = self.allocate_rider(rider, solution, departure_node=departure_node)
 
-                solution.check_constraint(complete=True)
+                # solution.check_constraint(complete=True)
                 solution.create_rider_schedule()
                 solution.calculate_objectives()
                 solutions.append(solution)
@@ -71,7 +71,7 @@ class GreedyInsert:
                 departure_node = self.allocate_rider(rider, solution, departure_node=None)
                 arrival_node = self.allocate_rider(rider, solution, departure_node=departure_node)
 
-            solution.check_constraint(complete=True)
+            # solution.check_constraint(complete=True)
             solution.create_rider_schedule()
             solution.calculate_objectives()
             return solution

@@ -38,7 +38,7 @@ class RGVA:
                 depart_node = greedy_insert_algo.allocate_rider(rider, sol, departure_node=None)
                 arrival_node = greedy_insert_algo.allocate_rider(rider, sol, departure_node=depart_node)
             
-            sol.check_constraint(complete=True)
+            # sol.check_constraint(complete=True)
             sol.create_rider_schedule()
             sol.calculate_objectives()
             solutions.append(sol)

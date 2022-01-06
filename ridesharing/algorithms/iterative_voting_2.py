@@ -89,7 +89,7 @@ class IterativeVoting2:
             else:
                 unallocated.remove(allocated_rider)
 
-        sol.check_constraint(complete=True)
+        # sol.check_constraint(complete=True)
         sol.create_rider_schedule()
         sol.calculate_objectives()
         return sol
