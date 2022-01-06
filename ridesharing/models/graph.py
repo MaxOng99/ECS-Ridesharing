@@ -9,6 +9,9 @@ class Graph:
         self.igraph = igraph
         self.__centroids = self.igraph.vs.select(is_centroid_eq=True)
 
+    def locations(self):
+        return [vertex['location_id'] for vertex in self.igraph.vs]
+        
     def find_edge(self, source_id, target_id) -> ig.Edge:
         source_vertex = self.igraph.vs.find(location_id_eq=source_id)
         target_vertex = self.igraph.vs.find(location_id_eq=target_id)

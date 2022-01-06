@@ -12,6 +12,15 @@ from algorithms.greedy_insert import GreedyInsert
 from algorithms.greedy_insert_plus import GreedyInsertPlus
 from algorithms.greedy_insert_with_voting import RGVA
 
+algos = {
+    "IV1": IterativeVoting1,
+    "IV2": IterativeVoting2,
+    "RGA": GreedyInsert,
+    "RGA ++": GreedyInsertPlus,
+    "RGVA": RGVA,
+    "tsp algorithms": heuristic_algo.TspHeuristic
+}
+
 def prune_graph(graph: Graph, riders: List[Passenger]) -> Graph:
 
     start_ids = [rider.start_id for rider in riders]
@@ -29,13 +38,4 @@ def create_algorithm(seed, params, graph, riders):
     pruned_graph = prune_graph(graph, riders)
 
     np.random.seed(seed)
-    algorithm_mapping = {
-        # First one not gonna work
-        "IV1": IterativeVoting1(riders, pruned_graph, algo_params),
-        "IV2": IterativeVoting2(riders, pruned_graph, algo_params),
-        "RGA": GreedyInsert(riders, pruned_graph, algo_params),
-        "RGA ++": GreedyInsertPlus(riders, pruned_graph, algo_params),
-        "RGVA": RGVA(riders, pruned_graph, algo_params)
-        # "tsp algorithms": heuristic_algo.TspHeuristic([Agent(rider, graph) for rider in riders], pruned_graph, algo_params)
-    }
-    return algorithm_mapping.get(algo_name)
+    return algos[algo_name](riders, pruned_graph, algo_params)

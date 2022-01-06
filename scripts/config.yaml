@@ -11,6 +11,11 @@ optimiser_params:
       objective: "gini_index"
       multiple_iterations: False
 
+  # - algorithm: "tsp algorithms"
+  #   algorithm_params:
+  #     driver: "2_opt"
+  #     max_processing_time: 10
+  
   # - algorithm: "RGA ++"
   #   algorithm_params:
   #     objective: "gini_index"
