@@ -1,8 +1,9 @@
-import algorithms
-from models.graph import DatasetGraphGenerator, SyntheticGraphGenerator
+import time
+
+from models.graph import DatasetGraphGenerator
 from models.passenger import PassengerGenerator
 from algorithms.optimiser import create_algorithm
-import time
+
 
 
 class Simulation:
@@ -27,16 +28,9 @@ class Simulation:
         graphs = []
         for x in range(runs):
             # Generate graph
-            graph = None
-            try: 
-                self.graph_params['dataset']
-                generator = DatasetGraphGenerator(self.graph_params)
-                graph = generator.graph
-                graphs.append(graph)
-            except:
-                generator = SyntheticGraphGenerator(graph_seed, self.graph_params)
-                graph = generator.graph
-                graphs.append(graph)
+            generator = DatasetGraphGenerator(graph_seed, self.graph_params)
+            graph = generator.graph
+            graphs.append(graph)
 
             # Generate passengers
             pass_generator = PassengerGenerator(passenger_seeds[x], graph, self.passenger_params)

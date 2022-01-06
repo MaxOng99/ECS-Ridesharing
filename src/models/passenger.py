@@ -1,6 +1,8 @@
 import numpy as np
 from typing import Counter, List, Tuple
 
+from models.graph import Graph
+
 class Passenger:
     def __init__(self, id: int, beta: float, location_pair: Tuple[int, int], temporal_preferences: Tuple[int, int]):
         self.id = id
@@ -25,7 +27,7 @@ class Passenger:
         return self.__str__()
 
 class PassengerGenerator:
-    def __init__(self, seed, graph, passenger_params) -> None:
+    def __init__(self, seed, graph: Graph, passenger_params) -> None:
         self.seed = seed
         self.graph = graph
         self.passenger_params = passenger_params
@@ -41,7 +43,7 @@ class PassengerGenerator:
 
         np.random.seed(seed)
         self.passengers = self.generate_passengers()
-    
+
     def generate_passengers(self) -> List[Passenger]:
         passengers = []
         beta_dist = self.__beta_distribution(self.alpha, self.beta)
@@ -57,8 +59,6 @@ class PassengerGenerator:
         ):
             p = Passenger(id, beta, loc_pair, time_pref)
             passengers.append(p)
-            self.graph.location_mapping[loc_pair[0]] = p
-            self.graph.location_mapping[loc_pair[1]] = p
 
         return passengers
 
@@ -76,20 +76,19 @@ class PassengerGenerator:
 
     def __intra_cluster_loc_preference(self):
         intra_loc_pairs = []
-        clusters = list(self.graph.cluster_info.keys())
-        cluster_info = self.graph.cluster_info
+        centroid_ids = self.graph.centroid_ids()
 
         for _ in range(self.num_passengers):    
-            selected_cluster = np.random.choice(clusters)
+            selected_centroid = np.random.choice(centroid_ids)
+            locations_of_centroid = self.graph.locations_of_centroid(selected_centroid)
             start_loc, end_loc = \
-                np.random.choice(cluster_info[selected_cluster], size=2, replace=False)
+                np.random.choice(locations_of_centroid, size=2, replace=False)
             intra_loc_pairs.append((start_loc, end_loc))
         
         return intra_loc_pairs
 
     def __inter_cluster_loc_preference(self):
-        clusters = list(self.graph.cluster_info.keys())
-        cluster_info = self.graph.cluster_info
+        centroid_ids = self.graph.centroid_ids()
         travel_types = \
             np.random.choice(['inter', 'intra'], size=self.num_passengers, p=[self.inter_cluster_prob, 1 - self.inter_cluster_prob])
         centroid_likelihood = self.centroid_likelihood
@@ -98,21 +97,22 @@ class PassengerGenerator:
 
         inter_loc_pairs = []
         for _ in range(counter['inter']):
-            start_cluster, end_cluster = \
-                np.random.choice(clusters, size=2, replace=False)
+            start_centroid, end_centroid = \
+                np.random.choice(centroid_ids, size=2, replace=False)
             depart_from_centroid, arrive_at_centriod = \
                 np.random.choice([True, False], size=2, p=[centroid_likelihood, 1 - centroid_likelihood])
             
             if depart_from_centroid:
-                start_loc = start_cluster
+                start_loc = start_centroid
             else:
-                start_loc = np.random.choice(cluster_info[start_cluster])
+                start_centroid_locations = self.graph.locations_of_centroid(start_centroid)
+                start_loc = np.random.choice(start_centroid_locations)
             
             if arrive_at_centriod:
-                end_loc = end_cluster
+                end_loc = end_centroid
             else:
-                end_loc = np.random.choice(cluster_info[end_cluster])
-            
+                end_centroid_locations = self.graph.locations_of_centroid(end_centroid)
+                end_loc = np.random.choice(end_centroid_locations)
             inter_loc_pairs.append((start_loc, end_loc))
         
         return inter_loc_pairs

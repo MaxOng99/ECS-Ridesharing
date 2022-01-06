@@ -35,21 +35,10 @@ passengers_schema = {
 }
 
 # Graph
-synthetic_graph_schema = {
+
+dataset_graph_schema = {
     'num_locations': {
-        'type': 'integer',
-        'min': 2,
-    },
-    'clusters': {
-        'type': 'integer',
-        'min': 1
-    },
-    'grid_size': {
-        'type': 'number',
-    },
-    'min_location_distance': {
-        'type': 'number',
-        'min': 100
+        'type': 'list'
     },
     'short_avg_vehicle_speed': {
         'type': 'number'
@@ -57,33 +46,42 @@ synthetic_graph_schema = {
     'long_avg_vehicle_speed': {
         'type': 'number'
     },
-    'dataset': {
-        'type': 'string'
+    'localities': {
+        'type': 'list'
     }
 }
 
-dataset_graph_schema = {
-    'dataset': {
-        'type': 'string'
-    },
-    'num_locations': {
-        'type': 'list'
-    },
-    'short_avg_vehicle_speed': {
-        'type': 'number'
-    },
-    'long_avg_vehicle_speed': {
-        'type': 'number'
-    },
-    'centroid_codes': {
-        'type': 'list'
-    }
-}
+# synthetic_graph_schema = {
+#     'num_locations': {
+#         'type': 'integer',
+#         'min': 2,
+#     },
+#     'clusters': {
+#         'type': 'integer',
+#         'min': 1
+#     },
+#     'grid_size': {
+#         'type': 'number',
+#     },
+#     'min_location_distance': {
+#         'type': 'number',
+#         'min': 100
+#     },
+#     'short_avg_vehicle_speed': {
+#         'type': 'number'
+#     },
+#     'long_avg_vehicle_speed': {
+#         'type': 'number'
+#     },
+#     'dataset': {
+#         'type': 'string'
+#     }
+# }
 
 graph_schema = {
     'type': 'dict',
     'oneof_schema': [
-        synthetic_graph_schema,
+        # synthetic_graph_schema,
         dataset_graph_schema
     ]
 }

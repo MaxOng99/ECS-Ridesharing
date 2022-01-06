@@ -27,14 +27,14 @@ optimiser_params:
   #     iterative_voting_rule: "borda_count"
   #     final_voting_rule: "borda_count"
 
-  # - algorithm: "IV2"
-  #   algorithm_params:
-  #     iterative_voting_rule: "borda_count"
+  - algorithm: "IV2"
+    algorithm_params:
+      iterative_voting_rule: "borda_count"
   
 const_params:
   experiment_params:
     runs: 1
-    name: "test_RGA_variants"
+    name: "test"
 
   passenger_params:
     service_hours: 24
@@ -47,13 +47,12 @@ const_params:
     time_step: 20
   
   graph_params:
-    dataset: "westminster_hackney_stops"
-    centroid_codes: [490003384SA, 490009644E]
+    localities: ["Westminster", "Hackney"]
     num_locations: [66, 60]
     short_avg_vehicle_speed: 13
     long_avg_vehicle_speed: 48
   
 var_params:
   passenger_params:
-    num_passengers: [50, 80]
+    num_passengers: [50, 80, 120]
     

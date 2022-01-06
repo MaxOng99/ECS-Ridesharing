@@ -1,5 +1,5 @@
-from typing import Set
-from collections import OrderedDict
+from typing import List
+import igraph as ig
 
 import numpy as np
 
@@ -12,34 +12,16 @@ from algorithms.greedy_insert import GreedyInsert
 from algorithms.greedy_insert_plus import GreedyInsertPlus
 from algorithms.greedy_insert_with_voting import RGVA
 
-def prune_graph(graph: Graph, passengers: Set[Passenger]) -> Graph:
-    passenger_locations = OrderedDict()
+def prune_graph(graph: Graph, riders: List[Passenger]) -> Graph:
 
-    for passenger in passengers:
-        start = passenger.start_id
-        destination = passenger.destination_id
+    start_ids = [rider.start_id for rider in riders]
+    destination_ids = [rider.destination_id for rider in riders]
+    required_locations = set(start_ids + destination_ids)
+    required_vertices = [graph.find_vertex(loc) for loc in required_locations]
 
-        passenger_locations[start] = None
-        passenger_locations[destination] = None
-
-    # Prune location_ids
-    new_location_ids = []
-    for location_id in graph.locations:
-        if location_id in passenger_locations:
-            new_location_ids.append(location_id)
-    
-    # Update time and distance matrix
-    new_time_matrix = dict()
-    new_distance_matrix = dict()
-
-    for (source, target) in graph.distance_matrix:
-        if source in passenger_locations and \
-            target in passenger_locations:
-
-            new_time_matrix[(source, target)] = graph.time_matrix[(source, target)]
-            new_distance_matrix[(source, target)] = graph.distance_matrix[(source, target)]
-    
-    return Graph(graph.igraph, new_location_ids, None, new_time_matrix, new_distance_matrix)
+    igraph: ig.Graph = graph.igraph
+    pruned_igraph = igraph.induced_subgraph(required_vertices)
+    return Graph(pruned_igraph)
         
 def create_algorithm(seed, params, graph, riders):
     algo_name = params.get("algorithm", None)
