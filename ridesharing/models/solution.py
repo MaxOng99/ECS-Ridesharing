@@ -8,7 +8,6 @@ from pyllist import dllist
 from poverty import gini
 
 from models.passenger import Passenger
-from utils.info_utils import solution_info
 from models.graph import Graph
 
 @dataclass(frozen=True)
