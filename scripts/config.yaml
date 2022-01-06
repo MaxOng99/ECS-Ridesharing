@@ -1,13 +1,16 @@
-seeds:
-  graph: 80
-  passengers: 67
-  algorithm: 82
+experiment_params:
+    runs: 1
+    name: "testing_2"
+    graph_seed: 80
+    passenger_seed: 67
+    algorithm_seed: 82
 
 optimiser_params:
   - algorithm: "RGA"
     algorithm_params: 
       objective: "gini_index"
       multiple_iterations: False
+
   # - algorithm: "RGA ++"
   #   algorithm_params:
   #     objective: "gini_index"
@@ -31,9 +34,6 @@ optimiser_params:
   #     iterative_voting_rule: "borda_count"
   
 const_params:
-  experiment_params:
-    runs: 1
-    name: "testing"
   passenger_params:
     service_hours: 24
     num_passengers: 80

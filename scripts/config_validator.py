@@ -207,6 +207,15 @@ experiment_schema = {
         },
         "name": {
             "type": "string"
+        },
+        "passenger_seed": {
+            "type": "integer"
+        },
+        "algorithm_seed": {
+            "type": "integer"
+        },
+        "graph_seed": {
+            "type": "integer"
         }
     }
 }
@@ -250,7 +259,7 @@ def __get_optimiser_params(config_dict):
 def parse_config(config_dict):
 
     # Check if experiment already exist by name
-    exp_name = config_dict['const_params']['experiment_params']['name']
+    exp_name = config_dict['experiment_params']['name']
     output_path = Path(f"./simulation_output/{exp_name}")
 
     if output_path.is_dir():
@@ -262,12 +271,12 @@ def parse_config(config_dict):
     # create params combination configuration
     params_config_list = []
     const_params = config_dict['const_params']
-    const_params['seeds'] = config_dict['seeds']
     param_type, param_key, param_list = __get_variable_param(config_dict)
 
     for value in param_list:
         temp_dict = copy.deepcopy(const_params)
         temp_dict[param_type][param_key] = value
+        temp_dict['experiment_params'] = config_dict['experiment_params']
         temp_dict["var_param"] = {param_key: value}
         params_config_list.append(temp_dict)
 

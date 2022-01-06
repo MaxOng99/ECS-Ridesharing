@@ -10,7 +10,6 @@ class Simulation:
     def __init__(self, config) -> None:
 
         self.config = config
-        self.seed_params = self.config['seeds']
         self.graph_params = self.config['graph_params']
         self.passenger_params = self.config['passenger_params']
         self.optimiser_params = self.config['optimiser_params']
@@ -19,9 +18,9 @@ class Simulation:
     def run(self):
         
         runs = self.experiment_params['runs']
-        graph_seed = self.seed_params['graph']
-        passenger_seeds = [self.seed_params['passengers'] + x for x in range(runs)]
-        optimiser_seed = self.seed_params['algorithm']
+        graph_seed = self.experiment_params['graph_seed']
+        passenger_seeds = [self.experiment_params['passenger_seed'] + x for x in range(runs)]
+        optimiser_seed = self.experiment_params['algorithm_seed']
 
         solutions = []
         elapsed = []

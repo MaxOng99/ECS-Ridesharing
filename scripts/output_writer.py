@@ -1,6 +1,7 @@
 import csv
 from pathlib import Path
 
+import yaml
 import numpy as np
 import seaborn as sns
 import pandas as pd
@@ -10,7 +11,7 @@ from ridesharing.utils.data_structure import flatten_dict
 
 def write_mean_output(main_config, result_list):
 
-    exp_name = main_config['const_params']['experiment_params']['name']
+    exp_name = main_config['experiment_params']['name']
     var_param = flatten_dict(main_config['var_params'])
     var_key = list(var_param.keys())[0]
     objective_keys = list(result_list[0][1][0].keys())
@@ -44,13 +45,20 @@ def write_mean_output(main_config, result_list):
     
     return data_rows
 
+def write_config_output(main_config, path):
+    with path.open("w") as f:
+        yaml.safe_dump(main_config, f)
+        
 def write_full_output(main_config, result_list):
-    exp_name = main_config['const_params']['experiment_params']['name']
+    exp_name = main_config['experiment_params']['name']
     var_param = flatten_dict(main_config['var_params'])
 
     output_path = Path(f"./simulation_output/{exp_name}")
     output_path.mkdir(parents=True, exist_ok=True)
+
     full_csv = output_path / "full_output.csv"
+    config_path = output_path / "config.yaml"
+    write_config_output(main_config, config_path)
     
     var_key = list(var_param.keys())[0]
     objective_keys = list(result_list[0][1][0].keys())
@@ -76,7 +84,7 @@ def write_full_output(main_config, result_list):
     
 
 def plot_graph(main_config, mean_data_rows):
-    exp_name = main_config['const_params']['experiment_params']['name']
+    exp_name = main_config['experiment_params']['name']
     var_key = list(flatten_dict(main_config["var_params"]).keys())[0]
 
     output_path = Path(f"./simulation_output/{exp_name}")
