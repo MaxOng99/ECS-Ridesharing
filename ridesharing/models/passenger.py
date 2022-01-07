@@ -35,9 +35,7 @@ class PassengerGenerator:
         self.beta = self.passenger_params['beta']
         self.alpha = self.passenger_params['alpha']
         self.peak_probability = self.passenger_params['peak_probability']
-        self.service_hours = self.passenger_params['service_hours']
         self.num_passengers = self.passenger_params['num_passengers']
-        self.time_step = self.passenger_params['time_step']
         self.centroid_likelihood = self.passenger_params['centroid_likelihood']
         self.inter_cluster_prob = self.passenger_params['inter_cluster_probability']
 
@@ -135,7 +133,7 @@ class PassengerGenerator:
         for frame, loc_pair in zip(peak_frame_list + non_peak_frame_list, loc_pairs):
             start, end = frame
             start_loc, end_loc = loc_pair
-            optimum_departure = np.random.choice(np.arange(start, end, self.time_step))
+            optimum_departure = np.random.randint(start, end+1)
             optimum_arrival = optimum_departure + self.graph.travel_time(start_loc, end_loc)
 
             time_preferences.append((optimum_departure, optimum_arrival))

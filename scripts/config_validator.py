@@ -24,11 +24,9 @@ passengers_schema = {
     "type": "dict",
     "schema": {
         "num_passengers": {"type": "integer", "min": 1},
-        "service_hours": {"type": "integer", "min": 1, "max": 24},
         "alpha": {"type": "number"},
         "beta": {"type": "number"},
         "peak_probability": {"type": "number"},
-        "time_step": {"type": "number"},
         "inter_cluster_probability": {"type": "number", "min":0, "max":1},
         "centroid_likelihood": {"type": "number", "min": 0, "max": 1}
     }
@@ -98,12 +96,8 @@ RGA_schema = {
             "objective": {
                 "type": "string",
                 "allowed": [
-                    'egalitarian',
                     'utilitarian',
-                    'proportionality',
-                    'avg_utility',
-                    'gini_index',
-                    'percentile'
+                    'gini_index'
                 ]
             },
             "multiple_iterations": {
@@ -179,7 +173,7 @@ tsp_heuristic_schema = {
         "schema": {
             "driver": {
                 "type": "string",
-                "allowed": ["2_opt", "simulated_annealing", "dp"]
+                "allowed": ["2_opt", "simulated_annealing"]
             },
             "max_processing_time": {"type": "number"}
         }

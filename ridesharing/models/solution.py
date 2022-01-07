@@ -88,13 +88,9 @@ class Solution:
             arrival_time = self.rider_schedule.get("arrival").get(rider.id)
             utils.append(rider.utility(departure_time, arrival_time))
 
-        self.objectives['avg_utility'] = np.mean(utils)
         self.objectives['utilitarian'] = sum(utils)
-        self.objectives['egalitarian'] = min(utils)
-        self.objectives['proportionality'] = np.std(utils)
         self.objectives['gini_index'] = gini(utils)
-        self.objectives['percentile'] = np.percentile(utils, 20)
-
+        
     def create_rider_schedule(self) -> Dict[str, Dict[int, int]]:
         time_taken = 0
         current_node = self.llist.first
