@@ -1,4 +1,3 @@
-import copy
 from typing import List, Union
 from dataclasses import dataclass, replace
 
@@ -48,13 +47,12 @@ class GreedyInsert:
             for rider in self.riders:
                 # Initialize solution by allocating first rider
                 solution: Solution = self.initialise_solution(rider)
-                temp_riders = copy.copy(self.riders)
-                temp_riders.remove(rider)
 
                 # Allocate n other riders
-                for rider in temp_riders:
-                    departure_node = self.allocate_rider(rider, solution, departure_node=None)
-                    arrival_node = self.allocate_rider(rider, solution, departure_node=departure_node)
+                for other_rider in self.riders:
+                    if not rider.id == other_rider.id:
+                        departure_node = self.allocate_rider(rider, solution, departure_node=None)
+                        arrival_node = self.allocate_rider(rider, solution, departure_node=departure_node)
 
                 # solution.check_constraint(complete=True)
                 solution.create_rider_schedule()

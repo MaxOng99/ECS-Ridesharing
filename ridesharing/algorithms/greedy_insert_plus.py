@@ -1,4 +1,3 @@
-import copy
 from typing import List
 
 import numpy as np
@@ -32,20 +31,20 @@ class GreedyInsertPlus:
             for rider in self.riders:
                 rider_depart_node_dict = dict()
                 sol: Solution = self.initialise_solution(rider)
-                temp_riders = copy.copy(self.riders)
-                temp_riders.remove(rider)
 
                 rider_depart_node_dict[rider.id] = sol.llist.first
                 greedy_insert_algo = GreedyInsert(self.riders, self.graph, self.params)
 
-                for rider in temp_riders:
-                    depart_node = greedy_insert_algo.allocate_rider(rider, sol, departure_node=None)
-                    rider_depart_node_dict[rider.id] = depart_node
+                for other_rider in self.riders:
+                    if not other_rider.id == rider.id:
+                        depart_node = greedy_insert_algo.allocate_rider(rider, sol, departure_node=None)
+                        rider_depart_node_dict[rider.id] = depart_node
                 
                 self.riders.reverse()
 
-                for rider in temp_riders:
-                    arrival_node = greedy_insert_algo.allocate_rider(rider, sol, departure_node=rider_depart_node_dict.get(rider.id))
+                for other_rider in self.riders:
+                    if not other_rider.id == rider.id:
+                        arrival_node = greedy_insert_algo.allocate_rider(rider, sol, departure_node=rider_depart_node_dict.get(rider.id))
                 
                 # sol.check_constraint(complete=True)
                 sol.create_rider_schedule()

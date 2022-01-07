@@ -29,14 +29,13 @@ class RGVA:
         solutions: Solution = []
 
         for rider in self.riders:
-            temp_riders = copy.copy(self.riders)
-            temp_riders.remove(rider)
             sol: Solution = self.initialise_solution(rider)
             greedy_insert_algo = GreedyInsert(self.riders, self.graph, self.params)
 
-            for rider in temp_riders:
-                depart_node = greedy_insert_algo.allocate_rider(rider, sol, departure_node=None)
-                arrival_node = greedy_insert_algo.allocate_rider(rider, sol, departure_node=depart_node)
+            for other_rider in self.riders:
+                if not other_rider.id == rider.id:
+                    depart_node = greedy_insert_algo.allocate_rider(rider, sol, departure_node=None)
+                    arrival_node = greedy_insert_algo.allocate_rider(rider, sol, departure_node=depart_node)
             
             # sol.check_constraint(complete=True)
             sol.create_rider_schedule()
@@ -50,8 +49,3 @@ class RGVA:
             voting_system = Popularity(self.riders, solutions, additional_info=None)
         
         return voting_system.winner
-
-
-
-
-
