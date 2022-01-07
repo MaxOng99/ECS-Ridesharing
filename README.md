@@ -1,64 +1,124 @@
 # ECS RideSharing Research
 
-## Instructions
+## Project Setup
 
-### Running on ECS's linux server
+#### Running on ECS's linux server
 *Windows users: Consider installing [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) to ssh into the server.*
 1. `ssh` into `linuxproj.ecs.soton.ac.uk` with your university username and password.
-2. Clone the repository. <br/>
+2. Clone the repository.
+3. Navigate to root folder of project.
+4. Run `./scripts/setup_env.sh`<br/>
 
 
-### Running on personal machine
+#### Running on Personal Machine
 *Windows users: [Set up](https://docs.microsoft.com/en-us/windows/wsl/install-win10) WSL so that bash scripts can be run.*
 1. Ensure that Python 3.4.x or above is already installed.
 2. Clone the repository.
-3. In the `setup_env.sh` and `run_simulation.sh` files, change `python3` to `<path/to/python_interpreter>`, or `<python_interpreter>` if your python interpreter was added to `PATH` variable. </br>
+3. In the `setup_env.sh`, change `python3` to `<path/to/python_interpreter>`, or `<python_interpreter>` if your python interpreter was added to `PATH` variable. </br>
+4. Navigate to root folder of project.
+5. Run `./scripts/setup_env.sh`
 
-### Specifying experiments
-
-Refer to [config.yaml](https://github.com/MaxOng99/ECS-Ridesharing/blob/main/config.yaml) for examples.
-#### Seeds
-- `graph: int`
-- `passengers: int`
-- `algorithm: int`
-
-*There are 3 seed parameters to set: `graph`, `passengers` and `algorithm`. For each experiment, each run will generate the same graph, but different passengers (different betas, start/end location and time). Different passengers are generated based on the `passengers` seed. For e.g., if `runs = 3` and the passenger seed `passengers = 67`, the list of passengers seeds to be used for each run of the experiment is [67, 68, 69]*
-
-#### Passenger Parameters
-- `num_passengers: int`
-- `service_hours: int`
-- `beta_distribution: "truncated_normal" | "uniform"`
-- `preference_distribution: "peak_hours" | "uniform"`
-- `inter_cluster_travelling: True | False`
-
-*`truncated_normal` for `beta_distribution` assumes a normal distribution with mean 0.5 and standrad deviation of 0.15, truncated between 0 and 1. These specific parameters give rise to higher probabilities for sampling around 0.5, but lesser probabilities for sampling around the extremes (around 0.1 and around 0.8)*
-
-*`peak_hours` value for `preference_distribution` is only valid when `service_hours=24`. When sampling temporal preferences under this setting, there are 3 time frames (with their respective probabilities); morning, evening, full day (0.4, 0.4, 0.2). Essentially, there is a higher probability of sampling from morning + evening time frame, compared to the full day time frame. Note that if `preference_distribution="peak_hours"` but `service_hours != 24`, `preference_distribution` defaults to `uniform`.*
-
-#### Graph Parameters
-- `num_locations: int`
-- `cluster: int`
-- `grid_size`: int
-- `avg_vehicle_speed: float`
-
-*Note that 1. individual clusters are not part of the locations 2. The specified grid size is always nxn. For e.g., `grid_size=1200` equals to a 1200x1200 grid 3. `avg_vehicle_speed` is in km/h*
-
-#### Optimiser Parameters
-- `algorithm: 'greedy_insert' | 'iterative_voting'`
-- `algorithm_params (greedy_insert): iterations: int, final_voting_rule: 'borda_count' | 'popularity'`
-- `algorithm_params (iterative_voting): wait_time: int, iterative_voting_rule: 'borda_count' | 'popularity', final_voting_rule: 'borda_count' | 'popularity'`
-
-### Running the simulation
+## Running the simulation
 1. Navigate to the root folder of this project.
-3. Run `./setup_env.sh`.
-4. Specify different experiments in the `config.yaml` file.
-5. Run `./run_simulation.sh`.
-6. Repeat steps 3-4 with different experiments.
-7. View the outputs in the `simulation_output` folder. Each experiment contains a configuration file and an output file.
+2. Specify parameters in `config.yaml`.
+3. Run `source ./env/ride_sharing/bin/activate`
+4. Run `python3 scripts/run_simulation.py`.
+5. View the outputs in the `simulation_output` folder. Each experiment contains a configuration file and an output file.
 
-## Packages used in this project
-- [numpy](https://numpy.org/)
-- [python-igraph](https://igraph.org/python/)
-- [prettytable](https://pypi.org/project/prettytable/)
-- [PyYAML](https://pyyaml.org/wiki/PyYAMLDocumentation)
-- [pyllist](https://pythonhosted.org/pyllist/)
+## Dataset
+The dataset used to generate the transport network graph is the [Naptan Dataset](#https://data.gov.uk/dataset/ff93ffc1-6656-47d8-9155-85ea0b8f2251/national-public-transport-access-nodes-naptan) which consists of all public transport access points within the United Kingdom. Only bus stops are considered in this project, and the following bus stop properties are utilised:
+
+- ATCOCode: The unique identifier for a stop.
+- LocalityName: Locality (or cluster in our project) of a stop.
+- Latitude: Latitude of a stop.
+- Longitude: Longitude of a stop.
+
+## Modifying config.yaml
+
+Refer to [config.yaml](https://github.com/MaxOng99/ECS-Ridesharing/blob/main/config.yaml) for the structure of the configuration file. There are a few important things to take note:
+1. [optimiser_params](#optimiser_params) takes a list of algorithms with their specified parameters.
+2. const_params consists of [graph_params](#graph_params) and [passenger_params](#passenger_params) that will be constant throughout the experiment.
+3. `var_param` consist of **only one parameter, from one parameter type (`graph_params` or `passenger_params`)**
+4. For each algorithm (and their parameters) - variable parameter value combination, a separate configuration will be constructed, which can then be used to run an instance of a simulation. For example, if 2 algorithms and 4 variable parameter values are specified, there are a total of 8 simulation instances. Each of the 8 instances will have a different variable parameter, different optimiser, but the same const params.
+
+There are four types of parameters, each of which are explained below:
+#### experiment_params:
+- `name: string`
+
+    *Name of the experiment.*
+
+- `runs: int`
+
+    *Number of runs for each instance of a simulation.*
+
+- `graph_seed: int`
+
+    *Seed value used to generate graph.*
+
+- `passenger_seed: int`
+    *If there `runs > 1`, for the ith run, the seed used to generate passengers will be `passenger_seed + i`.*
+
+- `algorithm_seed: int`
+
+    *Seed value used to construct algorithms.*
+
+#### graph_params
+- `localities: List[LocalityName] `
+
+	*List of LocalityName as defined in the Naptan Dataset. Each locality represents a cluster. **Only include more than 1 LocalityName if inter_cluster_probability > 0**.*
+- `num_locations: List[int]`
+
+	*The number of locations for each LocalityName (cluster) defined in the `localities` parameter.*
+
+- `short_avg_vehicle_speed: float`
+
+	*The average bus speed when travelling between stations within a cluster/locality.*
+
+- `long_avg_vehicle_speed: float`
+
+	*The average bus speed when travelling between stations of different localities.*
+
+#### passenger_params
+- `num_passengers: int`
+
+	*Number of riders for the 24 hours bus service.*
+- `peak_probability: float`
+
+	*The probability [0, 1] in which a rider travels during peak hours. There are 2 peak time frames, morning peak: [420, 560] and evening peak: [1020, 1140]. If a rider travels during peak hours, there is a 0.5 probability of travelling in the morning peak, or in the evenig peak*.
+- `centroid_likelihood: float, requires inter_cluster_probability > 0`
+
+	*The probability [0, 1] in which riders depart (and arrive) from (at) the centroid of a cluster.*
+
+- `inter_cluster_probability: float, [0, 1]`
+
+	*The probability [0, 1] in which riders travel between locations of two different clusters (not necessarily departing from or arriving at a centroid).*
+
+#### optimiser_params
+
+- `algorithm: RGA | RGA ++| RGVA | IV1 | IV2 | tsp algorithms`
+
+- `algorithm_params: dictionary of key-value pairs`:
+
+	**RGA**
+		1. objective: gini_index | utilitarian
+		2. multiple_iterations: True | False
+
+	**RGA ++**
+		1. objective: gini_index | utilitarian
+		2. multiple_iterations: True | False
+
+	**RGVA**
+		1. final_voting_rule: borda_count | popularity
+
+	**IV1**
+		1. iterative_voting_rule: borda_count | popularity
+		2. final_voting_rule: borda_count | popularity
+
+	**IV2**
+		1. iterative_voting_rule: borda_count | popularity
+
+	**tsp algorithms**
+		1. driver: 2_opt | simulated_annealing
+		2. max_processing_time: int
+
+
