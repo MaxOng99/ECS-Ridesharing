@@ -1,8 +1,8 @@
 from dataclasses import replace
 
 import numpy as np
-from python_tsp.exact import solve_tsp_dynamic_programming
-from python_tsp.heuristics import solve_tsp_local_search, solve_tsp_simulated_annealing
+from python_tsp.heuristics import solve_tsp_local_search
+from python_tsp.heuristics import solve_tsp_simulated_annealing
 
 from models.solution import Solution, TourNodeValue
 
@@ -30,30 +30,16 @@ class TspHeuristic:
             return solve_tsp_local_search
         elif self.params['driver'] == "simulated_annealing":
             return solve_tsp_simulated_annealing
-        elif self.params['driver'] == "dp":
-            return solve_tsp_dynamic_programming
-
-    def __join_routes(self, routes):
-        for route_i, route_j in zip(routes[:-1], routes[1:]):
-            if route_i[-1] == route_j[0]:
-                route_i.pop()
-        return [loc_id for route in routes for loc_id in route]
 
     def optimise(self) -> Solution:
-        journey_time = 0
         routes = []
         processing_time = self.params['max_processing_time']
 
-        while journey_time < 1440:
-            if processing_time != 0:
-                route, travel_time = self.algorithm(np.array(self.time_matrix), max_processing_time=processing_time)
-            else:
-                route, travel_time = self.algorithm(np.array(self.time_matrix))
-            routes.append(route)
-            journey_time += travel_time
+        route, travel_time = self.algorithm(np.array(self.time_matrix), max_processing_time=processing_time)
+        multiplier = 1440 / travel_time
+        joined_routes = route * 2
 
         # Construct solution based on solved TSP route
-        joined_routes = self.__join_routes(routes)
         solution = Solution(self.riders, self.graph)
         start_tour_node = TourNodeValue(self.mapping[joined_routes[0]], 0, 0)
         solution.llist.append(start_tour_node)
@@ -64,7 +50,7 @@ class TspHeuristic:
             arrival_time = current_node.value.departure_time + travel_time
             node = TourNodeValue(self.mapping[loc_index], arrival_time, 0)
             solution.llist.append(node)
-        solution.check_constraint(complete=True)
+        # solution.check_constraint(complete=True)
         
         # Find best nodes to board and alight:
         for rider in self.riders:
