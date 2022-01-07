@@ -32,6 +32,6 @@ if __name__ == "__main__":
     mean_data_rows = output_writer.write_mean_output(config, result_list)
 
     # Plot graphical results
-    output_writer.plot_graph(config, mean_data_rows)
+    output_writer.plot_graph(config, full_data_rows)
 
 

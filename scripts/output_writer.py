@@ -83,19 +83,18 @@ def write_full_output(main_config, result_list):
     return data_rows
     
 
-def plot_graph(main_config, mean_data_rows):
+def plot_graph(main_config, full_data_rows):
     exp_name = main_config['experiment_params']['name']
     var_key = list(flatten_dict(main_config["var_params"]).keys())[0]
 
     output_path = Path(f"./simulation_output/{exp_name}")
-    keys = list(mean_data_rows[0].keys())
+    keys = list(full_data_rows[0].keys())
     keys.remove("algorithm")
     keys.remove(var_key)
 
-    df = pd.read_csv(f"{output_path}/mean_output.csv", header=0)
+    df = pd.read_csv(f"{output_path}/full_output.csv", header=0)
     for key in keys:
         _, ax = plt.subplots()
-        sns.lineplot(data=df, ax=ax, x=var_key, y=key, hue="algorithm")
+        sns.lineplot(data=df, ax=ax, x=var_key, y=key, hue="algorithm", err_style="bars", ci=95)
         plt.legend(fontsize="xx-small")
         plt.savefig(f"{output_path}/{key}_vs_{var_key}.png")
-
