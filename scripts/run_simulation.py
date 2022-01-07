@@ -24,7 +24,7 @@ if __name__ == "__main__":
         config = yaml.safe_load(file)
         config_list = parse_config(config)
 
-    with Pool(processes=4) as pool:
+    with Pool() as pool:
         result_list = pool.map(__run_simulation, config_list)
     
     # Write CSV Output
