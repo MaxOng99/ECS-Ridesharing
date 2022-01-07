@@ -23,7 +23,7 @@
 2. Specify parameters in `config.yaml`.
 3. Run `source ./env/ride_sharing/bin/activate`
 4. Run `python3 scripts/run_simulation.py`.
-5. View the outputs in the `simulation_output` folder. Each experiment contains a configuration file and an output file.
+5. View the outputs in the `simulation_output` folder.
 
 ## Dataset
 The dataset used to generate the transport network graph is the [Naptan Dataset](#https://data.gov.uk/dataset/ff93ffc1-6656-47d8-9155-85ea0b8f2251/national-public-transport-access-nodes-naptan) which consists of all public transport access points within the United Kingdom. Only bus stops are considered in this project, and the following bus stop properties are utilised:
