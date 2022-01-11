@@ -42,6 +42,7 @@ class Simulation:
             t_end = time.perf_counter()
             elapsed.append(t_end - t_start)
             solutions.append(solution.objectives)
+            print(self.optimiser_params['algorithm'], self.optimiser_params['algorithm_params'], self.config['var_param'], f"done at {t_end - t_start}")
         
         return (self.config, solutions)
         
