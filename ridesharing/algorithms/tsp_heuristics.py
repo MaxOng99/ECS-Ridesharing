@@ -32,11 +32,9 @@ class TspHeuristic:
             return solve_tsp_simulated_annealing
 
     def optimise(self) -> Solution:
-        routes = []
         processing_time = self.params['max_processing_time']
 
         route, travel_time = self.algorithm(np.array(self.time_matrix), max_processing_time=processing_time)
-        multiplier = 1440 / travel_time
         joined_routes = route * 2
 
         # Construct solution based on solved TSP route
@@ -50,7 +48,6 @@ class TspHeuristic:
             arrival_time = current_node.value.departure_time + travel_time
             node = TourNodeValue(self.mapping[loc_index], arrival_time, 0)
             solution.llist.append(node)
-        # solution.check_constraint(complete=True)
         
         # Find best nodes to board and alight:
         for rider in self.riders:
@@ -60,21 +57,38 @@ class TspHeuristic:
                 solution.llist.iternodes()
             )
             for start in start_nodes:
-                end_nodes = filter(
-                    lambda node: node.value.arrival_time >= start.value.departure_time and node.value.location_id == rider.destination_id,
-                    start.iternext() 
-                )
-                for end in end_nodes:
-                    start_end_pairs.append((start, end))
-        
+                curr_best_end = None
+                curr_best_end_util = -1
+
+                for end_node in start.iternext():
+                    if end_node.value.arrival_time >= start.value.departure_time and end_node.value.location_id == rider.destination_id:
+                        depart_time = start.value.departure_time
+                        arrival_time = end_node.value.arrival_time
+                        util = rider.utility(depart_time, arrival_time)
+                        if util > curr_best_end_util:
+                            curr_best_end = end_node
+                            curr_best_end_util = util
+                        else:
+                            break
+                if curr_best_end:
+                    start_end_pairs.append((start, curr_best_end))
+
             best_node_pair = max(
                 start_end_pairs,
                 key=lambda pair: rider.utility(pair[0].value.departure_time, pair[1].value.arrival_time)
             )
-            for best_node in list(best_node_pair):
-                best_node_val = best_node.value
-                best_node.value = replace(best_node_val, pick_ups=best_node_val.pick_ups + tuple([rider]))
-        
+            best_depart_node, best_arrival_node = best_node_pair
+
+            best_depart_node_val = best_depart_node.value
+            best_arrival_node_val = best_arrival_node.value
+
+            updated_depart_val = replace(best_depart_node_val, pick_ups=best_depart_node_val.pick_ups + tuple([rider]))
+            best_depart_node.value = updated_depart_val
+
+            updated_arrival_val = replace(best_arrival_node_val, drop_offs=best_arrival_node_val.drop_offs + tuple([rider]))
+            best_arrival_node.value = updated_arrival_val
+
+        # solution.check_constraint(complete=True)
         solution.create_rider_schedule()
         solution.calculate_objectives()
         return solution
