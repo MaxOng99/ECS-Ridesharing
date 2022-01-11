@@ -97,4 +97,5 @@ def plot_graph(main_config, full_data_rows):
         _, ax = plt.subplots()
         sns.lineplot(data=df, ax=ax, x=var_key, y=key, hue="algorithm", err_style="bars", ci=95)
         plt.legend(fontsize="xx-small")
+        plt.ylim(bottom=0)
         plt.savefig(f"{output_path}/{key}_vs_{var_key}.png")
