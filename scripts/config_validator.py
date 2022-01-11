@@ -157,7 +157,7 @@ IV2_schema = {
         "schema": {
             "iterative_voting_rule": {
                 "type": "string",
-                "allowed": ["borda_count", "poplarity"]
+                "allowed": ["borda_count", "popularity"]
             }
         }
     }
