@@ -81,6 +81,30 @@ class Solution:
         if invalid_drop_offs or invalid_pick_ups:
             raise SolutionConstraintError("Riders are being allocated twice")
 
+        # Check if all riders have been allocated
+        if complete:
+            departure_allocated = dict.fromkeys(self.riders, False)
+            arrival_allocated = dict.fromkeys(self.riders, False)
+
+            for node in self.llist.iternodes():
+                picks = node.value.pick_ups
+                drops = node.value.drop_offs
+
+                for rider in picks:
+                    departure_allocated[rider] = True
+                for rider in drops:
+                    arrival_allocated[rider] = True
+
+            departure_keys = list(departure_allocated.keys())
+            arrival_keys = list(arrival_allocated.keys())
+
+            if len(self.riders) == len(departure_keys) and \
+                len(self.riders) == len(arrival_keys):
+                pass
+            else:
+                raise SolutionConstraintError(f"Some riders have not been fully allocated")
+
+
     def calculate_objectives(self):
         utils = []
         for rider in self.riders:
@@ -92,25 +116,16 @@ class Solution:
         self.objectives['gini_index'] = gini(utils)
         
     def create_rider_schedule(self) -> Dict[str, Dict[int, int]]:
-        time_taken = 0
-        current_node = self.llist.first
-        
+
         for node in self.llist.iternodes():
-            location_i = current_node.value.location_id
-            location_j = node.value.location_id
-            travel_time = self.graph.travel_time(location_i, location_j)
-            time_taken += travel_time
-
             departure_time = node.value.departure_time
-            arrival_time = node.value.arrival_time
-
+            arrival_time = node.value.arrival_time            
             for rider in node.value.pick_ups:
                 self.rider_schedule['departure'][rider.id] = departure_time
             
             for rider in node.value.drop_offs:
                 self.rider_schedule['arrival'][rider.id] = arrival_time
-            
-            current_node = node
+        
         return self.rider_schedule
 
     def __str__(self) -> str:
