@@ -25,17 +25,18 @@ class RGVA:
         return sol
 
     def optimise(self) -> Solution:
-        np.random.shuffle(self.riders)
         solutions: Solution = []
+        temp_riders = self.riders[:]
 
         for rider in self.riders:
+            np.random.shuffle(temp_riders)
             sol: Solution = self.initialise_solution(rider)
-            greedy_insert_algo = GreedyInsert(self.riders, self.graph, self.params)
+            greedy_insert_algo = GreedyInsert(temp_riders, self.graph, self.params)
 
-            for other_rider in self.riders:
+            for other_rider in temp_riders:
                 if not other_rider.id == rider.id:
-                    depart_node = greedy_insert_algo.allocate_rider(rider, sol, departure_node=None)
-                    arrival_node = greedy_insert_algo.allocate_rider(rider, sol, departure_node=depart_node)
+                    depart_node = greedy_insert_algo.allocate_rider(other_rider, sol, departure_node=None)
+                    arrival_node = greedy_insert_algo.allocate_rider(other_rider, sol, departure_node=depart_node)
             
             # sol.check_constraint(complete=True)
             sol.create_rider_schedule()

@@ -23,35 +23,40 @@ class GreedyInsertPlus:
         return sol
 
     def optimise(self) -> Solution:
-        np.random.shuffle(self.riders)
-
+        
         if self.params['multiple_iterations']:
+
             solutions: List[Solution] = []
+            temp_riders = self.riders[:]
 
             for rider in self.riders:
                 rider_depart_node_dict = dict()
+                np.random.shuffle(temp_riders)
                 sol: Solution = self.initialise_solution(rider)
 
                 rider_depart_node_dict[rider.id] = sol.llist.first
-                greedy_insert_algo = GreedyInsert(self.riders, self.graph, self.params)
+                greedy_insert_algo = GreedyInsert(temp_riders, self.graph, self.params)
 
-                for other_rider in self.riders:
+                for other_rider in temp_riders:
                     if not other_rider.id == rider.id:
-                        depart_node = greedy_insert_algo.allocate_rider(rider, sol, departure_node=None)
-                        rider_depart_node_dict[rider.id] = depart_node
+                        depart_node = greedy_insert_algo.allocate_rider(other_rider, sol, departure_node=None)
+                        rider_depart_node_dict[other_rider.id] = depart_node
                 
-                self.riders.reverse()
+                temp_riders.reverse()
 
-                for other_rider in self.riders:
+                for other_rider in temp_riders:
                     if not other_rider.id == rider.id:
-                        arrival_node = greedy_insert_algo.allocate_rider(rider, sol, departure_node=rider_depart_node_dict.get(rider.id))
+                        arrival_node = greedy_insert_algo.allocate_rider(other_rider, sol, departure_node=rider_depart_node_dict.get(other_rider.id))
                 
                 # sol.check_constraint(complete=True)
                 sol.create_rider_schedule()
                 sol.calculate_objectives()
                 solutions.append(sol)
-                
-            return max(solutions, key=lambda sol: sol.objectives[self.params['objective']])
+            
+            if self.params['objective'] == "gini_index":
+                return min(solutions, key=lambda sol: sol.objectives["gini_index"])
+            elif self.params['objective'] == "utilitarian":
+                return max(solutions, key=lambda sol: sol.objectives["utilitarian"])
             
         else:
 

@@ -1,3 +1,4 @@
+import copy
 from typing import List, Union
 from dataclasses import dataclass, replace
 
@@ -40,34 +41,43 @@ class GreedyInsert:
         self.params = params
 
     def optimise(self) -> Solution:
-        np.random.shuffle(self.riders)
 
         if self.params['multiple_iterations']:
             solutions: List[Solution] = []
+            temp_riders = self.riders[:]
+
             for rider in self.riders:
+                np.random.shuffle(temp_riders)
                 # Initialize solution by allocating first rider
                 solution: Solution = self.initialise_solution(rider)
 
                 # Allocate n other riders
-                for other_rider in self.riders:
+                for other_rider in temp_riders:
                     if not rider.id == other_rider.id:
-                        departure_node = self.allocate_rider(rider, solution, departure_node=None)
-                        arrival_node = self.allocate_rider(rider, solution, departure_node=departure_node)
+                        departure_node = self.allocate_rider(other_rider, solution, departure_node=None)
+                        arrival_node = self.allocate_rider(other_rider, solution, departure_node=departure_node)
 
+                #     solution.check_constraint()
                 # solution.check_constraint(complete=True)
+
                 solution.create_rider_schedule()
                 solution.calculate_objectives()
                 solutions.append(solution)
             
-            return max(solutions, key=lambda sol: sol.objectives[self.params['objective']])
-            
+            if self.params['objective'] == "gini_index":
+                return min(solutions, key=lambda sol: sol.objectives["gini_index"])
+            elif self.params['objective'] == "utilitarian":
+                return max(solutions, key=lambda sol: sol.objectives["utilitarian"])
+
         else:
+            np.random.shuffle(self.riders)
             solution: Solution = self.initialise_solution(self.riders[0])
 
             # Allocate n other riders
             for rider in self.riders[1:]:
                 departure_node = self.allocate_rider(rider, solution, departure_node=None)
                 arrival_node = self.allocate_rider(rider, solution, departure_node=departure_node)
+            #     solution.check_constraint()
 
             # solution.check_constraint(complete=True)
             solution.create_rider_schedule()
@@ -115,7 +125,6 @@ class GreedyInsert:
             elif best_tn.insert_position == "after":
                 new_node = sol.llist.insert(updated_val, after=best_tn.ref_node)
                 self.__update_next_node(new_node.next)
-            sol.check_constraint()
             return new_node
 
         elif type(best_tn) is ExistingValidTourNode:
@@ -132,7 +141,7 @@ class GreedyInsert:
             pref_time
         ), valid_insert_contexts))
         return valid_existing_tour_nodes + valid_new_tour_nodes
-        
+
     def __valid_existing_nodes(self, input_loc, start_node) -> List[ExistingValidTourNode]:
         filtered = filter(lambda node: node.value.location_id == input_loc, start_node.iternext())
         valid_existing_nodes = list(map(
