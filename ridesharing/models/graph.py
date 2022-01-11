@@ -1,4 +1,5 @@
 import csv
+from typing import Counter
 
 import igraph as ig
 import numpy as np
@@ -79,8 +80,17 @@ class DatasetGraphGenerator:
     def __generate_graph(self):
         with open(f"./dataset/westminster_hackney_stops.csv", "r", encoding='utf-8-sig') as file:
             records = list(csv.DictReader(file))
+
+            # filter duplicates by ATCOCode
+            codes = [record['ATCOCode'] for record in records]
+            counter = Counter(codes)
+            duplicate_records = \
+                list(filter(lambda pair: pair[1] > 1, counter.items()))
+            duplicate_codes = [key for key, val in duplicate_records]
+
+            filtered_records = [record for record in records if record['ATCOCode'] not in duplicate_codes]
             igraph = ig.Graph.Full(n=sum(self.num_locations))
-            self.__generate_vertex_props(igraph, records)
+            self.__generate_vertex_props(igraph, filtered_records)
             self.__generate_edge_props(igraph)
 
         return igraph
