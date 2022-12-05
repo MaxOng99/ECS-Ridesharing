@@ -56,6 +56,10 @@ class IterativeVoting2:
             return VotingRules.borda_count
         elif rule == 'popularity':
             return VotingRules.popularity
+        elif rule == "harmonic":
+            return VotingRules.harmonic
+        elif rule == "instant_runoff":
+            return VotingRules.instant_runoff
     
     def __stations_to_visit(self, selected_voters) -> List[int]:
         stations = []
