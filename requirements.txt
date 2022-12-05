@@ -8,4 +8,4 @@ matplotlib
 pycairo
 seaborn
 poverty
-harversine
+haversine
