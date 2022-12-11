@@ -51,10 +51,6 @@ There are four types of parameters, each of which are explained below:
 
     *Number of runs for each instance of a simulation.*
 
-- `graph_seed: int`
-
-    *Seed value used to generate graph.*
-
 - `passenger_seed: int`
 
     *If there `runs > 1`, for the ith run, the seed used to generate passengers will be `passenger_seed + i`.*
