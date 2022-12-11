@@ -1,6 +1,6 @@
 experiment_params:
     runs: 100
-    name: "test_1"
+    name: "test_2"
     graph_seed: 80
     passenger_seed: 67
     algorithm_seed: 82
@@ -11,9 +11,9 @@ optimiser_params:
       objective: "utilitarian"
       multiple_iterations: False
 
-  - algorithm: "RGA"
+  - algorithm: "RGA ++"
     algorithm_params: 
-      objective: "gini_index"
+      objective: "utilitarian"
       multiple_iterations: False
 
   - algorithm: "IV2"
