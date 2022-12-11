@@ -8,7 +8,6 @@ from haversine import haversine, Unit
 class Graph:
     def __init__(self, igraph) -> None:
         self.igraph = igraph
-        self.__centroids = self.igraph.vs.select(is_centroid_eq=True)
 
     def locations(self):
         return [vertex['location_id'] for vertex in self.igraph.vs]
@@ -26,22 +25,6 @@ class Graph:
     def find_vertex(self, loc_id) -> ig.Vertex:
         return self.igraph.vs.find(location_id_eq=loc_id)
 
-    def centroid_ids(self):
-        return [centroid['location_id'] for centroid in self.__centroids]
-
-    def centroid_id_of(self, loc_id):
-        vertex = self.find_vertex(loc_id)
-        locality = vertex['locality']
-        centroid = self.igraph.vs.find(locality_eq=locality)
-        return centroid['location_id']
-    
-    def locations_of_centroid(self, centroid_id):
-        centroid_vertex = self.find_vertex(centroid_id)
-        locality = centroid_vertex['locality']
-        vertices = self.igraph.vs.select(locality_eq=locality)
-        vertices = vertices.select(location_id_ne=centroid_id)
-        return [vertex['location_id'] for vertex in vertices]
-
     def travel_time(self, source_id, target_id) -> int:
         edge = self.find_edge(source_id, target_id)
         return 0 if edge is None else edge['travel_time']
@@ -53,29 +36,12 @@ class Graph:
 class DatasetGraphGenerator:
 
     def __init__(self, graph_seed, graph_params) -> None:
-        self.short_avg_vehicle_speed = graph_params['short_avg_vehicle_speed']
-        self.long_avg_vehicle_speed = graph_params['long_avg_vehicle_speed']
+        self.avg_vehicle_speed = graph_params['avg_vehicle_speed']
         self.num_locations = graph_params['num_locations']
-        self.localities = graph_params['localities']
+        self.locality = graph_params['locality']
         self.seed = graph_seed
         np.random.seed(100)
         self.graph = Graph(self.__generate_graph())
-
-    def __centroid_info(self):
-
-        info = {
-            "Westminster": {
-                "ATCOCode": "490003384SA",
-                "Coordinate": (-0.13663328, 51.49742493),
-                "max_stations": 66
-            },
-            "Hackney": {
-                "ATCOCode": "490009644E",
-                "Coordinate": (-0.056845911, 51.54654249),
-                "max_stations": 60
-            }
-        }
-        return info
 
     def __generate_graph(self):
         with open(f"./dataset/westminster_hackney_stops.csv", "r", encoding='utf-8-sig') as file:
@@ -89,45 +55,46 @@ class DatasetGraphGenerator:
             duplicate_codes = [key for key, val in duplicate_records]
 
             filtered_records = [record for record in records if record['ATCOCode'] not in duplicate_codes]
-            igraph = ig.Graph.Full(n=sum(self.num_locations))
+            igraph = ig.Graph.Full(n=self.num_locations)
             self.__generate_vertex_props(igraph, filtered_records)
             self.__generate_edge_props(igraph)
 
         return igraph
 
     def __generate_vertex_props(self, igraph, records):
+
+        locality_info = {
+            "Westminster": {
+                "ATCOCode": "490003384SA",
+                "Coordinate": (-0.13663328, 51.49742493),
+                "max_stations": 66
+            },
+            "Hackney": {
+                "ATCOCode": "490009644E",
+                "Coordinate": (-0.056845911, 51.54654249),
+                "max_stations": 60
+            }
+        }
+
         loc_ids = []
         coordinates = []
-        is_centroid = []
-        localites = []
-        centroid_info = self.__centroid_info()
+        info = locality_info[self.locality]
+        records_by_locality = \
+            list(filter(
+                lambda record: record.get("LocalityName") == self.locality and not record.get("ATCOCode") == info['ATCOCode'],
+                records)
+            )
+        records_indices = np.random.choice(len(records_by_locality), size=self.num_locations-1, replace=False)
+        records_by_locality = [records_by_locality[index] for index in records_indices]
+        for record in records_by_locality:
+            loc_ids.append(record.get("ATCOCode"))
+            coordinates.append((float(record.get("Latitude")), float(record.get("Longitude"))))
 
-        for locality, num_locations in zip(self.localities, self.num_locations):
-                
-            info = centroid_info[locality]
-            records_by_locality = \
-                list(filter(
-                    lambda record: record.get("LocalityName") == locality and not record.get("ATCOCode") == info['ATCOCode'],
-                    records)
-                )
-
-            records_indices = np.random.choice(len(records_by_locality), size=num_locations-1, replace=False)
-            records_by_locality = [records_by_locality[index] for index in records_indices]
-            for record in records_by_locality:
-                loc_ids.append(record.get("ATCOCode"))
-                coordinates.append((float(record.get("Latitude")), float(record.get("Longitude"))))
-                is_centroid.append(False)
-                localites.append(locality)
-
-            loc_ids.append(info['ATCOCode'])
-            coordinates.append(info['Coordinate'])
-            is_centroid.append(True)
-            localites.append(locality)
+        loc_ids.append(info['ATCOCode'])
+        coordinates.append(info['Coordinate'])
 
         igraph.vs['location_id'] = loc_ids
         igraph.vs['coordinate'] = coordinates
-        igraph.vs['is_centroid'] = is_centroid
-        igraph.vs['locality'] = localites
 
     def __generate_edge_props(self, igraph):
 
@@ -139,10 +106,7 @@ class DatasetGraphGenerator:
             target_coordinate = target_vertex["coordinate"]
             distance = haversine(source_coordinates, target_coordinate, unit=Unit.METERS)
 
-            if source_vertex['locality'] != target_vertex['locality']:
-                speed = self.long_avg_vehicle_speed * 1000 / 60
-            else:
-                speed = self.short_avg_vehicle_speed * 1000 / 60
+            speed = self.avg_vehicle_speed * 1000 / 60
 
             travel_time = round(distance / speed, 2)
             edge["distance"] = int(distance)

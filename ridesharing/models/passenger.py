@@ -36,9 +36,7 @@ class PassengerGenerator:
         self.alpha = self.passenger_params['alpha']
         self.peak_probability = self.passenger_params['peak_probability']
         self.num_passengers = self.passenger_params['num_passengers']
-        self.centroid_likelihood = self.passenger_params['centroid_likelihood']
-        self.inter_cluster_prob = self.passenger_params['inter_cluster_probability']
-
+        
         np.random.seed(seed)
         self.passengers = self.generate_passengers()
 
@@ -64,56 +62,15 @@ class PassengerGenerator:
         return np.random.beta(alpha, beta, self.passenger_params['num_passengers'])            
     
     def __generate_loc_preferences(self):
-
-        if self.inter_cluster_prob > 0:
-            inter_loc_preferences = self.__inter_cluster_loc_preference()
-            intra_loc_preferences = self.__intra_cluster_loc_preference()
-            return inter_loc_preferences + intra_loc_preferences
-        else:
-            return self.__intra_cluster_loc_preference()
-
-    def __intra_cluster_loc_preference(self):
-        intra_loc_pairs = []
-        centroid_ids = self.graph.centroid_ids()
+        location_pairs = []
+        location_ids = self.graph.locations()
 
         for _ in range(self.num_passengers):    
-            selected_centroid = np.random.choice(centroid_ids)
-            locations_of_centroid = self.graph.locations_of_centroid(selected_centroid)
             start_loc, end_loc = \
-                np.random.choice(locations_of_centroid, size=2, replace=False)
-            intra_loc_pairs.append((start_loc, end_loc))
+                np.random.choice(location_ids, size=2, replace=False)
+            location_pairs.append((start_loc, end_loc))
         
-        return intra_loc_pairs
-
-    def __inter_cluster_loc_preference(self):
-        centroid_ids = self.graph.centroid_ids()
-        travel_types = \
-            np.random.choice(['inter', 'intra'], size=self.num_passengers, p=[self.inter_cluster_prob, 1 - self.inter_cluster_prob])
-        centroid_likelihood = self.centroid_likelihood
-
-        counter = Counter(travel_types)
-
-        inter_loc_pairs = []
-        for _ in range(counter['inter']):
-            start_centroid, end_centroid = \
-                np.random.choice(centroid_ids, size=2, replace=False)
-            depart_from_centroid, arrive_at_centriod = \
-                np.random.choice([True, False], size=2, p=[centroid_likelihood, 1 - centroid_likelihood])
-            
-            if depart_from_centroid:
-                start_loc = start_centroid
-            else:
-                start_centroid_locations = self.graph.locations_of_centroid(start_centroid)
-                start_loc = np.random.choice(start_centroid_locations)
-            
-            if arrive_at_centriod:
-                end_loc = end_centroid
-            else:
-                end_centroid_locations = self.graph.locations_of_centroid(end_centroid)
-                end_loc = np.random.choice(end_centroid_locations)
-            inter_loc_pairs.append((start_loc, end_loc))
-        
-        return inter_loc_pairs
+        return location_pairs
 
     def __generate_time_preferences(self, loc_pairs):
         time_preferences = []

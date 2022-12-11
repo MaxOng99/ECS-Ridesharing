@@ -63,20 +63,16 @@ There are four types of parameters, each of which are explained below:
     *Seed value used to construct algorithms.*
 
 #### graph_params
-- `localities: List[LocalityName] `
+- `locality: "Westminster" | "Hackney" `
 
-	*List of LocalityName as defined in the Naptan Dataset. Each locality represents a cluster. **Only include more than 1 LocalityName if inter_cluster_probability > 0**.*
-- `num_locations: List[int]`
+	*Represents the LocalityName as defined in the Naptan Dataset.*
+- `num_locations: int`
 
-	*The number of locations for each LocalityName (cluster) defined in the `localities` parameter.*
+	*The number of locations for*
 
-- `short_avg_vehicle_speed: float`
+- `avg_vehicle_speed: float`
 
-	*The average bus speed when travelling between stations within a cluster/locality.*
-
-- `long_avg_vehicle_speed: float`
-
-	*The average bus speed when travelling between stations of different localities.*
+	*The average bus speed when travelling between stations within a locality.*
 
 #### passenger_params
 - `num_passengers: int`
@@ -85,13 +81,6 @@ There are four types of parameters, each of which are explained below:
 - `peak_probability: float`
 
 	*The probability [0, 1] in which a rider travels during peak hours. There are 2 peak time frames, morning peak: [420, 560] and evening peak: [1020, 1140]. If a rider travels during peak hours, there is a 0.5 probability of travelling in the morning peak, or in the evenig peak*.
-- `centroid_likelihood: float, requires inter_cluster_probability > 0`
-
-	*The probability [0, 1] in which riders depart (and arrive) from (at) the centroid of a cluster.*
-
-- `inter_cluster_probability: float, [0, 1]`
-
-	*The probability [0, 1] in which riders travel between locations of two different clusters (not necessarily departing from or arriving at a centroid).*
 
 #### optimiser_params
 

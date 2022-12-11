@@ -38,17 +38,14 @@ optimiser_params:
   
 const_params:
   passenger_params:
-    inter_cluster_probability: 0
     alpha: 10
     beta: 10
-    centroid_likelihood: 0
     peak_probability: 0.6
   
   graph_params:
-    localities: ["Westminster"]
-    num_locations: [60]
-    short_avg_vehicle_speed: 13
-    long_avg_vehicle_speed: 48
+    locality: Westminster
+    num_locations: 60
+    avg_vehicle_speed: 13
   
 var_params:
   passenger_params:

@@ -26,9 +26,7 @@ passengers_schema = {
         "num_passengers": {"type": "integer", "min": 1},
         "alpha": {"type": "number"},
         "beta": {"type": "number"},
-        "peak_probability": {"type": "number"},
-        "inter_cluster_probability": {"type": "number", "min":0, "max":1},
-        "centroid_likelihood": {"type": "number", "min": 0, "max": 1}
+        "peak_probability": {"type": "number"}
     }
 }
 
@@ -36,16 +34,14 @@ passengers_schema = {
 
 dataset_graph_schema = {
     'num_locations': {
-        'type': 'list'
-    },
-    'short_avg_vehicle_speed': {
         'type': 'number'
     },
-    'long_avg_vehicle_speed': {
+    'avg_vehicle_speed': {
         'type': 'number'
     },
-    'localities': {
-        'type': 'list'
+    'locality': {
+        "type": "string",
+        "allowed": ["Westminster", "Hackney"]
     }
 }
 
