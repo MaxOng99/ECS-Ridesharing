@@ -82,6 +82,9 @@ There are four types of parameters, each of which are explained below:
 
 	*The probability [0, 1] in which a rider travels during peak hours. There are 2 peak time frames, morning peak: [420, 560] and evening peak: [1020, 1140]. If a rider travels during peak hours, there is a 0.5 probability of travelling in the morning peak, or in the evenig peak*.
 
+- `hotspots: int`
+
+	*Number of hotspots within a locality*
 #### optimiser_params
 
 - `algorithm: RGA | RGA ++| RGVA | IV1 | IV2 | tsp algorithms`

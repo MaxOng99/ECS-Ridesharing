@@ -40,7 +40,8 @@ const_params:
   passenger_params:
     alpha: 10
     beta: 10
-    peak_probability: 0.6
+    peak_probability: 0.8
+    # hotspots: 10 
   
   graph_params:
     locality: Westminster

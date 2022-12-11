@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Counter, List, Tuple
+from typing import Counter, List, Tuple, Literal
 
 from models.graph import Graph
 
@@ -44,19 +44,39 @@ class PassengerGenerator:
         passengers = []
         beta_dist = self.__beta_distribution(self.alpha, self.beta)
         self.beta_distribution = beta_dist
-        loc_pairs = self.__generate_loc_preferences()
-        time_preferences = self.__generate_time_preferences(loc_pairs)
 
-        for id, beta, loc_pair, time_pref in zip(
-            range(self.num_passengers),
-            beta_dist,
-            loc_pairs,
-            time_preferences
-        ):
-            p = Passenger(id, beta, loc_pair, time_pref)
-            passengers.append(p)
+        # New way of generating preferences with hotspot
+        if self.passenger_params.get('hotspots', None):
+            passengers = []
+            beta_dist = self.__beta_distribution(self.alpha, self.beta)
+            self.beta_distribution = beta_dist
+            preferences = self.__generate_preferences()
 
-        return passengers
+            for id, beta, preference in zip(
+                range(self.num_passengers),
+                beta_dist,
+                preferences,
+            ):
+                p = Passenger(id, beta, [preference['departure_location'], preference['arrival_location']], [preference['optimum_departure'], preference['optimum_arrival']])
+                passengers.append(p)
+
+            return passengers
+
+        # Old way of generating preferences
+        else:
+            loc_pairs = self.__generate_loc_preferences()
+            time_preferences = self.__generate_time_preferences(loc_pairs)
+
+            for id, beta, loc_pair, time_pref in zip(
+                range(self.num_passengers),
+                beta_dist,
+                loc_pairs,
+                time_preferences
+            ):
+                p = Passenger(id, beta, loc_pair, time_pref)
+                passengers.append(p)
+
+            return passengers
 
     def __beta_distribution(self, alpha, beta):
         return np.random.beta(alpha, beta, self.passenger_params['num_passengers'])            
@@ -96,3 +116,44 @@ class PassengerGenerator:
             time_preferences.append((optimum_departure, optimum_arrival))
 
         return time_preferences
+
+    # New preference generator that includes hotspots
+    def __generate_preferences(self):
+        locations = self.graph.locations()
+        hotspots: int = self.passenger_params['hotspots']
+
+        hotspot_locations = np.random.choice(locations, size=hotspots, replace=False)
+        morning_hotspots = np.random.choice(hotspot_locations, size=hotspots // 2, replace=False)
+        evening_hotspots = np.random.choice([location for location in hotspot_locations if location not in morning_hotspots], size=len(hotspot_locations) - len(morning_hotspots), replace=False)
+
+        preferences = {
+            'peak': {
+                'config': [((420, 560), morning_hotspots), ((1020, 1140), evening_hotspots)]
+            },
+            'non_peak': {
+                'config': [((0, 1440), locations)]
+            }
+        }
+
+        preferences_type: List[Literal['peak', 'non_peak']] = \
+            np.random.choice(['peak', 'non_peak'], size=self.num_passengers, p=[self.peak_probability, 1-self.peak_probability])
+        
+        generated_preferences = []
+        for preference_type in preferences_type:
+            configs = preferences[preference_type]['config']
+            config_index = np.random.choice(len(configs))
+            selected_config = configs[config_index]
+            time_frame, locations = selected_config
+
+            departure_location, arrival_location = np.random.choice(locations, size=2, replace=False)
+            optimum_departure = np.random.randint(time_frame[0], time_frame[1] + 1)
+            optimum_arrival = optimum_departure + self.graph.travel_time(departure_location, arrival_location)
+
+            generated_preferences.append({
+                'optimum_departure': optimum_departure,
+                'optimum_arrival': optimum_arrival,
+                'departure_location': departure_location,
+                'arrival_location': arrival_location,
+            })
+
+        return generated_preferences

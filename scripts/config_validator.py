@@ -26,7 +26,8 @@ passengers_schema = {
         "num_passengers": {"type": "integer", "min": 1},
         "alpha": {"type": "number"},
         "beta": {"type": "number"},
-        "peak_probability": {"type": "number"}
+        "peak_probability": {"type": "number"},
+        "hotspots": {"type": "integer", "min": 0}
     }
 }
 
@@ -34,17 +35,17 @@ passengers_schema = {
 graph_schema = {
     "type": "dict",
     "schema": {
-    'num_locations': {
-        'type': 'number'
-    },
-    'avg_vehicle_speed': {
-        'type': 'number'
-    },
-    'locality': {
-        "type": "string",
-        "allowed": ["Westminster", "Hackney"]
+        'num_locations': {
+            'type': 'number'
+        },
+        'avg_vehicle_speed': {
+            'type': 'number'
+        },
+        'locality': {
+            "type": "string",
+            "allowed": ["Westminster", "Hackney"]
+        }
     }
-}
 }
 
 # Optimiser
