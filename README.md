@@ -92,7 +92,7 @@ There are four types of parameters, each of which are explained below:
 	*Beta parameter for beta distribution*
 #### optimiser_params
 
-- `algorithm: RGA | RGA ++| RGVA | IV1 | IV2 | tsp algorithms`
+- `algorithm: RGA | RGA ++ | IV2 `
 
 - `algorithm_params: dictionary of key-value pairs`:
 
@@ -104,19 +104,7 @@ There are four types of parameters, each of which are explained below:
 		1. objective: gini_index | utilitarian
 		2. multiple_iterations: True | False
 
-	**RGVA**
-		1. final_voting_rule: borda_count | popularity
-
-	**IV1**
-		1. iterative_voting_rule: borda_count | popularity
-		2. final_voting_rule: borda_count | popularity
-
 	**IV2**
 		1. iterative_voting_rule: borda_count | popularity | harmonic | instant_runoff
 		2. multiple_iterations: True | False
-
-	**tsp algorithms**
-		1. driver: 2_opt | simulated_annealing
-		2. max_processing_time: int
-
 
