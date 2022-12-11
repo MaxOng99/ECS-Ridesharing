@@ -85,6 +85,14 @@ There are four types of parameters, each of which are explained below:
 - `hotspots: int`
 
 	*Number of hotspots within a locality*
+
+- `alpha`
+
+	*Alpha parameter for beta distribution*
+
+- `beta`
+
+	*Beta parameter for beta distribution*
 #### optimiser_params
 
 - `algorithm: RGA | RGA ++| RGVA | IV1 | IV2 | tsp algorithms`
