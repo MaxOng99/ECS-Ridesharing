@@ -45,8 +45,8 @@ class PassengerGenerator:
         beta_dist = self.__beta_distribution(self.alpha, self.beta)
         self.beta_distribution = beta_dist
 
-        # New way of generating preferences with hotspot
-        if self.passenger_params.get('hotspots', None):
+        # New way of generating preferences with hotspots
+        if self.passenger_params.get('num_hotspots', None):
             passengers = []
             beta_dist = self.__beta_distribution(self.alpha, self.beta)
             self.beta_distribution = beta_dist
@@ -120,10 +120,10 @@ class PassengerGenerator:
     # New preference generator that includes hotspots
     def __generate_preferences(self):
         locations = self.graph.locations()
-        hotspots: int = self.passenger_params['hotspots']
+        num_hotspots: int = self.passenger_params['num_hotspots']
 
-        hotspot_locations = np.random.choice(locations, size=hotspots, replace=False)
-        morning_hotspots = np.random.choice(hotspot_locations, size=hotspots // 2, replace=False)
+        hotspot_locations = np.random.choice(locations, size=num_hotspots, replace=False)
+        morning_hotspots = np.random.choice(hotspot_locations, size=num_hotspots // 2, replace=False)
         evening_hotspots = np.random.choice([location for location in hotspot_locations if location not in morning_hotspots], size=len(hotspot_locations) - len(morning_hotspots), replace=False)
 
         preferences = {

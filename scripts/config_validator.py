@@ -10,7 +10,7 @@ passengers_schema = {
         "alpha": {"type": "number"},
         "beta": {"type": "number"},
         "peak_probability": {"type": "number"},
-        "hotspots": {"type": "integer", "min": 0}
+        "num_hotspots": {"type": "integer", "min": 0}
     }
 }
 

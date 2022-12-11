@@ -40,7 +40,7 @@ const_params:
     alpha: 10
     beta: 10
     peak_probability: 0.8
-    # hotspots: 10 
+    # num_hotspots: 10 
   
   graph_params:
     locality: Westminster

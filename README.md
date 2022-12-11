@@ -56,6 +56,7 @@ There are four types of parameters, each of which are explained below:
     *Seed value used to generate graph.*
 
 - `passenger_seed: int`
+
     *If there `runs > 1`, for the ith run, the seed used to generate passengers will be `passenger_seed + i`.*
 
 - `algorithm_seed: int`
@@ -82,9 +83,9 @@ There are four types of parameters, each of which are explained below:
 
 	*The probability [0, 1] in which a rider travels during peak hours. There are 2 peak time frames, morning peak: [420, 560] and evening peak: [1020, 1140]. If a rider travels during peak hours, there is a 0.5 probability of travelling in the morning peak, or in the evenig peak*.
 
-- `hotspots: int`
+- `num_hotspots: int`
 
-	*Number of hotspots within a locality*
+	*Number of hotspots within a locality. `num_hotspots` will first be sampled from locations of the specified `locality`. Then, `num_hotspots // 2` (division without remainder) hotspot locations will be allocated to the morning peak, while `num_hotspots - (num_hotspots // 2)` hotspot locations will be allocated to the evening peak. This means that if a passenger falls under either morning or evening peak (via `peak_probability` parameter), their departure and arrival locations will be sampled from the associated hotspot locations for each peak time frame, with uniform distribution.*
 
 - `alpha`
 
@@ -115,7 +116,8 @@ There are four types of parameters, each of which are explained below:
 		2. final_voting_rule: borda_count | popularity
 
 	**IV2**
-		1. iterative_voting_rule: borda_count | popularity
+		1. iterative_voting_rule: borda_count | popularity | harmonic | instant_runoff
+		2. multiple_iterations: True | False
 
 	**tsp algorithms**
 		1. driver: 2_opt | simulated_annealing
