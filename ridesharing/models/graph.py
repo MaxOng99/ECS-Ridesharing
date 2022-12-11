@@ -35,12 +35,10 @@ class Graph:
 
 class DatasetGraphGenerator:
 
-    def __init__(self, graph_seed, graph_params) -> None:
+    def __init__(self, graph_params) -> None:
         self.avg_vehicle_speed = graph_params['avg_vehicle_speed']
         self.num_locations = graph_params['num_locations']
         self.locality = graph_params['locality']
-        self.seed = graph_seed
-        np.random.seed(100)
         self.graph = Graph(self.__generate_graph())
 
     def __generate_graph(self):

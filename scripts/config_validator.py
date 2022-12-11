@@ -1,23 +1,6 @@
 import copy
 from pathlib import Path
-
 from cerberus import Validator
-
-# Seeds
-seeds_schema = {
-    'type': 'dict',
-    'schema': {
-        'graph': {
-            'type': 'integer',
-        },
-        'passengers': {
-            'type': 'integer'
-        },
-        'algorithm': {
-            'type': 'integer'
-        }
-    }
-}
 
 # Passengers
 passengers_schema = {
@@ -176,15 +159,11 @@ experiment_schema = {
         },
         "algorithm_seed": {
             "type": "integer"
-        },
-        "graph_seed": {
-            "type": "integer"
         }
     }
 }
 
 config_schema = {
-    "seeds": seeds_schema,
     "optimiser_params": optimiser_schema,
     "passenger_params": passengers_schema,
     "graph_params": graph_schema,

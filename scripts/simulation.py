@@ -18,7 +18,6 @@ class Simulation:
     def run(self):
         
         runs = self.experiment_params['runs']
-        graph_seed = self.experiment_params['graph_seed']
         passenger_seeds = [self.experiment_params['passenger_seed'] + x for x in range(runs)]
         optimiser_seed = self.experiment_params['algorithm_seed']
 
@@ -27,7 +26,7 @@ class Simulation:
         graphs = []
         for x in range(runs):
             # Generate graph
-            generator = DatasetGraphGenerator(graph_seed, self.graph_params)
+            generator = DatasetGraphGenerator(self.graph_params)
             graph = generator.graph
             graphs.append(graph)
 
