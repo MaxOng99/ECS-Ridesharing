@@ -41,16 +41,14 @@ class GreedyInsert:
         self.params = params
 
     def optimise(self) -> Solution:
-
         if self.params['multiple_iterations']:
             solutions: List[Solution] = []
-            temp_riders = self.riders[:]
-
             for rider in self.riders:
-                np.random.shuffle(temp_riders)
                 # Initialize solution by allocating first rider
                 solution: Solution = self.initialise_solution(rider)
-
+                temp_riders = [rider for rider in self.riders]
+                temp_riders.remove(rider)
+                np.random.shuffle(temp_riders)
                 # Allocate n other riders
                 for other_rider in temp_riders:
                     if not rider.id == other_rider.id:
@@ -84,7 +82,7 @@ class GreedyInsert:
             solution.calculate_objectives()
             return solution
 
-    def initialise_solution(self, first_rider: Passenger) -> None:
+    def initialise_solution(self, first_rider: Passenger) -> Solution:
         sol = Solution(self.riders, self.graph)
         optimal_depart = first_rider.optimal_departure
         depart_loc = first_rider.start_id
@@ -108,7 +106,11 @@ class GreedyInsert:
         pos = "before" if not departure_node else "after"
 
         valid_tns = self.valid_tour_nodes(loc_id, pref_time, start_node, pos)
-        best_tn = max(valid_tns, key=lambda node: node_utility(rider, node, additional_info={rider: departure_node}))
+        additional_info = {
+            'rider_depart_node_dict': {rider: departure_node},
+            'graph': self.graph
+        }
+        best_tn = max(valid_tns, key=lambda node: node_utility(rider, node, additional_info=additional_info))
         allocated_node = self.update_sol(rider, solution, best_tn, departure_node)
         return allocated_node
 

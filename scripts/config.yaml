@@ -1,6 +1,6 @@
 experiment_params:
-    runs: 1
-    name: "testing_2"
+    runs: 100
+    name: "test_1"
     graph_seed: 80
     passenger_seed: 67
     algorithm_seed: 82
@@ -8,54 +8,48 @@ experiment_params:
 optimiser_params:
   - algorithm: "RGA"
     algorithm_params: 
+      objective: "utilitarian"
+      multiple_iterations: False
+
+  - algorithm: "RGA"
+    algorithm_params: 
       objective: "gini_index"
       multiple_iterations: False
 
-  # - algorithm: "tsp algorithms"
-  #   algorithm_params:
-  #     driver: "2_opt"
-  #     max_processing_time: 10
-  
-  # - algorithm: "RGA ++"
-  #   algorithm_params:
-  #     objective: "gini_index"
-  #     multiple_iterations: True
-  
-  # - algorithm: "RGVA"
-  #   algorithm_params:
-  #     final_voting_rule: "borda_count"
-  
-  # - algorithm: "RGVA"
-  #   algorithm_params:
-  #     final_voting_rule: "popularity"
-  
-  # - algorithm: "IV1"
-  #   algorithm_params:
-  #     iterative_voting_rule: "borda_count"
-  #     final_voting_rule: "borda_count"
+  - algorithm: "IV2"
+    algorithm_params:
+      iterative_voting_rule: "borda_count"
+      multiple_iterations: False
 
-  # - algorithm: "IV2"
-  #   algorithm_params:
-  #     iterative_voting_rule: "borda_count"
+  - algorithm: "IV2"
+    algorithm_params:
+      iterative_voting_rule: "harmonic"
+      multiple_iterations: False
+
+  - algorithm: "IV2"
+    algorithm_params:
+      iterative_voting_rule: "instant_runoff"
+      multiple_iterations: False
+
+  - algorithm: "IV2"
+    algorithm_params:
+      iterative_voting_rule: "popularity"
+      multiple_iterations: False
   
 const_params:
   passenger_params:
-    service_hours: 24
-    num_passengers: 80
     inter_cluster_probability: 0
     alpha: 10
     beta: 10
     centroid_likelihood: 0
     peak_probability: 0.6
-    time_step: 20
   
   graph_params:
-    localities: ["Westminster", "Hackney"]
-    num_locations: [66, 60]
+    localities: ["Westminster"]
+    num_locations: [60]
     short_avg_vehicle_speed: 13
     long_avg_vehicle_speed: 48
   
 var_params:
   passenger_params:
-    num_passengers: [50, 60]
-    
+    num_passengers: [50, 100, 150, 200]

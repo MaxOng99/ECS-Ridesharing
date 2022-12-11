@@ -119,7 +119,9 @@ RGVA_schema = {
                 "type": "string",
                 "allowed": [
                     "borda_count",
-                    "popularity"
+                    "popularity",
+                    "harmonic",
+                    "instant_runoff"
                 ]
             }
         }
@@ -136,11 +138,11 @@ IV1_schema = {
         "schema": {
             "iterative_voting_rule": {
                 "type": "string",
-                "allowed": ["borda_count", "popularity"]
+                "allowed": ["borda_count", "popularity", "harmonic", "instant_runoff"]
             },
             "final_voting_rule": {
                 "type": "string",
-                "allowed": ["borda_count", "popularity"]
+                "allowed": ["borda_count", "popularity", "harmonic", "instant_runoff"]
             }
         }
 
@@ -157,7 +159,10 @@ IV2_schema = {
         "schema": {
             "iterative_voting_rule": {
                 "type": "string",
-                "allowed": ["borda_count", "popularity"]
+                "allowed": ["borda_count", "popularity", "harmonic", "instant_runoff"]
+            },
+            "multiple_iterations": {
+                "type": "boolean"
             }
         }
     }

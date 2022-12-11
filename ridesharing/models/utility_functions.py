@@ -10,17 +10,27 @@ def solution_utility(rider, solution, additional_info=None):
     return rider.utility(departure_time, arrival_time)
 
 def node_utility(rider: Passenger, node, additional_info=None):
-    '''additional_info must be dictionary of rider-departure_node mapping'''
+    graph = additional_info['graph']
+    departure_node = additional_info['rider_depart_node_dict'].get(rider, None)
     node_val = node.value
-    departure_node = additional_info.get(rider, None)
+
     if departure_node is None:
-        departure_time = node_val.departure_time
-        return rider.utility(departure_time=departure_time, arrival_time=None)
-    
+        if node_val.location_id == rider.start_id:
+            departure_time = node_val.departure_time
+            return rider.utility(departure_time=departure_time, arrival_time=None)
+        else:
+            potential_departure_time = node_val.departure_time + graph.travel_time(node_val.location_id, rider.start_id)
+            return rider.utility(departure_time=potential_departure_time, arrival_time=None)
+
     else:
-        departure_time = departure_node.value.departure_time
-        arrival_time = node_val.arrival_time
-        return rider.utility(departure_time=departure_time, arrival_time=arrival_time)
+        if node_val.location_id == rider.destination_id:
+            departure_time = departure_node.value.departure_time
+            arrival_time = node_val.arrival_time
+            return rider.utility(departure_time=departure_time, arrival_time=arrival_time)
+        else:
+            departure_time = departure_node.value.departure_time
+            potential_arrival_time = node_val.departure_time + graph.travel_time(node_val.location_id, rider.destination_id)
+            return rider.utility(departure_time=departure_time, arrival_time=potential_arrival_time)
         
 def location_utility(rider, new_location, additional_info=None) -> float:
     graph = additional_info['graph']
