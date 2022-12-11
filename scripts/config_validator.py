@@ -31,8 +31,9 @@ passengers_schema = {
 }
 
 # Graph
-
-dataset_graph_schema = {
+graph_schema = {
+    "type": "dict",
+    "schema": {
     'num_locations': {
         'type': 'number'
     },
@@ -44,40 +45,6 @@ dataset_graph_schema = {
         "allowed": ["Westminster", "Hackney"]
     }
 }
-
-# synthetic_graph_schema = {
-#     'num_locations': {
-#         'type': 'integer',
-#         'min': 2,
-#     },
-#     'clusters': {
-#         'type': 'integer',
-#         'min': 1
-#     },
-#     'grid_size': {
-#         'type': 'number',
-#     },
-#     'min_location_distance': {
-#         'type': 'number',
-#         'min': 100
-#     },
-#     'short_avg_vehicle_speed': {
-#         'type': 'number'
-#     },
-#     'long_avg_vehicle_speed': {
-#         'type': 'number'
-#     },
-#     'dataset': {
-#         'type': 'string'
-#     }
-# }
-
-graph_schema = {
-    'type': 'dict',
-    'oneof_schema': [
-        # synthetic_graph_schema,
-        dataset_graph_schema
-    ]
 }
 
 # Optimiser
