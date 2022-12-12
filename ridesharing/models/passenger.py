@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Counter, List, Tuple, Literal
+from typing import Counter, List, Tuple
 
 from models.graph import Graph
 
@@ -135,7 +135,7 @@ class PassengerGenerator:
             }
         }
 
-        preferences_type: List[Literal['peak', 'non_peak']] = \
+        preferences_type = \
             np.random.choice(['peak', 'non_peak'], size=self.num_passengers, p=[self.peak_probability, 1-self.peak_probability])
         
         generated_preferences = []
