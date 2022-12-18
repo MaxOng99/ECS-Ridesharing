@@ -41,7 +41,7 @@ class GreedyInsert:
         self.params = params
 
     def optimise(self) -> Solution:
-        if self.params['multiple_iterations']:
+        if self.params.get('multiple_iterations', None):
             solutions: List[Solution] = []
             for rider in self.riders:
                 # Initialize solution by allocating first rider

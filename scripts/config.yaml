@@ -6,34 +6,26 @@ experiment_params:
 
 optimiser_params:
   - algorithm: "RGA"
-    algorithm_params: 
-      objective: "utilitarian"
-      multiple_iterations: False
+    algorithm_params: {}
 
   - algorithm: "RGA ++"
-    algorithm_params: 
-      objective: "utilitarian"
-      multiple_iterations: False
+    algorithm_params: {}
 
   - algorithm: "IV2"
     algorithm_params:
       iterative_voting_rule: "borda_count"
-      multiple_iterations: False
 
   - algorithm: "IV2"
     algorithm_params:
       iterative_voting_rule: "harmonic"
-      multiple_iterations: False
 
   - algorithm: "IV2"
     algorithm_params:
       iterative_voting_rule: "instant_runoff"
-      multiple_iterations: False
 
   - algorithm: "IV2"
     algorithm_params:
       iterative_voting_rule: "popularity"
-      multiple_iterations: False
   
 const_params:
   passenger_params:

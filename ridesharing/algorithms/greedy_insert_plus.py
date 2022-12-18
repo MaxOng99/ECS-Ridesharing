@@ -24,7 +24,7 @@ class GreedyInsertPlus:
 
     def optimise(self) -> Solution:
         
-        if self.params['multiple_iterations']:
+        if self.params.get('multiple_iterations', None):
 
             solutions: List[Solution] = []
             temp_riders = self.riders[:]
@@ -53,9 +53,9 @@ class GreedyInsertPlus:
                 sol.calculate_objectives()
                 solutions.append(sol)
             
-            if self.params['objective'] == "gini_index":
+            if self.params.get('objective', None) == "gini_index":
                 return min(solutions, key=lambda sol: sol.objectives["gini_index"])
-            elif self.params['objective'] == "utilitarian":
+            elif self.params.get('objective', None) == "utilitarian":
                 return max(solutions, key=lambda sol: sol.objectives["utilitarian"])
             
         else:
