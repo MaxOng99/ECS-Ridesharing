@@ -1,8 +1,8 @@
 experiment_params:
     runs: 100
     name: "test_2"
-    passenger_seed: 67
-    algorithm_seed: 82
+    initial_passenger_seed: 67
+    initial_algorithm_seed: 82
 
 optimiser_params:
   - algorithm: "RGA"

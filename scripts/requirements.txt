@@ -4,6 +4,7 @@ prettytable
 pyyaml
 pyllist
 cerberus
+tqdm
 matplotlib
 pycairo
 seaborn

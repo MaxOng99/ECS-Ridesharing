@@ -1,5 +1,6 @@
 import copy
 from pathlib import Path
+import ridesharing.utils.config as config_utils
 from cerberus import Validator
 
 # Passengers
@@ -154,21 +155,46 @@ experiment_schema = {
         "name": {
             "type": "string"
         },
-        "passenger_seed": {
+        "initial_passenger_seed": {
             "type": "integer"
         },
-        "algorithm_seed": {
+        "initial_algorithm_seed": {
             "type": "integer"
         }
     }
 }
 
+
+graph_var_param_schema = {
+    "type": "dict",
+    "oneof_schema": [{key: {"type": "list", "schema": val}} for key, val in graph_schema['schema'].items()]
+}
+
+passenger_var_param_schema = {
+    "type": "dict",
+    "oneof_schema": [{key: {"type": "list", "schema": val}} for key, val in passengers_schema['schema'].items()]
+}
+
 config_schema = {
-    "optimiser_params": optimiser_schema,
-    "passenger_params": passengers_schema,
-    "graph_params": graph_schema,
     "experiment_params": experiment_schema,
-    "var_param": {"type": "dict"}
+    "optimiser_params": {
+        "type": "list",
+        "schema": optimiser_schema,
+    },
+    "const_params": {
+        "type" : "dict",
+        "schema": {
+            "passenger_params": passengers_schema,
+            "graph_params": graph_schema
+        }
+    },
+    "var_params": {
+        "type": "dict",
+        "oneof_schema": [
+            {"passenger_params": passenger_var_param_schema},
+            {"graph_params": graph_var_param_schema}
+        ]
+    } 
 }
 
 
@@ -180,23 +206,41 @@ def __validate_yaml(config_dict):
     if not v.validate(config_dict):
         raise ConfigException(v.errors)
 
-def __get_variable_param(config_dict):
-    var_param = config_dict['var_params']
-    param_type, param_dict = list(var_param.items())[0]
-    param_key, param_list = list(param_dict.items())[0]
+def __build_configs(config_dict):
+    runs = config_dict['experiment_params']['runs']
+    current_algorithm_seed = config_dict['experiment_params']['initial_algorithm_seed']
+    current_passenger_seed = config_dict['experiment_params']['initial_passenger_seed']
+    var_param_type, var_param_key, var_param_values = config_utils.get_variable_param(config_dict)
 
-    if not isinstance(param_list, list):
-        msg = "Variable parameters need to be supplied with " + \
-            "a list of values."
-        raise Exception(msg)
+    config_list = []
+    for val in var_param_values:
+        # current_params = const_params + current var_param
+        temp_params = copy.deepcopy(config_dict['const_params'])
+        temp_params[var_param_type][var_param_key] = val
+        temp_params['var_param'] = {var_param_key: val}
 
-    return (param_type, param_key, param_list)
+        # Assign current_params to each optimiser
+        optimiser_and_parameters = []
+        for optimiser in config_dict['optimiser_params']:
+            temp_optimiser_params = copy.deepcopy(temp_params)
+            temp_optimiser_params['optimiser_params'] = optimiser
+            optimiser_and_parameters.append(temp_optimiser_params)
 
-def __get_optimiser_params(config_dict):
-    optimisers = config_dict['optimiser_params']
-    if not isinstance(optimisers, list):
-        raise Exception("Please supply list of optimisers")
-    return optimisers
+        # 1. Create experiment_params['runs'] number of config for each optimiser, for the current var_param
+        # 2. Set the seed for each config
+        for i in range(runs):
+            for optimiser_and_param_dict in optimiser_and_parameters:
+                temp = copy.deepcopy(optimiser_and_param_dict)
+                temp['optimiser_params']['algorithm_seed'] = current_algorithm_seed + i
+                temp['passenger_params']['passenger_seed'] = current_passenger_seed + i
+                temp['experiment_params'] = {"id": f"{temp['optimiser_params']}_{val}_{i}"}
+                temp['experiment_params']['name'] = config_dict['experiment_params']['name']
+                config_list.append(temp)
+
+        current_algorithm_seed = current_algorithm_seed + runs
+        current_passenger_seed = current_passenger_seed + runs
+    
+    return config_list
 
 def parse_config(config_dict):
 
@@ -210,25 +254,7 @@ def parse_config(config_dict):
                 "name parameter"
         raise Exception(msg)
 
-    # create params combination configuration
-    params_config_list = []
-    const_params = config_dict['const_params']
-    param_type, param_key, param_list = __get_variable_param(config_dict)
-
-    for value in param_list:
-        temp_dict = copy.deepcopy(const_params)
-        temp_dict[param_type][param_key] = value
-        temp_dict['experiment_params'] = config_dict['experiment_params']
-        temp_dict["var_param"] = {param_key: value}
-        params_config_list.append(temp_dict)
-
-    # For each param combination config, run all specified optimisers
-    final_config_list = []
-    optimisers = __get_optimiser_params(config_dict)
-    for optimiser in optimisers:
-        for config in params_config_list:
-            temp = copy.deepcopy(config)
-            temp['optimiser_params'] = optimiser
-            __validate_yaml(temp)
-            final_config_list.append(temp)
-    return final_config_list
+    # Validate then build individual configs to run simulation in parallel
+    __validate_yaml(config_dict)
+    configs = __build_configs(config_dict)
+    return configs
